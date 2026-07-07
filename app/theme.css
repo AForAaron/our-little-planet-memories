@@ -1,0 +1,61 @@
+:root,
+[data-theme="warm"] {
+  --color-bg: #fbf4ea;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fff9f3;
+  --color-text: #4a3a34;
+  --color-text-muted: #96857a;
+  --color-accent: #f58c7b;
+  --color-accent-strong: #e87565;
+  --color-accent-soft: #fde6df;
+  --color-amber: #e7a24c;
+  --color-amber-soft: #faecd5;
+  --color-pink: #ef9ebb;
+  --color-pink-soft: #fbe5ee;
+  --color-line: #efe3d6;
+  --color-on-accent: #ffffff;
+  --color-success: #6c9b79;
+  --color-danger: #c85f5f;
+  --color-overlay: rgb(74 58 52 / 42%);
+  --color-hero-start: #f7a092;
+  --color-photo-start: #f7d9cf;
+  --color-photo-end: #fdede7;
+  --font-heading: "Arial Rounded MT Bold", "PingFang SC", sans-serif;
+  --font-body: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --radius: 1.625rem;
+  --radius-sm: 1.125rem;
+  --radius-xs: 0.75rem;
+  --radius-pill: 999px;
+  --shadow: 0 6px 20px rgb(120 80 60 / 7%);
+  --shadow-lift: 0 16px 34px rgb(120 80 60 / 13%);
+  --shadow-accent: 0 16px 40px rgb(245 140 123 / 28%);
+  --shadow-button: 0 6px 16px rgb(245 140 123 / 30%);
+  --space-page: clamp(1rem, 4vw, 2.25rem);
+  --content-width: 73.75rem;
+  --transition: 180ms ease;
+}
+
+[data-theme="starlight"] {
+  --color-bg: #f6f1f8;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fbf8fc;
+  --color-text: #493d4d;
+  --color-text-muted: #8f8194;
+  --color-accent: #b68bc8;
+  --color-accent-strong: #9f70b3;
+  --color-accent-soft: #efe2f4;
+  --color-amber: #d6a35d;
+  --color-amber-soft: #f6ead7;
+  --color-pink: #df91ae;
+  --color-pink-soft: #f8e2eb;
+  --color-line: #eadfec;
+  --color-on-accent: #ffffff;
+  --color-success: #70947c;
+  --color-danger: #bd626b;
+  --color-overlay: rgb(73 61 77 / 42%);
+  --color-hero-start: #c6a3d3;
+  --color-photo-start: #e7d9ec;
+  --color-photo-end: #f4ecf7;
+  --shadow-accent: 0 16px 40px rgb(182 139 200 / 25%);
+  --shadow-button: 0 6px 16px rgb(182 139 200 / 28%);
+}

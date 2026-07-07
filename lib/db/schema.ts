@@ -1,0 +1,209 @@
+import { sql } from "drizzle-orm";
+import {
+  bigint,
+  boolean,
+  check,
+  date,
+  doublePrecision,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+const createdAt = timestamp("created_at", { withTimezone: true })
+  .notNull()
+  .defaultNow();
+
+export const profiles = pgTable("profiles", {
+  id: uuid("id").primaryKey(),
+  displayName: text("display_name").notNull(),
+  avatarUrl: text("avatar_url"),
+  color: text("color"),
+  theme: text("theme"),
+  createdAt,
+});
+
+export const relationship = pgTable(
+  "relationship",
+  {
+    id: integer("id").primaryKey().default(1),
+    title: text("title"),
+    togetherSince: date("together_since"),
+    firstMetOn: date("first_met_on"),
+    partnerA: uuid("partner_a").references(() => profiles.id),
+    partnerB: uuid("partner_b").references(() => profiles.id),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check("relationship_single_row", sql`${table.id} = 1`),
+  ],
+);
+
+export const memoryChapters = pgTable("memory_chapters", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sourceRef: text("source_ref").unique(),
+  kind: text("kind").notNull().default("day"),
+  title: text("title").notNull(),
+  summary: text("summary"),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+  endedAt: timestamp("ended_at", { withTimezone: true }).notNull(),
+  createdAt,
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const places = pgTable("places", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  category: text("category"),
+  address: text("address"),
+  lat: doublePrecision("lat"),
+  lng: doublePrecision("lng"),
+  notes: text("notes"),
+  privacyLevel: text("privacy_level").notNull().default("approximate"),
+  precisionM: integer("precision_m").notNull().default(100),
+  createdAt,
+}, (table) => [
+  check(
+    "places_privacy_level_check",
+    sql`${table.privacyLevel} in ('exact', 'approximate', 'private')`,
+  ),
+]);
+
+export const entries = pgTable(
+  "entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id),
+    updatedBy: uuid("updated_by").references(() => profiles.id),
+    chapterId: uuid("chapter_id").references(() => memoryChapters.id),
+    category: text("category").notNull(),
+    title: text("title"),
+    body: text("body"),
+    happenedAt: timestamp("happened_at", { withTimezone: true }).notNull(),
+    happenedPrecision: text("happened_precision").notNull().default("day"),
+    placeId: uuid("place_id").references(() => places.id),
+    mood: text("mood"),
+    weather: text("weather"),
+    rating: smallint("rating"),
+    source: text("source").notNull().default("manual"),
+    sourceRef: text("source_ref"),
+    isHighlight: boolean("is_highlight").notNull().default(false),
+    createdAt,
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("entries_happened_at_idx").on(table.happenedAt),
+    index("entries_category_idx").on(table.category),
+    uniqueIndex("entries_source_source_ref_unique")
+      .on(table.source, table.sourceRef)
+      .where(sql`${table.sourceRef} is not null`),
+    check(
+      "entries_category_check",
+      sql`${table.category} in ('moment', 'diary', 'trip', 'first', 'milestone', 'anniversary', 'food', 'watch')`,
+    ),
+    check(
+      "entries_rating_check",
+      sql`${table.rating} is null or (${table.rating} between 1 and 5)`,
+    ),
+  ],
+);
+
+export const media = pgTable(
+  "media",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    r2Key: text("r2_key").notNull(),
+    thumbnailR2Key: text("thumbnail_r2_key"),
+    mime: text("mime"),
+    type: text("type").notNull().default("image"),
+    caption: text("caption"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    capturedAt: timestamp("captured_at", { withTimezone: true }),
+    width: integer("width"),
+    height: integer("height"),
+    durationMs: integer("duration_ms"),
+    sha256: text("sha256"),
+    lat: doublePrecision("lat"),
+    lng: doublePrecision("lng"),
+    createdAt,
+  },
+  (table) => [
+    check(
+      "media_type_check",
+      sql`${table.type} in ('image', 'video', 'audio')`,
+    ),
+  ],
+);
+
+export const wishlistItems = pgTable("wishlist_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  description: text("description"),
+  isDone: boolean("is_done").notNull().default(false),
+  doneAt: timestamp("done_at", { withTimezone: true }),
+  doneEntryId: uuid("done_entry_id").references(() => entries.id),
+  createdBy: uuid("created_by").references(() => profiles.id),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt,
+});
+
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: text("id").primaryKey(),
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    senderRole: text("sender_role").notNull(),
+    renderType: text("render_type").notNull(),
+    content: text("content").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull(),
+    sortSeq: bigint("sort_seq", { mode: "bigint" }).notNull(),
+    replyToRef: text("reply_to_ref"),
+    quoteTitle: text("quote_title"),
+    quoteContent: text("quote_content"),
+    sequence: integer("sequence").notNull().default(0),
+  },
+  (table) => [
+    index("chat_messages_entry_sent_at_idx").on(
+      table.entryId,
+      table.sentAt,
+    ),
+    check(
+      "chat_messages_sender_role_check",
+      sql`${table.senderRole} in ('self', 'partner', 'system')`,
+    ),
+  ],
+);
+
+export const chatMessageMedia = pgTable(
+  "chat_message_media",
+  {
+    messageId: text("message_id")
+      .notNull()
+      .references(() => chatMessages.id, { onDelete: "cascade" }),
+    mediaId: uuid("media_id")
+      .notNull()
+      .references(() => media.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.messageId, table.mediaId] }),
+  ],
+);

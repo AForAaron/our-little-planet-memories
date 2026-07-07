@@ -1,0 +1,49 @@
+{
+  "name": "our-little-planet",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "review": "IMPORT_REVIEW_MODE=1 next dev -H 127.0.0.1",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:auth:pull": "drizzle-kit pull --config=drizzle.auth.config.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "data:prepare": "node --env-file-if-exists=.env.local scripts/import/prepare.mjs",
+    "data:verify": "node --env-file-if-exists=.env.local scripts/import/verify.mjs",
+    "data:compare-zips": "node --env-file-if-exists=.env.local scripts/import/compare-zips.mjs",
+    "data:dry-run": "node --env-file-if-exists=.env.local scripts/import/publish.mjs --dry-run",
+    "data:publish": "node --env-file-if-exists=.env.local scripts/import/publish.mjs --apply"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1079.0",
+    "@aws-sdk/s3-request-presigner": "^3.1079.0",
+    "@neondatabase/auth": "0.4.2-beta",
+    "@neondatabase/serverless": "^1.1.0",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
+    "lucide-react": "^0.468.0",
+    "next": "^16.2.10",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-leaflet": "^5.0.0",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.21",
+    "@types/leaflet.markercluster": "^1.5.6",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "drizzle-kit": "^0.31.10",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,12 @@
+node_modules
+.next
+.env*
+!.env.example
+*.log
+.DS_Store
+*.tsbuildinfo
+
+# Private source data and generated import artifacts must never be committed.
+/Datas/
+/data-work/
+.pnpm-store/
