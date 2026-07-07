@@ -3,6 +3,7 @@
 import { Crosshair, ImagePlus, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { EmojiTextField } from "@/components/emoji-text-field";
 import { LocationPicker } from "@/components/location-picker";
 import {
   ENTRY_CATEGORIES,
@@ -333,11 +334,10 @@ export function EntryForm({
           </label>
           <label className="label">
             标题
-            <input
-              className="field"
+            <EmojiTextField
               name="title"
               value={draft.title}
-              onChange={(event) => updateDraft("title", event.target.value)}
+              onChange={(value) => updateDraft("title", value)}
               maxLength={100}
               required
             />
@@ -356,12 +356,12 @@ export function EntryForm({
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="label">
               心情
-              <input
-                className="field"
+              <EmojiTextField
                 name="mood"
                 value={draft.mood}
-                onChange={(event) => updateDraft("mood", event.target.value)}
+                onChange={(value) => updateDraft("mood", value)}
                 maxLength={30}
+                emojis={["🥰", "开心", "✨", "😭", "🥺", "🌧️", "☀️", "🍃", "💗", "😌"]}
               />
             </label>
             <label className="label">
@@ -379,11 +379,12 @@ export function EntryForm({
           </div>
           <label className="label">
             想说的话
-            <textarea
-              className="field min-h-32 resize-y"
+            <EmojiTextField
+              as="textarea"
+              className="min-h-32 resize-y"
               name="body"
               value={draft.body}
-              onChange={(event) => updateDraft("body", event.target.value)}
+              onChange={(value) => updateDraft("body", value)}
               maxLength={5000}
             />
           </label>
@@ -391,13 +392,13 @@ export function EntryForm({
             <legend className="px-2 text-sm font-semibold text-muted">地点（可选）</legend>
             <label className="label">
               地点名称
-              <input
-                className="field"
+              <EmojiTextField
                 name="place_name"
                 placeholder="例如：青海湖、某家餐厅"
                 value={draft.place_name}
-                onChange={(event) => updateDraft("place_name", event.target.value)}
+                onChange={(value) => updateDraft("place_name", value)}
                 maxLength={120}
+                emojis={["📍", "🏔️", "🌊", "🏨", "🍽️", "☕", "🎡", "🌉", "🌸", "✨"]}
               />
             </label>
             <div className="flex flex-wrap gap-2">

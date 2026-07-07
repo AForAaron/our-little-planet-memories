@@ -1,25 +1,32 @@
 "use client";
 
 import {
-  ArrowLeftRight,
+  BarChart3,
   Check,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
+  Clock3,
+  FileCheck2,
   GitMerge,
   ImageIcon,
+  ListChecks,
   LoaderCircle,
   MapPin,
-  MessageCircle,
   Play,
   RefreshCw,
   Save,
   Scissors,
+  Search,
+  ShieldCheck,
   Sparkles,
+  UserRound,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { ChatBubbleThread } from "@/components/chat-bubble-thread";
+import { EmojiTextField } from "@/components/emoji-text-field";
 import type {
   CandidateDetail,
   CandidatePatch,
@@ -76,21 +83,60 @@ function statusLabel(status: ReviewStatus) {
   return status === "approved" ? "已批准" : status === "rejected" ? "已拒绝" : "待审核";
 }
 
+function sourceTypeLabel(sourceType: CandidateSummary["sourceType"]) {
+  return sourceType === "photo"
+    ? "照片"
+    : sourceType === "mixed"
+      ? "聊天 + 照片"
+      : "聊天";
+}
+
+function privacyLabel(privacyLevel: PrivacyLevel) {
+  return privacyLevel === "exact"
+    ? "公开景点 · 精确"
+    : privacyLevel === "private"
+      ? "住宅/住宿 · 约 1 公里"
+      : "未分类 · 约 100 米";
+}
+
+function categoryLabel(category: string) {
+  const labels: Record<string, string> = {
+    moment: "日常时刻",
+    trip: "旅行",
+    first: "第一次",
+    milestone: "里程碑",
+    diary: "共同日记",
+  };
+  return labels[category] ?? category;
+}
+
 function CandidateBadge({ candidate }: { candidate: CandidateSummary }) {
   return (
-    <div className="flex flex-wrap gap-2 text-[.68rem]">
-      <span className="review-chip">{statusLabel(candidate.status)}</span>
-      <span className="review-chip">
-        {candidate.sourceType === "photo"
-          ? "照片"
-          : candidate.sourceType === "mixed"
-            ? "聊天 + 照片"
-            : "聊天"}
-      </span>
+    <div className="review-candidate-meta">
+      <span className={`review-chip is-${candidate.status}`}>{statusLabel(candidate.status)}</span>
+      <span className="review-chip">{sourceTypeLabel(candidate.sourceType)}</span>
       <span className="review-chip">
         {candidate.messageCount} 消息 · {candidate.mediaCount} 媒体
       </span>
-      <span className="review-chip">分数 {candidate.score}</span>
+      <span className="review-chip is-score">分数 {candidate.score}</span>
+    </div>
+  );
+}
+
+function SectionHeading({
+  index,
+  title,
+  meta,
+}: {
+  index: string;
+  title: string;
+  meta?: string;
+}) {
+  return (
+    <div className="review-section-heading">
+      <span>{index}</span>
+      <h3>{title}</h3>
+      {meta && <em>{meta}</em>}
     </div>
   );
 }
@@ -223,35 +269,35 @@ function DetailEditor({
   const selectedMedia = new Set(candidate.selectedMediaPaths);
 
   return (
-    <div className="grid gap-6">
-      <section className="surface p-5 sm:p-7">
+    <div className="review-detail-stack">
+      <section className="surface review-detail-card">
         <div className="review-detail-hero">
           <div>
             <span className="eyebrow">Candidate detail</span>
-            <h2 className="mt-2 font-heading text-2xl font-bold">整理这个记忆点</h2>
-            <p className="mt-2 text-sm leading-6 text-muted">
+            <h2>整理这个记忆点</h2>
+            <p>
               先确认边界，再整理标题、摘要、地点和精选媒体。只批准真正想进入网站的内容。
             </p>
           </div>
           <div className="review-action-bar">
-            <button className="button-secondary" type="button" onClick={() => save("rejected")} disabled={saving}>
+            <button className="button-secondary review-action-button" type="button" onClick={() => save("rejected")} disabled={saving}>
               <X size={16} /> 拒绝
             </button>
-            <button className="button-secondary" type="button" onClick={() => save()} disabled={saving}>
+            <button className="button-secondary review-action-button" type="button" onClick={() => save()} disabled={saving}>
               <Save size={16} /> 保存
             </button>
-            <button className="button-primary" type="button" onClick={() => save("approved")} disabled={saving}>
+            <button className="button-primary review-action-button" type="button" onClick={() => save("approved")} disabled={saving}>
               {saving ? <LoaderCircle size={16} className="animate-spin" /> : <Check size={16} />}
               批准发布
             </button>
           </div>
         </div>
 
-        {error && <p className="mt-4 rounded-soft bg-[var(--color-accent-soft)] p-3 text-sm text-[var(--color-danger)]">{error}</p>}
+        {error && <p className="review-inline-error">{error}</p>}
 
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
+        <div className="review-form-grid">
           {(candidate.lastEditedBy || candidate.reviewedBy) && (
-            <div className="md:col-span-2 rounded-soft bg-[var(--color-surface-soft)] p-3 text-xs leading-6 text-muted">
+            <div className="review-edit-meta">
               {candidate.lastEditedBy && (
                 <span>
                   最后编辑：{candidate.lastEditedBy}
@@ -268,17 +314,23 @@ function DetailEditor({
             </div>
           )}
           <div className="review-form-section md:col-span-2">
-            <div>
-              <h3 className="font-heading text-lg font-bold">故事本身</h3>
-              <p className="mt-1 text-xs text-muted">标题给人看，摘要给未来的你们看。</p>
-            </div>
+            <SectionHeading index="01" title="故事本身" meta="标题给人看，摘要给未来的你们看" />
             <label className="label">
               标题
-              <input className="field" value={candidate.title} onChange={(event) => patch("title", event.target.value)} />
+              <EmojiTextField
+                value={candidate.title}
+                onChange={(value) => patch("title", value)}
+                emojis={["💕", "✨", "🌙", "📍", "🏔️", "🌊", "🍽️", "🎬", "🎂", "🐾"]}
+              />
             </label>
             <label className="label">
               记忆摘要
-              <textarea className="field min-h-28 resize-y" value={candidate.summary} onChange={(event) => patch("summary", event.target.value)} />
+              <EmojiTextField
+                as="textarea"
+                className="min-h-28 resize-y"
+                value={candidate.summary}
+                onChange={(value) => patch("summary", value)}
+              />
             </label>
           </div>
           <label className="label">
@@ -307,7 +359,12 @@ function DetailEditor({
           </label>
           <label className="label">
             地点名称
-            <input className="field" value={candidate.placeName} placeholder="由你确认，不发送坐标给外部服务" onChange={(event) => patch("placeName", event.target.value)} />
+            <EmojiTextField
+              value={candidate.placeName}
+              placeholder="由你确认，不发送坐标给外部服务"
+              onChange={(value) => patch("placeName", value)}
+              emojis={["📍", "🏔️", "🌊", "🏨", "🍽️", "☕", "🎡", "🌉", "🌸", "✨"]}
+            />
           </label>
           <label className="label">
             地点隐私
@@ -319,17 +376,20 @@ function DetailEditor({
           </label>
           <label className="label md:col-span-2">
             审核备注
-            <textarea className="field min-h-20 resize-y" value={candidate.reviewNotes ?? ""} onChange={(event) => patch("reviewNotes", event.target.value)} />
+            <EmojiTextField
+              as="textarea"
+              className="min-h-20 resize-y"
+              value={candidate.reviewNotes ?? ""}
+              onChange={(value) => patch("reviewNotes", value)}
+              emojis={["✅", "⚠️", "✂️", "📍", "🖼️", "🎙️", "💡", "✨"]}
+            />
           </label>
         </div>
       </section>
 
-      <section className="surface p-5 sm:p-7">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <span className="eyebrow">Route</span>
-            <h3 className="mt-2 font-heading text-xl font-bold">章节路线</h3>
-          </div>
+      <section className="surface review-detail-card">
+        <div className="review-card-head">
+          <SectionHeading index="02" title="章节路线" meta="按时间连接的地点预览" />
           {candidate.location && <span className="text-xs text-muted">{candidate.location.latitude}, {candidate.location.longitude}</span>}
         </div>
         <div className="mt-5">
@@ -337,24 +397,21 @@ function DetailEditor({
         </div>
       </section>
 
-      <section className="surface p-5 sm:p-7">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <span className="eyebrow">Media</span>
-            <h3 className="mt-2 font-heading text-xl font-bold">精选媒体</h3>
-          </div>
-          <span className="text-xs text-muted">{selectedMedia.size}/{candidate.mediaPaths.length} 已选择</span>
+      <section className="surface review-detail-card">
+        <div className="review-card-head">
+          <SectionHeading index="03" title="精选媒体" meta="只保留真正要进入网站的照片和视频" />
+          <span className="review-count-badge">{selectedMedia.size}/{candidate.mediaPaths.length} 已选择</span>
         </div>
         {candidate.mediaPaths.length ? (
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="review-media-grid">
             {candidate.mediaPaths.map((sourcePath, mediaIndex) => {
               const isImage = /\.(?:jpe?g|png|webp)$/i.test(sourcePath);
               const isSelected = selectedMedia.has(sourcePath);
               return (
-                <article key={sourcePath} className={`review-media-card ${isSelected ? "" : "opacity-45"}`}>
+                <article key={sourcePath} className={`review-media-card ${isSelected ? "is-selected" : "is-muted"}`}>
                   {candidate.sourceType === "photo" && mediaIndex > 0 && (
                     <button
-                      className="review-text-button m-2"
+                      className="review-media-split"
                       type="button"
                       onClick={() => onPhotoSplit(sourcePath)}
                     >
@@ -364,17 +421,18 @@ function DetailEditor({
                   {isImage ? (
                     // Local-only review asset.
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={mediaUrl(sourcePath)} alt="" className="h-40 w-full object-cover" />
+                    <img src={mediaUrl(sourcePath)} alt="" />
                   ) : /\.(?:wav|m4a)$/i.test(sourcePath) ? (
-                    <div className="grid h-40 place-items-center bg-[var(--color-surface-soft)] p-3">
+                    <div className="review-media-audio">
                       <Play size={24} />
                       <audio controls preload="none" src={mediaUrl(sourcePath)} className="w-full" />
                     </div>
                   ) : (
-                    <div className="grid h-40 place-items-center bg-[var(--color-surface-soft)]"><ImageIcon /></div>
+                    <div className="review-media-audio"><ImageIcon /></div>
                   )}
-                  <div className="grid gap-2 p-3">
-                    <label className="flex items-center gap-2 text-xs">
+                  {candidate.coverPath === sourcePath && isSelected && <span className="review-cover-badge">封面</span>}
+                  <div className="review-media-actions">
+                    <label className="review-keep-toggle">
                       <input type="checkbox" checked={isSelected} onChange={() => {
                         const next = new Set(selectedMedia);
                         if (next.has(sourcePath)) next.delete(sourcePath); else next.add(sourcePath);
@@ -396,13 +454,10 @@ function DetailEditor({
         ) : <p className="mt-5 text-sm text-muted">这个候选事件没有可用媒体。</p>}
       </section>
 
-      <section className="surface p-5 sm:p-7">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <span className="eyebrow">Original messages</span>
-            <h3 className="mt-2 font-heading text-xl font-bold">原始消息</h3>
-          </div>
-          <span className="text-xs text-muted">{selectedMessages.size}/{detail.messages.length} 已选择</span>
+      <section className="surface review-detail-card">
+        <div className="review-card-head">
+          <SectionHeading index="04" title="原始消息" meta="勾选会随事件进入网站的聊天片段" />
+          <span className="review-count-badge">{selectedMessages.size}/{detail.messages.length} 已选择</span>
         </div>
         {detail.messages.length ? (
           <div className="mt-5">
@@ -426,6 +481,113 @@ function DetailEditor({
         ) : <p className="mt-5 text-sm text-muted">照片事件没有聊天原文。</p>}
       </section>
     </div>
+  );
+}
+
+function ReviewInspector({
+  detail,
+  overview,
+}: {
+  detail: CandidateDetail | null;
+  overview: ReviewOverview;
+}) {
+  const candidate = detail?.candidate;
+  const approved = overview.candidates.filter((item) => item.status === "approved");
+  const approvedMedia = approved.reduce((total, item) => total + item.selectedMediaCount, 0);
+  const approvedMessages = approved.reduce((total, item) => total + item.selectedMessageCount, 0);
+  const approvedChapters = new Set(approved.map((item) => item.chapterId)).size;
+  const selectedMedia = candidate?.selectedMediaPaths.length ?? 0;
+  const selectedMessages = candidate?.selectedMessageIds.length ?? 0;
+  const hasValidCover = Boolean(
+    candidate?.coverPath && candidate.selectedMediaPaths.includes(candidate.coverPath),
+  );
+  const checks = candidate
+    ? [
+        {
+          done: candidate.title.trim().length > 0,
+          label: "标题非空",
+          detail: candidate.title.trim() ? "已填写" : "请填写标题",
+        },
+        {
+          done: candidate.summary.trim().length > 0,
+          label: "摘要已整理",
+          detail: candidate.summary.trim() ? "已填写" : "建议补一句可读叙事",
+        },
+        {
+          done: selectedMedia > 0 || candidate.mediaPaths.length === 0,
+          label: "精选媒体",
+          detail: candidate.mediaPaths.length ? `${selectedMedia} 张已保留` : "无媒体候选",
+        },
+        {
+          done: hasValidCover || candidate.mediaPaths.length === 0,
+          label: "有效封面",
+          detail: hasValidCover ? "封面已选" : "请选择保留媒体作为封面",
+        },
+        {
+          done: Boolean(candidate.privacyLevel),
+          label: "地点隐私",
+          detail: privacyLabel(candidate.privacyLevel),
+        },
+      ]
+    : [];
+
+  return (
+    <aside className="review-inspector">
+      <section className="review-inspector-card">
+        <div className="review-inspector-title">
+          <ListChecks size={16} />
+          审核检查
+        </div>
+        {candidate ? (
+          <div className="review-check-list">
+            {checks.map((check) => (
+              <div key={check.label} className="review-check-row">
+                <span className={check.done ? "is-done" : ""}>
+                  {check.done ? <Check size={12} /> : <CircleAlert size={12} />}
+                </span>
+                <div>
+                  <b>{check.label}</b>
+                  <em>{check.detail}</em>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted">选择一个候选事件后，这里会显示发布前检查项。</p>
+        )}
+      </section>
+
+      <section className="review-inspector-card">
+        <div className="review-inspector-title">
+          <FileCheck2 size={16} />
+          当前候选
+        </div>
+        {candidate ? (
+          <dl className="review-inspector-data">
+            <div><dt>状态</dt><dd>{statusLabel(candidate.status)}</dd></div>
+            <div><dt>分类</dt><dd>{categoryLabel(candidate.category)}</dd></div>
+            <div><dt>媒体</dt><dd>{selectedMedia}/{candidate.mediaPaths.length}</dd></div>
+            <div><dt>消息</dt><dd>{selectedMessages}/{detail?.messages.length ?? 0}</dd></div>
+            <div><dt>隐私</dt><dd>{privacyLabel(candidate.privacyLevel)}</dd></div>
+          </dl>
+        ) : (
+          <p className="text-sm text-muted">暂无候选。</p>
+        )}
+      </section>
+
+      <section className="review-inspector-card">
+        <div className="review-inspector-title">
+          <BarChart3 size={16} />
+          发布清单
+        </div>
+        <dl className="review-publish-summary">
+          <div><dt>已批准事件</dt><dd>{approved.length}</dd></div>
+          <div><dt>媒体总数</dt><dd>{approvedMedia}</dd></div>
+          <div><dt>消息总数</dt><dd>{approvedMessages}</dd></div>
+          <div><dt>涉及章节</dt><dd>{approvedChapters}</dd></div>
+        </dl>
+      </section>
+    </aside>
   );
 }
 
@@ -606,6 +768,22 @@ export function ImportReviewWorkbench({
 
   const approved = overview.candidates.filter((candidate) => candidate.status === "approved").length;
   const draft = overview.candidates.filter((candidate) => candidate.status === "draft").length;
+  const rejected = overview.candidates.filter((candidate) => candidate.status === "rejected").length;
+  const filterCounts: Record<Filter, number> = {
+    all: overview.candidates.length,
+    draft,
+    approved,
+    rejected,
+    event: overview.candidates.filter((candidate) => candidate.classification === "event").length,
+    unclassified: overview.candidates.filter((candidate) => candidate.classification === "unclassified").length,
+  };
+  const stats = [
+    { label: "全部候选", value: overview.candidates.length, icon: ListChecks, tone: "neutral" },
+    { label: "待审核", value: draft, icon: Clock3, tone: "pending" },
+    { label: "已批准", value: approved, icon: CheckCircle2, tone: "approved" },
+    { label: "章节", value: overview.chapters.length, icon: ShieldCheck, tone: "chapter" },
+  ];
+  const dryRunRecord = dryRun ?? {};
 
   return (
     <main className="review-shell">
@@ -615,14 +793,21 @@ export function ImportReviewWorkbench({
           <h1 className="mt-2 font-heading text-2xl font-bold">本地记忆审核台</h1>
           <p className="mt-1 text-xs text-muted">原始数据不会上传；只有批准事件才会进入发布清单。</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <label className="label !flex !grid-cols-none !flex-row items-center gap-2 text-xs">
-            审核人
-            <select className="field !min-h-0 !w-auto !py-2 text-xs" value={reviewer} onChange={(event) => chooseReviewer(event.target.value)}>
-              <option value={reviewLabels.self}>{reviewLabels.self}</option>
-              <option value={reviewLabels.partner}>{reviewLabels.partner}</option>
-            </select>
-          </label>
+        <div className="review-toolbar-actions">
+          <div className="reviewer-switch" aria-label="审核人">
+            <span><UserRound size={13} /> 审核人</span>
+            {[reviewLabels.self, reviewLabels.partner].map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={reviewer === name ? "is-active" : ""}
+                onClick={() => chooseReviewer(name)}
+              >
+                <i />
+                {name}
+              </button>
+            ))}
+          </div>
           <button className="button-secondary" onClick={() => startLoading(refresh)} disabled={loading}><RefreshCw size={16} />刷新</button>
           <button className="button-primary" onClick={showDryRun} disabled={loading}><Play size={16} />发布预览</button>
         </div>
@@ -631,17 +816,25 @@ export function ImportReviewWorkbench({
       {error && <div className="review-global-error"><CircleAlert size={16} />{error}<button onClick={() => setError("")}><X size={14} /></button></div>}
 
       <section className="review-stats">
-        <span className="review-stat-card"><b>{overview.candidates.length}</b> 全部候选</span>
-        <span className="review-stat-card"><b>{draft}</b> 待审核</span>
-        <span className="review-stat-card"><b>{approved}</b> 已批准</span>
-        <span className="review-stat-card"><b>{overview.chapters.length}</b> 章节</span>
+        {stats.map((item) => {
+          const Icon = item.icon;
+          return (
+            <span key={item.label} className={`review-stat-card is-${item.tone}`}>
+              <i><Icon size={15} /></i>
+              <span><b>{item.value}</b>{item.label}</span>
+            </span>
+          );
+        })}
       </section>
 
       <div className="review-layout">
         <aside className="review-sidebar">
-          <div className="sticky top-0 z-10 grid gap-3 bg-background pb-4">
-            <input className="field" placeholder="搜索标题、地点或关键词" value={query} onChange={(event) => setQuery(event.target.value)} />
-            <div className="flex flex-wrap gap-2">
+          <div className="review-sidebar-tools">
+            <label className="review-search">
+              <Search size={16} />
+              <input placeholder="搜索标题、地点或关键词" value={query} onChange={(event) => setQuery(event.target.value)} />
+            </label>
+            <div className="review-filter-row">
               {([
                 ["all", "全部"],
                 ["draft", "待审核"],
@@ -649,13 +842,16 @@ export function ImportReviewWorkbench({
                 ["event", "事件"],
                 ["unclassified", "碎片"],
               ] as [Filter, string][]).map(([value, label]) => (
-                <button key={value} className={`review-filter ${filter === value ? "is-active" : ""}`} onClick={() => setFilter(value)}>{label}</button>
+                <button key={value} className={`review-filter ${filter === value ? "is-active" : ""}`} onClick={() => setFilter(value)}>
+                  {label}
+                  <span>{filterCounts[value]}</span>
+                </button>
               ))}
             </div>
             {selectedForMerge.size > 1 && (
               <button className="button-primary" onClick={merge} disabled={loading}><GitMerge size={16} />合并 {selectedForMerge.size} 个事件</button>
             )}
-            <div className="flex items-center justify-between gap-3 text-xs text-muted">
+            <div className="review-list-pager">
               <span>{filtered.length} 条 · 第 {page + 1}/{pageCount} 页</span>
               <div className="flex gap-1">
                 <button className="button-secondary size-8 !min-h-0 !p-0" disabled={page === 0} onClick={() => setPage((value) => value - 1)} aria-label="上一页"><ChevronLeft size={14} /></button>
@@ -663,7 +859,7 @@ export function ImportReviewWorkbench({
               </div>
             </div>
           </div>
-          <div className="grid gap-3">
+          <div className="review-candidate-list">
             {visibleCandidates.map((candidate) => (
               <article key={candidate.id} className={`review-candidate ${candidate.id === selectedId ? "is-active" : ""}`}>
                 <div className="flex gap-3">
@@ -678,15 +874,18 @@ export function ImportReviewWorkbench({
                     aria-label="选择合并"
                   />
                   <button className="min-w-0 flex-1 text-left" onClick={() => setSelectedId(candidate.id)}>
-                    <time className="text-xs text-muted">{formatTime(candidate.startAt)}</time>
-                    <h2 className="mt-1 line-clamp-2 font-heading font-bold">{candidate.title}</h2>
+                    <div className="review-candidate-kicker">
+                      <time>{formatTime(candidate.startAt)}</time>
+                      <span>{candidate.classification === "event" ? "事件" : "碎片"}</span>
+                    </div>
+                    <h2>{candidate.title}</h2>
                     {candidate.lastEditedBy && (
-                      <p className="mt-1 text-[.68rem] text-muted">
+                      <p className="review-candidate-edited">
                         {candidate.lastEditedBy} 编辑
                         {candidate.lastEditedAt ? ` · ${formatTime(candidate.lastEditedAt)}` : ""}
                       </p>
                     )}
-                    <div className="mt-3"><CandidateBadge candidate={candidate} /></div>
+                    <CandidateBadge candidate={candidate} />
                   </button>
                 </div>
               </article>
@@ -712,11 +911,12 @@ export function ImportReviewWorkbench({
             <div className="surface grid min-h-64 place-items-center text-muted">选择一个候选事件开始整理</div>
           )}
         </section>
+        <ReviewInspector detail={detail} overview={overview} />
       </div>
 
       {dryRun && (
         <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setDryRun(null)}>
-          <section className="modal-card p-6 sm:p-8">
+          <section className="modal-card review-publish-modal p-6 sm:p-8">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span className="eyebrow">Dry run</span>
@@ -724,7 +924,22 @@ export function ImportReviewWorkbench({
               </div>
               <button className="button-secondary size-10 !p-0" onClick={() => setDryRun(null)}><X size={16} /></button>
             </div>
-            <pre className="mt-6 max-h-[60vh] overflow-auto rounded-soft bg-[var(--color-surface-soft)] p-4 text-xs leading-6">{JSON.stringify(dryRun, null, 2)}</pre>
+            <div className="review-dryrun-grid">
+              {([
+                ["事件", dryRunRecord.events],
+                ["章节", dryRunRecord.chapters],
+                ["媒体", dryRunRecord.media],
+                ["消息", dryRunRecord.messages],
+                ["语音", dryRunRecord.voices],
+                ["原始媒体 MiB", dryRunRecord.originalMediaMiB],
+              ] satisfies Array<[string, unknown]>).map(([label, value]) => (
+                <div key={label} className="review-dryrun-card">
+                  <b>{String(value ?? 0)}</b>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+            <pre className="review-dryrun-json">{JSON.stringify(dryRun, null, 2)}</pre>
             <p className="mt-4 text-sm text-muted">这只是预览，不会连接 Neon 或 R2。</p>
           </section>
         </div>

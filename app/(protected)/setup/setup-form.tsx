@@ -3,6 +3,7 @@
 import { Save, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { EmojiTextField } from "@/components/emoji-text-field";
 
 type SetupFormProps = {
   relationship: {
@@ -114,14 +115,14 @@ export function SetupForm({ relationship, profiles, isDemo }: SetupFormProps) {
     <form onSubmit={submit} className="surface mt-8 grid gap-5 p-6 sm:p-8">
       <label className="label">
         网站标题
-        <input
-          className="field"
+        <EmojiTextField
           name="title"
           value={draft.title}
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, title: event.target.value }))
+          onChange={(value) =>
+            setDraft((current) => ({ ...current, title: value }))
           }
           required
+          emojis={["💕", "🌍", "🪐", "✨", "🌙", "🏠", "🐾", "🌸"]}
         />
       </label>
       <div className="grid gap-5 sm:grid-cols-2">
@@ -159,11 +160,12 @@ export function SetupForm({ relationship, profiles, isDemo }: SetupFormProps) {
       {profiles.map((profile, index) => (
         <label className="label" key={profile.id}>
           {index === 0 ? "第一个人的显示名字" : "第二个人的显示名字"}
-          <input
-            className="field"
+          <EmojiTextField
             name={`profile_${profile.id}`}
             value={draft.profileNames[profile.id] ?? ""}
-            onChange={(event) => updateProfileName(profile.id, event.target.value)}
+            onChange={(value) => updateProfileName(profile.id, value)}
+            maxLength={40}
+            emojis={["💕", "✨", "🌙", "☀️", "🐱", "🐶", "🌸", "🫶"]}
           />
         </label>
       ))}

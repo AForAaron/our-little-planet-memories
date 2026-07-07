@@ -3,6 +3,7 @@
 import { Check, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { EmojiTextField } from "@/components/emoji-text-field";
 
 type Wish = {
   id: string;
@@ -90,27 +91,28 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
         <h2 className="font-heading text-xl font-bold">写下一个愿望</h2>
         <label className="label mt-5">
           想一起完成什么
-          <input
-            className="field"
+          <EmojiTextField
             name="title"
             value={draft.title}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, title: event.target.value }))
+            onChange={(value) =>
+              setDraft((current) => ({ ...current, title: value }))
             }
             maxLength={120}
             required
+            emojis={["✨", "🌍", "✈️", "🍽️", "🎬", "🎡", "🏔️", "🌊", "🎂", "💕"]}
           />
         </label>
         <label className="label mt-4">
           补充说明
-          <textarea
-            className="field min-h-24"
+          <EmojiTextField
+            as="textarea"
+            className="min-h-24"
             name="description"
             value={draft.description}
-            onChange={(event) =>
+            onChange={(value) =>
               setDraft((current) => ({
                 ...current,
-                description: event.target.value,
+                description: value,
               }))
             }
             maxLength={500}
