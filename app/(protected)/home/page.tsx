@@ -56,7 +56,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mt-11">
-        <SectionHeading title="关于时间" description="把每一个值得记住的日子留下来" />
+        <SectionHeading title="关于时间" description="把每一个值得记住的日子留下来" href="/time" />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <FeatureCard icon={Waypoints} name="恋爱时间轴" stat={`${count} 条共同回忆`} href="/time/timeline" />
           <FeatureCard icon={Infinity} name="在一起计数" stat={`第 ${days || "—"} 天`} href="/time/counter" />
@@ -66,7 +66,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mt-10">
-        <SectionHeading title="关于足迹" description="走过的路，都是我们的地图" tone="amber" />
+        <SectionHeading title="关于足迹" description="走过的路，都是我们的地图" href="/places" tone="amber" />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <FeatureCard icon={Map} name="足迹地图" stat={`${counts.trip ?? 0} 段旅程`} href="/places/map" tone="amber" />
           <FeatureCard icon={MapPin} name="探店地图" stat={`${counts.food ?? 0} 次探店`} href="/places/food" tone="amber" />
@@ -74,7 +74,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mt-10">
-        <SectionHeading title="关于日常" description="平淡的每一天，也想和你一起记录" tone="pink" />
+        <SectionHeading title="关于日常" description="平淡的每一天，也想和你一起记录" href="/daily" tone="pink" />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <FeatureCard icon={NotebookPen} name="共同日记" stat={`${counts.diary ?? 0} 篇日记`} href="/daily/diary" tone="pink" />
           <FeatureCard icon={ListChecks} name="愿望清单" stat="一起完成的小目标" href="/daily/wishlist" tone="pink" />

@@ -430,7 +430,7 @@ function DetailEditor({
 }
 
 export function ImportReviewWorkbench({
-  reviewLabels = { self: "我", partner: "她" },
+  reviewLabels = { self: "张张", partner: "沈沈" },
 }: {
   reviewLabels?: { self: string; partner: string };
 }) {
@@ -448,8 +448,14 @@ export function ImportReviewWorkbench({
 
   useEffect(() => {
     const saved = window.localStorage.getItem("little-planet-reviewer");
-    if (saved) setReviewer(saved);
-  }, []);
+    const allowed = new Set([reviewLabels.self, reviewLabels.partner]);
+    if (saved && allowed.has(saved)) {
+      setReviewer(saved);
+      return;
+    }
+    setReviewer(reviewLabels.self);
+    window.localStorage.setItem("little-planet-reviewer", reviewLabels.self);
+  }, [reviewLabels.self, reviewLabels.partner]);
 
   function chooseReviewer(value: string) {
     setReviewer(value);

@@ -1,15 +1,21 @@
-import { Globe2, MapPin } from "lucide-react";
+import { ArrowLeft, Globe2, MapPin } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { EntryCategoryPage } from "@/components/entry-category-page";
+import { TimelineView } from "@/components/timeline-view";
 import { WorldMap } from "@/components/world-map";
-import { getMapPoints } from "@/lib/data/memories";
+import { getEntriesData, getMapPoints } from "@/lib/data/memories";
 import { formatDate } from "@/lib/utils";
 
 async function MapDataPage({ foodOnly = false }: { foodOnly?: boolean }) {
-  const points = await getMapPoints(foodOnly);
+  const [points, foodEntries] = await Promise.all([
+    getMapPoints(foodOnly),
+    foodOnly ? getEntriesData(["food"]) : Promise.resolve(null),
+  ]);
   return (
     <main className="page-shell">
+      <Link href="/places" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-text">
+        <ArrowLeft size={17} /> 关于足迹
+      </Link>
       <span className="eyebrow"><Globe2 size={14} /> {foodOnly ? "Food map" : "Our world"}</span>
       <h1 className="mt-3 font-heading text-4xl font-bold sm:text-5xl">{foodOnly ? "探店地图" : "足迹地图"}</h1>
       <p className="mt-4 max-w-2xl leading-7 text-muted">
@@ -30,6 +36,23 @@ async function MapDataPage({ foodOnly = false }: { foodOnly?: boolean }) {
           </Link>
         ))}
       </div>
+      {foodEntries && (
+        <section className="mt-12">
+          <div className="mb-8 max-w-2xl">
+            <span className="eyebrow">Food memories</span>
+            <h2 className="mt-3 font-heading text-3xl font-bold sm:text-4xl">探店记录</h2>
+            <p className="mt-4 leading-7 text-muted">
+              吃过的味道、给过的评分，以及值得再去一次的地方。
+            </p>
+          </div>
+          <TimelineView
+            entries={foodEntries.entries}
+            currentUserId={foodEntries.userId}
+            isDemo={foodEntries.isDemo}
+            defaultCategory="food"
+          />
+        </section>
+      )}
     </main>
   );
 }
@@ -41,15 +64,6 @@ export default async function PlacesFeaturePage({
 }) {
   const { feature } = await params;
   if (feature === "map") return <MapDataPage />;
-  if (feature === "food") {
-    return (
-      <>
-        <MapDataPage foodOnly />
-        <div className="mt-10">
-          <EntryCategoryPage title="探店记录" description="吃过的味道、给过的评分，以及值得再去一次的地方。" eyebrow="Food memories" categories={["food"]} backHref="/home" />
-        </div>
-      </>
-    );
-  }
+  if (feature === "food") return <MapDataPage foodOnly />;
   notFound();
 }

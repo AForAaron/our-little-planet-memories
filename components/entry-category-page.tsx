@@ -10,18 +10,20 @@ export async function EntryCategoryPage({
   eyebrow,
   categories,
   backHref,
+  backLabel = "返回",
 }: {
   title: string;
   description: string;
   eyebrow: string;
   categories: EntryCategory[];
   backHref: string;
+  backLabel?: string;
 }) {
   const { entries, userId, isDemo } = await getEntriesData(categories);
   return (
     <main className="page-shell">
       <Link href={backHref} className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-text">
-        <ArrowLeft size={17} /> 返回
+        <ArrowLeft size={17} /> {backLabel}
       </Link>
       <div className="mb-10 max-w-2xl">
         <span className="eyebrow">{eyebrow}</span>

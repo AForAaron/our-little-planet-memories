@@ -27,8 +27,8 @@ export default async function ReviewPage() {
   return (
     <ImportReviewWorkbench
       reviewLabels={{
-        self: process.env.REVIEW_SELF_LABEL || "我",
-        partner: process.env.REVIEW_PARTNER_LABEL || "她",
+        self: process.env.REVIEW_SELF_LABEL || "张张",
+        partner: process.env.REVIEW_PARTNER_LABEL || "沈沈",
       }}
     />
   );

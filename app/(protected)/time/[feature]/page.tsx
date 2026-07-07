@@ -1,4 +1,5 @@
-import { CalendarHeart, Infinity } from "lucide-react";
+import { ArrowLeft, CalendarHeart, Infinity } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EntryCategoryPage } from "@/components/entry-category-page";
 import { getEntriesData } from "@/lib/data/memories";
@@ -24,6 +25,9 @@ async function CounterPage() {
   const milestone = nextMilestone(days);
   return (
     <main className="page-shell">
+      <Link href="/time" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-text">
+        <ArrowLeft size={17} /> 关于时间
+      </Link>
       <section className="hero mx-auto max-w-4xl rounded-theme p-8 text-center sm:p-14">
         <Infinity className="mx-auto" size={38} />
         <p className="mt-6 text-sm font-semibold opacity-85">从 {relationship.together_since ?? "尚未设置"} 开始</p>
@@ -64,6 +68,7 @@ async function AnniversariesPage() {
         eyebrow="Anniversaries"
         categories={["anniversary"]}
         backHref="/time"
+        backLabel="关于时间"
       />
     </>
   );
@@ -78,10 +83,10 @@ export default async function TimeFeaturePage({
   if (feature === "counter") return <CounterPage />;
   if (feature === "anniversaries") return <AnniversariesPage />;
   if (feature === "firsts") {
-    return <EntryCategoryPage title="第一次合集" description="第一次见面、第一次旅行，以及后来所有值得记住的第一次。" eyebrow="Our firsts" categories={["first"]} backHref="/time" />;
+    return <EntryCategoryPage title="第一次合集" description="第一次见面、第一次旅行，以及后来所有值得记住的第一次。" eyebrow="Our firsts" categories={["first"]} backHref="/time" backLabel="关于时间" />;
   }
   if (feature === "milestones") {
-    return <EntryCategoryPage title="重要里程碑" description="把关系里那些真正改变了什么的节点留下来。" eyebrow="Milestones" categories={["milestone"]} backHref="/time" />;
+    return <EntryCategoryPage title="重要里程碑" description="把关系里那些真正改变了什么的节点留下来。" eyebrow="Milestones" categories={["milestone"]} backHref="/time" backLabel="关于时间" />;
   }
   notFound();
 }

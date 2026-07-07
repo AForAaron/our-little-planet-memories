@@ -146,7 +146,7 @@ export default function LeafletWorldMap({
     return (
       <div className="world-map world-map-empty" style={{ minHeight: height }}>
         <p>还没有带地点的回忆。创建事件时填写地点坐标后，它会出现在这里。</p>
-        <Link className="button-primary" href="/time/timeline">新增一条回忆</Link>
+        <Link className="button-primary" href="/time/timeline?new=1">新增一条回忆</Link>
       </div>
     );
   }

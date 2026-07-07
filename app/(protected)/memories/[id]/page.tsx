@@ -7,6 +7,27 @@ import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+function backTargetForCategory(category: string) {
+  switch (category) {
+    case "trip":
+      return { href: "/places/map", label: "返回足迹地图" };
+    case "food":
+      return { href: "/places/food", label: "返回探店地图" };
+    case "diary":
+      return { href: "/daily/diary", label: "返回共同日记" };
+    case "watch":
+      return { href: "/daily/watch", label: "返回观影记录" };
+    case "anniversary":
+      return { href: "/time/anniversaries", label: "返回纪念日" };
+    case "first":
+      return { href: "/time/firsts", label: "返回第一次合集" };
+    case "milestone":
+      return { href: "/time/milestones", label: "返回重要里程碑" };
+    default:
+      return { href: "/time/timeline", label: "返回时间轴" };
+  }
+}
+
 export default async function MemoryDetailPage({
   params,
 }: {
@@ -16,11 +37,12 @@ export default async function MemoryDetailPage({
   const detail = await getMemoryDetail(id);
   if (!detail?.entry) notFound();
   const { entry, chapter, place, messages } = detail;
+  const backTarget = backTargetForCategory(entry.category);
 
   return (
     <main className="page-shell">
-      <Link href="/time/timeline" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-text">
-        <ArrowLeft size={17} /> 返回时间轴
+      <Link href={backTarget.href} className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-text">
+        <ArrowLeft size={17} /> {backTarget.label}
       </Link>
       <article className="mx-auto max-w-4xl">
         <div className="mb-8">
@@ -75,8 +97,8 @@ export default async function MemoryDetailPage({
             <div className="surface mt-5 p-4 sm:p-6">
               <ChatBubbleThread
                 messages={messages}
-                selfLabel={process.env.REVIEW_SELF_LABEL || "我"}
-                partnerLabel={process.env.REVIEW_PARTNER_LABEL || "她"}
+                selfLabel={process.env.REVIEW_SELF_LABEL || "张张"}
+                partnerLabel={process.env.REVIEW_PARTNER_LABEL || "沈沈"}
               />
             </div>
           </section>
