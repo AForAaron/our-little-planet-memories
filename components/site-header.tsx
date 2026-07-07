@@ -4,10 +4,10 @@ import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 import { signOut } from "@/app/login/actions";
 
-export function SiteHeader({ isDemo = false }: { isDemo?: boolean }) {
+export function SiteHeader({ isDemo = false, title }: { isDemo?: boolean; title?: string | null }) {
   return (
     <header className="page-shell flex items-center justify-between gap-4 py-7">
-      <Logo />
+      <Logo title={title} />
       <div className="flex items-center gap-2 sm:gap-3">
         {isDemo && (
           <span className="hidden rounded-full bg-[var(--color-amber-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--color-amber)] sm:inline">
