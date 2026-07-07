@@ -44,6 +44,13 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return result;
 }
 
+function reviewHeaders(reviewer: string): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    "x-reviewer-label": encodeURIComponent(reviewer),
+  };
+}
+
 function formatTime(value: string) {
   return new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Shanghai",
@@ -201,10 +208,7 @@ function DetailEditor({
         };
         const result = await api<{ candidate: typeof candidate }>(`/api/import-review/candidate/${encodeURIComponent(candidate.id)}`, {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "x-reviewer-label": reviewer,
-          },
+          headers: reviewHeaders(reviewer),
           body: JSON.stringify(body),
         });
         setCandidate(result.candidate);
@@ -221,12 +225,15 @@ function DetailEditor({
   return (
     <div className="grid gap-6">
       <section className="surface p-5 sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="review-detail-hero">
           <div>
             <span className="eyebrow">Candidate detail</span>
             <h2 className="mt-2 font-heading text-2xl font-bold">整理这个记忆点</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">
+              先确认边界，再整理标题、摘要、地点和精选媒体。只批准真正想进入网站的内容。
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="review-action-bar">
             <button className="button-secondary" type="button" onClick={() => save("rejected")} disabled={saving}>
               <X size={16} /> 拒绝
             </button>
@@ -260,14 +267,20 @@ function DetailEditor({
               <span className="ml-3">版本 {candidate.revision ?? 0}</span>
             </div>
           )}
-          <label className="label md:col-span-2">
-            标题
-            <input className="field" value={candidate.title} onChange={(event) => patch("title", event.target.value)} />
-          </label>
-          <label className="label md:col-span-2">
-            记忆摘要
-            <textarea className="field min-h-28 resize-y" value={candidate.summary} onChange={(event) => patch("summary", event.target.value)} />
-          </label>
+          <div className="review-form-section md:col-span-2">
+            <div>
+              <h3 className="font-heading text-lg font-bold">故事本身</h3>
+              <p className="mt-1 text-xs text-muted">标题给人看，摘要给未来的你们看。</p>
+            </div>
+            <label className="label">
+              标题
+              <input className="field" value={candidate.title} onChange={(event) => patch("title", event.target.value)} />
+            </label>
+            <label className="label">
+              记忆摘要
+              <textarea className="field min-h-28 resize-y" value={candidate.summary} onChange={(event) => patch("summary", event.target.value)} />
+            </label>
+          </div>
           <label className="label">
             所属章节
             <select className="field" value={candidate.chapterId} onChange={(event) => patch("chapterId", event.target.value)}>
@@ -516,10 +529,7 @@ export function ImportReviewWorkbench({
       try {
         const result = await api<{ candidate: CandidateSummary }>("/api/import-review/merge", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-reviewer-label": reviewer,
-          },
+          headers: reviewHeaders(reviewer),
           body: JSON.stringify({ ids: [...selectedForMerge] }),
         });
         setSelectedForMerge(new Set());
@@ -535,10 +545,7 @@ export function ImportReviewWorkbench({
     if (!detail || !window.confirm("从这条消息开始拆成一个新的候选事件？")) return;
     const result = await api<{ candidates: CandidateSummary[] }>("/api/import-review/split", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-reviewer-label": reviewer,
-      },
+      headers: reviewHeaders(reviewer),
       body: JSON.stringify({
         candidateId: detail.candidate.id,
         splitMessageId: messageId,
@@ -554,10 +561,7 @@ export function ImportReviewWorkbench({
       "/api/import-review/split-photos",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-reviewer-label": reviewer,
-        },
+        headers: reviewHeaders(reviewer),
         body: JSON.stringify({
           candidateId: detail.candidate.id,
           splitPhotoPath: sourcePath,
@@ -621,10 +625,10 @@ export function ImportReviewWorkbench({
       {error && <div className="review-global-error"><CircleAlert size={16} />{error}<button onClick={() => setError("")}><X size={14} /></button></div>}
 
       <section className="review-stats">
-        <span><b>{overview.candidates.length}</b> 全部候选</span>
-        <span><b>{draft}</b> 待审核</span>
-        <span><b>{approved}</b> 已批准</span>
-        <span><b>{overview.chapters.length}</b> 章节</span>
+        <span className="review-stat-card"><b>{overview.candidates.length}</b> 全部候选</span>
+        <span className="review-stat-card"><b>{draft}</b> 待审核</span>
+        <span className="review-stat-card"><b>{approved}</b> 已批准</span>
+        <span className="review-stat-card"><b>{overview.chapters.length}</b> 章节</span>
       </section>
 
       <div className="review-layout">

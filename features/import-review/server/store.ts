@@ -101,7 +101,11 @@ export function validateReviewAccessToken(token: string) {
 
 export function getReviewActor(request: Request) {
   const raw = request.headers.get("x-reviewer-label")?.trim() || "";
-  return raw.slice(0, 24) || "我";
+  try {
+    return decodeURIComponent(raw).slice(0, 24) || "我";
+  } catch {
+    return raw.slice(0, 24) || "我";
+  }
 }
 
 function requestHasValidReviewCookie(request: Request) {

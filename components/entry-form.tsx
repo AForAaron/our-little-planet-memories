@@ -134,6 +134,12 @@ function initialDraft(entry: Entry | null | undefined, defaultCategory: EntryCat
   };
 }
 
+function looksLikeNullIsland(latitude: string, longitude: string) {
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) < 1 && Math.abs(lng) < 1;
+}
+
 export function EntryForm({
   entry,
   onClose,
@@ -247,6 +253,12 @@ export function EntryForm({
     updateDraft("longitude", result.longitude);
     setGeocodeResults([]);
     setMapOpen(true);
+  }
+
+  function clearCoordinates() {
+    updateDraft("latitude", "");
+    updateDraft("longitude", "");
+    setLocationError("");
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -428,8 +440,19 @@ export function EntryForm({
                     <span className="mt-1 block text-xs text-muted">
                       {result.latitude}, {result.longitude}
                     </span>
+                    <span className="mt-2 inline-flex rounded-full bg-[var(--color-accent-soft)] px-3 py-1 text-xs font-semibold text-accent">
+                      使用这个位置
+                    </span>
                   </button>
                 ))}
+              </div>
+            )}
+            {looksLikeNullIsland(draft.latitude, draft.longitude) && (
+              <div className="rounded-soft bg-[var(--color-amber-soft)] p-3 text-sm leading-6 text-[var(--color-amber)]">
+                当前坐标接近 0,0，通常是误点到海面或搜索结果不正确。建议清空坐标后重新搜索城市/街道，或打开地图放大后再点选。
+                <button className="review-text-button ml-2" type="button" onClick={clearCoordinates}>
+                  清空坐标
+                </button>
               </div>
             )}
             {locationError && (

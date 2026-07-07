@@ -29,6 +29,43 @@ function normalizeQuery(value: string) {
   return value.trim().replace(/\s+/g, " ").slice(0, 160);
 }
 
+const REGION_TOKENS = [
+  "新疆",
+  "伊宁",
+  "伊宁市",
+  "伊犁",
+  "乌鲁木齐",
+  "北京",
+  "上海",
+  "广州",
+  "深圳",
+  "杭州",
+  "成都",
+  "重庆",
+  "西安",
+  "南京",
+  "苏州",
+  "合肥",
+  "青海",
+  "甘肃",
+  "西藏",
+  "云南",
+  "四川",
+  "浙江",
+  "江苏",
+  "安徽",
+];
+
+function requestedRegionTokens(query: string) {
+  return REGION_TOKENS.filter((token) => query.includes(token));
+}
+
+function matchesRequestedRegion(result: GeocodeResult, tokens: string[]) {
+  if (!tokens.length) return true;
+  const haystack = `${result.name} ${result.displayName}`;
+  return tokens.some((token) => haystack.includes(token));
+}
+
 function jsonError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
@@ -78,6 +115,7 @@ export async function GET(request: Request) {
   }
 
   const rawResults = (await response.json()) as NominatimResult[];
+  const tokens = requestedRegionTokens(query);
   const results = rawResults
     .map((item): GeocodeResult | null => {
       const latitude = item.lat ? Number(item.lat) : NaN;
@@ -92,7 +130,8 @@ export async function GET(request: Request) {
         ...(category ? { category } : {}),
       };
     })
-    .filter((item): item is GeocodeResult => Boolean(item));
+    .filter((item): item is GeocodeResult => Boolean(item))
+    .filter((item) => matchesRequestedRegion(item, tokens));
 
   cache.set(cacheKey, {
     expiresAt: Date.now() + 24 * 60 * 60 * 1000,
