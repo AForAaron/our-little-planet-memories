@@ -1,6 +1,6 @@
 "use client";
 
-import { Crosshair, ImagePlus, LoaderCircle, MapPinned, X } from "lucide-react";
+import { Crosshair, ImagePlus, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LocationPicker } from "@/components/location-picker";
@@ -41,6 +41,14 @@ type EntryDraft = {
   latitude: string;
   longitude: string;
   privacy_level: "exact" | "approximate" | "private";
+};
+
+type GeocodeResult = {
+  name: string;
+  displayName: string;
+  latitude: string;
+  longitude: string;
+  category?: string;
 };
 
 function localDateTime(iso?: string) {
@@ -139,6 +147,8 @@ export function EntryForm({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [locationError, setLocationError] = useState("");
+  const [geocodeResults, setGeocodeResults] = useState<GeocodeResult[]>([]);
+  const [geocodePending, setGeocodePending] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const draftKey = useMemo(
     () => `little-planet-entry-draft:${entry?.id ?? "new"}:${defaultCategory}`,
@@ -203,6 +213,40 @@ export function EntryForm({
         maximumAge: 60_000,
       },
     );
+  }
+
+  async function searchPlaceByName() {
+    const query = draft.place_name.trim();
+    setLocationError("");
+    setGeocodeResults([]);
+    if (!query) {
+      setLocationError("先输入地点名称，例如：伊宁 汉庭。");
+      return;
+    }
+    setGeocodePending(true);
+    try {
+      const response = await fetch(`/api/geocode/search?q=${encodeURIComponent(query)}`);
+      const result = await readJsonResponse<{ results?: GeocodeResult[] }>(response, "地点搜索失败。");
+      if (!response.ok) throw new Error(result.error || "地点搜索失败。");
+      const results = result.results ?? [];
+      if (!results.length) {
+        setLocationError("没有找到匹配地点。可以换一个更完整的名称，例如加城市、区县或省份。");
+        return;
+      }
+      setGeocodeResults(results);
+    } catch (caught) {
+      setLocationError(caught instanceof Error ? caught.message : "地点搜索失败，请稍后重试。");
+    } finally {
+      setGeocodePending(false);
+    }
+  }
+
+  function chooseGeocodeResult(result: GeocodeResult) {
+    updateDraft("place_name", result.name || result.displayName);
+    updateDraft("latitude", result.latitude);
+    updateDraft("longitude", result.longitude);
+    setGeocodeResults([]);
+    setMapOpen(true);
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -348,6 +392,15 @@ export function EntryForm({
               <button
                 className="button-secondary"
                 type="button"
+                onClick={searchPlaceByName}
+                disabled={geocodePending}
+              >
+                {geocodePending ? <LoaderCircle className="animate-spin" size={16} /> : <Search size={16} />}
+                {geocodePending ? "搜索中" : "搜索地点"}
+              </button>
+              <button
+                className="button-secondary"
+                type="button"
                 onClick={useCurrentLocation}
               >
                 <Crosshair size={16} /> 使用当前位置
@@ -360,6 +413,25 @@ export function EntryForm({
                 <MapPinned size={16} /> {mapOpen ? "收起地图" : "打开地图选择"}
               </button>
             </div>
+            {geocodeResults.length > 0 && (
+              <div className="grid gap-2 rounded-soft border border-line bg-[var(--color-surface-soft)] p-3">
+                <p className="text-xs font-semibold text-muted">选择一个搜索结果：</p>
+                {geocodeResults.map((result) => (
+                  <button
+                    key={`${result.latitude}:${result.longitude}:${result.displayName}`}
+                    className="rounded-soft border border-line bg-[var(--color-surface)] p-3 text-left transition hover:-translate-y-0.5"
+                    type="button"
+                    onClick={() => chooseGeocodeResult(result)}
+                  >
+                    <span className="block text-sm font-semibold">{result.name || "未命名地点"}</span>
+                    <span className="mt-1 block text-xs leading-5 text-muted">{result.displayName}</span>
+                    <span className="mt-1 block text-xs text-muted">
+                      {result.latitude}, {result.longitude}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
             {locationError && (
               <p className="rounded-soft bg-[var(--color-accent-soft)] p-3 text-sm text-[var(--color-danger)]">
                 {locationError}

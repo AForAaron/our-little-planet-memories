@@ -24,6 +24,7 @@ export default function proxy(request: NextRequest) {
 
   const apiHandlesOwnAuth =
     pathname === "/api/entries" ||
+    pathname.startsWith("/api/geocode/") ||
     pathname === "/api/settings" ||
     pathname === "/api/wishlist" ||
     pathname.startsWith("/api/uploads/");
