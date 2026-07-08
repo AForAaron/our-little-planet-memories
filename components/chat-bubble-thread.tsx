@@ -68,6 +68,12 @@ function isAudio(path: string) {
   return /\.(?:wav|m4a|mp3)$/i.test(path);
 }
 
+function chatRoleLabel(role: ChatBubbleMessage["senderRole"], selfLabel: string, partnerLabel: string) {
+  if (role === "self") return selfLabel.trim().slice(0, 1) || "张";
+  if (role === "partner") return partnerLabel.trim().slice(0, 1) || "沈";
+  return "系统";
+}
+
 function MediaPreview({
   media,
   src,
@@ -128,13 +134,7 @@ export function ChatBubbleThread({
             : message.senderRole === "self"
               ? "self"
               : "partner";
-        const name =
-          message.senderDisplayName ||
-          (message.senderRole === "self"
-            ? selfLabel
-            : message.senderRole === "partner"
-              ? partnerLabel
-              : "系统");
+        const name = chatRoleLabel(message.senderRole, selfLabel, partnerLabel);
 
         return (
           <div key={message.id} className="chat-message-wrap">

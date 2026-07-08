@@ -87,8 +87,8 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
 
   return (
     <div className="grid gap-7 lg:grid-cols-[.8fr_1.2fr]">
-      <form action={(formData) => run(() => createWishFromForm(formData))} className="surface h-fit p-6">
-        <h2 className="font-heading text-xl font-bold">写下一个愿望</h2>
+      <form action={(formData) => run(() => createWishFromForm(formData))} className="surface h-fit rounded-[24px] p-6">
+        <h2 className="font-heading text-xl font-semibold text-[#43332c]">写下一个愿望</h2>
         <label className="label mt-5">
           想一起完成什么
           <EmojiTextField
@@ -119,7 +119,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
           />
         </label>
         <p className="mt-3 text-xs leading-5 text-muted">愿望草稿会自动保存到这台电脑。</p>
-        <button className="button-primary mt-5" disabled={pending || isDemo}>
+        <button className="button-primary mt-5 h-[46px]" disabled={pending || isDemo}>
           <Plus size={17} /> 加入清单
         </button>
         {isDemo && <p className="mt-3 text-xs text-muted">演示模式暂不保存。</p>}
@@ -128,9 +128,9 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
       <section className="grid gap-3">
         {error && <p className="rounded-soft bg-[var(--color-accent-soft)] p-4 text-sm text-[var(--color-danger)]">{error}</p>}
         {items.map((item) => (
-          <article key={item.id} className={`surface flex items-start gap-4 p-5 ${item.isDone ? "opacity-65" : ""}`}>
+          <article key={item.id} className={`surface flex items-start gap-4 rounded-[20px] p-5 transition hover:-translate-y-0.5 ${item.isDone ? "opacity-65" : ""}`}>
             <button
-              className="button-secondary size-10 shrink-0 !p-0"
+              className="button-secondary size-10 shrink-0 !rounded-[13px] !p-0"
               disabled={pending || isDemo}
               onClick={() => run(() => toggleWish(item.id, !item.isDone))}
               aria-label={item.isDone ? "恢复愿望" : "完成愿望"}
@@ -138,11 +138,11 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
               {item.isDone ? <RotateCcw size={16} /> : <Check size={17} />}
             </button>
             <div className="min-w-0 flex-1">
-              <h3 className={`font-heading font-bold ${item.isDone ? "line-through" : ""}`}>{item.title}</h3>
+              <h3 className={`font-heading font-semibold text-[#43332c] ${item.isDone ? "line-through" : ""}`}>{item.title}</h3>
               {item.description && <p className="mt-1 text-sm leading-6 text-muted">{item.description}</p>}
             </div>
             <button
-              className="button-danger size-9 !p-0"
+              className="button-danger size-9 !rounded-[10px] !p-0"
               disabled={pending || isDemo}
               onClick={() => {
                 if (window.confirm("确定删除这个愿望吗？")) run(() => deleteWish(item.id));

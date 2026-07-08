@@ -1,12 +1,23 @@
 "use client";
 
-import { CalendarDays, ImageIcon, Pencil, Plus, Smile, Trash2 } from "lucide-react";
+import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Entry, EntryCategory } from "@/lib/database.types";
 import { formatDate } from "@/lib/utils";
 import { EntryForm } from "./entry-form";
+
+function dateParts(value: string) {
+  const date = new Date(value);
+  return {
+    monthDay: new Intl.DateTimeFormat("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+    }).format(date).replace("/", "."),
+    year: String(date.getFullYear()),
+  };
+}
 
 export function TimelineView({
   entries,
@@ -50,76 +61,80 @@ export function TimelineView({
   return (
     <>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-muted">共收藏了 <b className="text-text">{entries.length}</b> 段故事</p>
-        <button className="button-primary" onClick={() => setEditing("new")}>
-          <Plus size={18} /> 写一段回忆
+        <p className="text-[15px] leading-7 text-muted">
+          共收藏了 <b className="text-[var(--color-accent)]">{entries.length}</b> 段故事。
+        </p>
+        <button className="button-primary h-[46px] px-5" onClick={() => setEditing("new")}>
+          <Plus size={16} /> 写一段回忆
         </button>
       </div>
 
       {error && <p className="mb-5 rounded-soft bg-[var(--color-accent-soft)] px-4 py-3 text-sm text-[var(--color-danger)]">{error}</p>}
 
       {entries.length ? (
-        <div className="relative ml-2 border-l border-line pb-4 sm:ml-28">
+        <div className="relative">
           {entries.map((entry) => {
             const canEdit = !isDemo;
+            const date = dateParts(entry.happened_at);
+            const firstMedia = entry.media?.find((media) => media.display_url);
             return (
-              <article key={entry.id} className="relative pb-8 pl-7 sm:pl-10">
-                <span className="absolute -left-[.42rem] top-7 size-3 rounded-full border-[3px] border-background bg-accent ring-2 ring-[var(--color-accent-soft)]" />
-                <time className="mb-2 block text-xs font-semibold text-muted sm:absolute sm:-left-28 sm:top-6 sm:w-20 sm:text-right">
-                  {new Intl.DateTimeFormat("zh-CN", { month: "short", day: "numeric" }).format(new Date(entry.happened_at))}
-                  <span className="block font-normal">{new Date(entry.happened_at).getFullYear()}</span>
+              <article key={entry.id} className="grid grid-cols-[4.8rem_2rem_minmax(0,1fr)] gap-0 sm:grid-cols-[7.25rem_2.75rem_minmax(0,1fr)]">
+                <time className="pt-5 text-right">
+                  <span className="block font-heading text-xl font-semibold text-[#43332c] sm:text-[22px]">{date.monthDay}</span>
+                  <span className="mt-1 block font-mono text-[11px] text-[#b39c8d]">{date.year}</span>
                 </time>
-                <div className="surface overflow-hidden">
-                  {entry.media?.length ? (
-                    <div className={`grid ${entry.media.length > 1 ? "grid-cols-2" : ""}`}>
-                      {entry.media.map((media) => media.display_url && (
-                        media.type === "image" ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img key={media.id} src={media.display_url} alt={media.caption ?? entry.title ?? "回忆照片"} className="h-56 w-full object-cover sm:h-72" />
-                        ) : media.type === "video" ? (
-                          <video key={media.id} src={media.display_url} controls preload="metadata" className="h-56 w-full bg-black object-contain sm:h-72" />
-                        ) : (
-                          <div key={media.id} className="flex min-h-24 items-center p-5">
-                            <audio src={media.display_url} controls preload="metadata" className="w-full" />
-                          </div>
-                        )
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="photo-placeholder flex h-28 items-center justify-center text-accent">
-                      <ImageIcon size={24} />
-                    </div>
-                  )}
-                  <div className="p-5 sm:p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
-                          <span className="flex items-center gap-1.5"><CalendarDays size={14} />{formatDate(entry.happened_at, true)}</span>
-                          {entry.mood && <span className="flex items-center gap-1.5"><Smile size={14} />{entry.mood}</span>}
+                <div className="relative flex justify-center">
+                  <div className="h-full w-px bg-gradient-to-b from-[#f0b4a4] to-[#eed9c8]" />
+                  <span className="absolute top-6 size-4 rounded-full border-[3px] border-[var(--color-surface)] bg-[var(--color-accent)] shadow-[0_0_0_5px_rgb(236_124_104_/_14%)]" />
+                </div>
+                <div className="pb-8 pl-2">
+                  <div className="surface overflow-hidden rounded-[22px] transition hover:-translate-y-1 hover:shadow-[0_28px_50px_-24px_rgb(180_110_90_/_55%)]">
+                    {firstMedia ? (
+                      firstMedia.type === "image" ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={firstMedia.display_url ?? ""} alt={firstMedia.caption ?? entry.title ?? "回忆照片"} className="h-[190px] w-full object-cover" />
+                      ) : firstMedia.type === "video" ? (
+                        <video src={firstMedia.display_url ?? ""} controls preload="metadata" className="h-[190px] w-full bg-black object-contain" />
+                      ) : (
+                        <div className="flex min-h-24 items-center p-5">
+                          <audio src={firstMedia.display_url ?? ""} controls preload="metadata" className="w-full" />
                         </div>
-                        <h2 className="font-heading text-xl font-bold">
-                          <Link href={`/memories/${entry.id}`} className="hover:text-accent">
-                            {entry.title || "无题回忆"}
-                          </Link>
-                        </h2>
+                      )
+                    ) : (
+                      <div className="photo-placeholder flex h-[118px] items-center justify-center text-[#c69a82]">
+                        <ImageIcon size={26} />
                       </div>
-                      {canEdit && (
-                        <div className="flex shrink-0 gap-1">
-                          <button className="button-secondary size-9 !p-0" onClick={() => setEditing(entry)} aria-label="编辑"><Pencil size={15} /></button>
-                          <button className="button-danger size-9 !p-0" onClick={() => remove(entry)} disabled={pending} aria-label="删除"><Trash2 size={15} /></button>
+                    )}
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h2 className="font-heading text-xl font-semibold text-[#43332c]">
+                            <Link href={`/memories/${entry.id}`} className="hover:text-[var(--color-accent-strong)]">
+                              {entry.title || "无题回忆"}
+                            </Link>
+                          </h2>
+                          <p className="mt-2 text-xs text-muted">{formatDate(entry.happened_at, true)}{entry.mood ? ` · ${entry.mood}` : ""}</p>
                         </div>
-                      )}
-                    </div>
-                    {entry.body && <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-muted">{entry.body}</p>}
-                    <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
-                      <span className="grid size-7 place-items-center rounded-full bg-[var(--color-accent-soft)] font-heading font-bold text-accent">
-                        {entry.profiles?.display_name?.slice(0, 1) ?? "♡"}
-                      </span>
-                      <span>由 {entry.profiles?.display_name ?? "我们"} 写下</span>
-                      {entry.updated_by_profile &&
-                        entry.updated_by_profile.display_name !== entry.profiles?.display_name && (
-                          <span>· {entry.updated_by_profile.display_name} 最后编辑</span>
+                        {canEdit && (
+                          <div className="flex shrink-0 gap-1">
+                            <button className="button-secondary size-8 !rounded-[10px] !p-0" onClick={() => setEditing(entry)} aria-label="编辑"><Pencil size={15} /></button>
+                            <button className="button-danger size-8 !rounded-[10px] !p-0" onClick={() => remove(entry)} disabled={pending} aria-label="删除"><Trash2 size={15} /></button>
+                          </div>
                         )}
+                      </div>
+                      {entry.body && <p className="mt-4 line-clamp-3 whitespace-pre-wrap text-[13.5px] leading-7 text-muted">{entry.body}</p>}
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#f2e6da] pt-4 text-xs text-[#a08a7c]">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="grid size-[22px] place-items-center rounded-full bg-gradient-to-br from-[#f5a08e] to-[#e4735f] text-[11px] text-white">
+                            {entry.profiles?.display_name?.slice(0, 1) ?? "♡"}
+                          </span>
+                          由 {entry.profiles?.display_name ?? "我们"} 记录
+                          {entry.updated_by_profile &&
+                            entry.updated_by_profile.display_name !== entry.profiles?.display_name && (
+                              <span> · {entry.updated_by_profile.display_name} 编辑</span>
+                            )}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -128,10 +143,10 @@ export function TimelineView({
           })}
         </div>
       ) : (
-        <div className="surface grid min-h-80 place-items-center p-8 text-center">
+        <div className="surface grid min-h-80 place-items-center rounded-[22px] p-8 text-center">
           <div>
-            <span className="mx-auto grid size-16 place-items-center rounded-theme bg-[var(--color-accent-soft)] text-accent"><CalendarDays size={28} /></span>
-            <h2 className="mt-5 font-heading text-xl font-bold">故事的第一页还是空白</h2>
+            <span className="mx-auto grid size-16 place-items-center rounded-[18px] bg-[var(--color-accent-soft)] text-accent"><ImageIcon size={28} /></span>
+            <h2 className="mt-5 font-heading text-xl font-semibold text-[#43332c]">故事的第一页还是空白</h2>
             <p className="mt-2 text-sm text-muted">从最近一次让你们笑起来的小事开始吧。</p>
             <button className="button-primary mt-6" onClick={() => setEditing("new")}><Plus size={18} /> 写下第一条</button>
           </div>

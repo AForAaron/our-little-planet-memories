@@ -1,4 +1,4 @@
-import { Heart, LockKeyhole, Sparkles } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { PasswordField } from "@/components/password-field";
 import { signIn } from "./actions";
@@ -15,40 +15,57 @@ export default async function LoginPage({
   const configured = isLiveMode() && isNeonConfigured();
 
   return (
-    <main className="grid min-h-screen place-items-center px-4 py-10">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-theme bg-surface shadow-lift md:grid-cols-[1.08fr_.92fr]">
-        <section className="hero relative hidden min-h-[38rem] flex-col justify-between overflow-hidden p-12 md:flex">
-          <div className="absolute -right-20 -top-20 size-72 rounded-full bg-[var(--color-on-accent)] opacity-10" />
-          <div className="absolute -bottom-24 -left-16 size-80 rounded-full bg-[var(--color-on-accent)] opacity-10" />
-          <div className="relative flex items-center gap-3 font-heading text-xl font-bold">
-            <span className="grid size-11 place-items-center rounded-soft bg-[var(--color-on-accent)]/20">
-              <Heart size={22} fill="currentColor" />
-            </span>
-            我们的小星球
+    <main className="grid min-h-screen overflow-hidden bg-[var(--color-bg)] md:grid-cols-[1.05fr_1fr]">
+      <section className="hero cosmos-panel relative hidden min-h-screen flex-col justify-between overflow-hidden p-16 text-[#fff6ec] md:flex lg:p-[72px]">
+        <div className="absolute left-[44%] top-[46%] size-[108px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_32%_28%,#fff6ec,#fbd8b8_55%,#f0a886)] shadow-[0_20px_50px_-12px_rgb(150_70_50_/_50%),inset_-10px_-12px_26px_rgb(196_110_80_/_40%)]" />
+        <div className="absolute left-[44%] top-[46%] size-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
+        <div className="absolute left-[44%] top-[46%] size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-white/35" />
+        <span className="tiny-star left-[22%] top-[18%]" />
+        <span className="tiny-star left-[68%] top-[30%] [animation-delay:.8s]" />
+        <span className="tiny-star left-[30%] top-[62%] [animation-delay:1.4s]" />
+        <div className="relative flex items-center gap-3">
+          <span className="grid size-[42px] place-items-center rounded-[13px] border border-white/45 bg-white/25 backdrop-blur">
+            <svg className="size-[22px]" viewBox="0 0 24 24" fill="none">
+              <circle cx="9.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+              <circle cx="14.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+            </svg>
+          </span>
+          <span className="text-[15px] font-medium tracking-[.04em]">张张和沈沈</span>
+        </div>
+        <div className="relative max-w-[420px]">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/20 px-3.5 py-2 text-xs tracking-[.18em]">
+            <span className="size-1.5 rounded-full bg-[#fff6ec]" /> PRIVATE BY DESIGN
           </div>
-          <div className="relative">
-            <Sparkles size={34} className="mb-6 opacity-90" />
-            <h1 className="max-w-md font-heading text-5xl font-bold leading-tight">
-              把平凡日子，
-              <br />过成闪光回忆。
-            </h1>
-            <p className="mt-6 max-w-sm leading-7 opacity-85">
-              这里没有陌生访客，只有我们走过的路、看过的晚霞，和还没来得及实现的愿望。
-            </p>
-          </div>
-          <p className="relative text-sm opacity-75">只属于两个人的宇宙 · Private by design</p>
-        </section>
+          <h1 className="font-heading text-[46px] font-semibold leading-[1.24] text-[#fff8f1] drop-shadow-sm">
+            我们的
+            <br />
+            小星球
+          </h1>
+          <p className="mt-5 text-base leading-8 text-[#fff6f0]/90">
+            一个只属于两个人的私密宇宙。
+            <br />
+            把日子、脚步和心动，都轻轻收进来。
+          </p>
+        </div>
+        <p className="relative text-[13px] text-[#fff6f0]/80">© 2026 · 只对彼此可见</p>
+      </section>
 
-        <section className="flex min-h-[36rem] flex-col justify-center p-7 sm:p-12">
+      <section className="relative flex min-h-screen items-center justify-center px-6 py-12">
+        <span className="tiny-star right-[15%] top-[10%] bg-[#f0b7a6]" />
+        <span className="tiny-star bottom-[12%] left-[14%] bg-[#ebc79a] [animation-delay:1s]" />
+        <div className="w-full max-w-[400px] rounded-[28px] border border-[rgb(74_58_51_/_7%)] bg-[var(--color-surface)] p-8 shadow-lift sm:p-10">
           <div className="mb-9 md:hidden">
-            <div className="mb-5 grid size-12 place-items-center rounded-soft bg-[var(--color-accent-soft)] text-accent">
-              <Heart fill="currentColor" />
-            </div>
-            <h1 className="font-heading text-2xl font-bold">我们的小星球</h1>
+            <span className="brand-mark mb-5" aria-hidden="true">
+              <svg className="brand-orbit" viewBox="0 0 24 24" fill="none">
+                <circle cx="9.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+                <circle cx="14.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+              </svg>
+            </span>
+            <h1 className="font-heading text-2xl font-semibold">我们的小星球</h1>
           </div>
           <span className="eyebrow"><LockKeyhole size={14} /> Private space</span>
-          <h2 className="mt-3 font-heading text-3xl font-bold">欢迎回家</h2>
-          <p className="mt-2 text-sm leading-6 text-muted">用你们约定好的账号进入。门很小，刚好只容得下两个人。</p>
+          <h2 className="mt-3 font-heading text-[27px] font-semibold text-[#43332c]">欢迎回来</h2>
+          <p className="mt-2 text-sm leading-6 text-muted">只属于两个人的私密空间。</p>
 
           {error && (
             <p className="mt-5 rounded-soft bg-[var(--color-accent-soft)] px-4 py-3 text-sm text-[var(--color-danger)]" role="alert">
@@ -72,15 +89,15 @@ export default async function LoginPage({
           <form action={signIn} className="mt-7 grid gap-5">
             <label className="label">
               邮箱
-              <input className="field" name="email" type="email" autoComplete="email" placeholder="name@example.com" required />
+              <input className="field" name="email" type="email" autoComplete="email" placeholder="you@ours.space" required />
             </label>
             <PasswordField
               name="password"
               label="密码"
               autoComplete="current-password"
-              placeholder="输入密码"
+              placeholder="只有你们知道的暗号"
             />
-            <button className="button-primary mt-2 w-full" type="submit">进入我们的小星球</button>
+            <button className="button-primary mt-2 h-[54px] w-full text-base" type="submit">进入我们的星球</button>
           </form>
           {configured && (
             <p className="mt-5 text-center text-sm text-muted">
@@ -91,8 +108,8 @@ export default async function LoginPage({
             </p>
           )}
           <p className="mt-7 text-center text-xs text-muted">登录即表示：今天也要好好记录生活。</p>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }

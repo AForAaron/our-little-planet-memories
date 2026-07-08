@@ -1,4 +1,4 @@
-import { Heart, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import Link from "next/link";
 import { PasswordField } from "@/components/password-field";
 import { signUp } from "@/app/login/actions";
@@ -12,14 +12,19 @@ export default async function RegisterPage({
 }) {
   const { error } = await searchParams;
   return (
-    <main className="grid min-h-screen place-items-center px-4 py-10">
-      <section className="surface w-full max-w-lg p-7 sm:p-10">
-        <span className="mx-auto grid size-14 place-items-center rounded-theme bg-[var(--color-accent-soft)] text-accent">
-          <Heart fill="currentColor" />
+    <main className="cosmos-panel grid min-h-screen place-items-center overflow-hidden px-4 py-10">
+      <span className="tiny-star left-[18%] top-[18%] bg-[#f0b7a6]" />
+      <span className="tiny-star bottom-[18%] right-[16%] bg-[#ebc79a] [animation-delay:1s]" />
+      <section className="surface relative w-full max-w-lg rounded-[28px] p-7 shadow-lift sm:p-10">
+        <span className="brand-mark mx-auto" aria-hidden="true">
+          <svg className="brand-orbit" viewBox="0 0 24 24" fill="none">
+            <circle cx="9.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+            <circle cx="14.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+          </svg>
         </span>
         <div className="mt-6 text-center">
           <span className="eyebrow"><UserPlus size={14} /> Two people only</span>
-          <h1 className="mt-3 font-heading text-3xl font-bold">建立你的账号</h1>
+          <h1 className="mt-3 font-heading text-[27px] font-semibold text-[#43332c]">建立你的账号</h1>
           <p className="mt-2 text-sm leading-6 text-muted">
             只有配置在白名单中的两个邮箱可以注册。
           </p>
@@ -47,7 +52,7 @@ export default async function RegisterPage({
             placeholder="设置一个你能记住的密码"
             showHint
           />
-          <button className="button-primary w-full" type="submit">
+          <button className="button-primary h-[54px] w-full text-base" type="submit">
             <UserPlus size={18} /> 创建账号
           </button>
         </form>

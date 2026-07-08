@@ -24,11 +24,14 @@ async function CounterPage() {
   const days = daysTogether(relationship.together_since);
   const milestone = nextMilestone(days);
   return (
-    <main className="page-shell">
-      <Link href="/time" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-text">
+    <main className="page-shell max-w-[1100px] py-7">
+      <Link href="/time" className="mb-6 inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-[var(--color-accent-strong)]">
         <ArrowLeft size={17} /> 关于时间
       </Link>
-      <section className="hero mx-auto max-w-4xl rounded-theme p-8 text-center sm:p-14">
+      <section className="hero cosmos-panel relative mx-auto max-w-4xl overflow-hidden rounded-theme p-8 text-center sm:p-14">
+        <span className="tiny-star left-[22%] top-[24%]" />
+        <span className="tiny-star bottom-[28%] right-[24%] [animation-delay:1s]" />
+        <div className="relative">
         <Infinity className="mx-auto" size={38} />
         <p className="mt-6 text-sm font-semibold opacity-85">从 {relationship.together_since ?? "尚未设置"} 开始</p>
         <h1 className="mt-4 font-heading text-5xl font-bold sm:text-7xl">
@@ -37,6 +40,12 @@ async function CounterPage() {
         <p className="mt-5 opacity-85">
           距离 {milestone.next} 天里程碑还有 {milestone.remaining} 天
         </p>
+        <div className="mx-auto mt-8 max-w-md">
+          <div className="h-2.5 overflow-hidden rounded-full bg-white/25">
+            <div className="h-full rounded-full bg-gradient-to-r from-[#fff3e6] to-[#ffe0ce]" style={{ width: `${milestone.progress}%` }} />
+          </div>
+        </div>
+        </div>
       </section>
     </main>
   );
@@ -50,14 +59,14 @@ async function AnniversariesPage() {
   return (
     <>
       {next && (
-        <div className="page-shell pb-0">
-          <div className="surface flex items-center gap-4 p-5">
-            <span className="grid size-12 place-items-center rounded-soft bg-[var(--color-accent-soft)] text-accent">
+        <div className="page-shell max-w-[1100px] pb-0 pt-7">
+          <div className="surface flex items-center gap-4 rounded-[22px] p-5">
+            <span className="grid size-12 place-items-center rounded-[15px] bg-[var(--color-accent-soft)] text-accent">
               <CalendarHeart />
             </span>
             <div>
               <p className="text-xs font-semibold text-muted">下一个纪念日</p>
-              <p className="font-heading text-lg font-bold">{next.entry.title} · 还有 {next.days} 天</p>
+              <p className="font-heading text-lg font-semibold text-[#43332c]">{next.entry.title} · 还有 {next.days} 天</p>
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ export default {
       fontFamily: {
         heading: "var(--font-heading)",
         body: "var(--font-body)",
+        mono: "var(--font-mono)",
       },
       borderRadius: {
         theme: "var(--radius)",

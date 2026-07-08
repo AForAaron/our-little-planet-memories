@@ -6,16 +6,16 @@ export const metadata = { title: "关于时间" };
 
 export default function TimePage() {
   return (
-    <main className="page-shell">
-      <Link href="/home" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-text">
+    <main className="page-shell max-w-[1100px] py-7">
+      <Link href="/home" className="mb-6 inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-[var(--color-accent-strong)]">
         <ArrowLeft size={17} /> 回到星球首页
       </Link>
       <div className="max-w-2xl">
         <span className="eyebrow">Time & memories</span>
-        <h1 className="mt-3 font-heading text-4xl font-bold sm:text-5xl">关于时间</h1>
-        <p className="mt-4 leading-7 text-muted">时间会往前走，我们把值得记住的部分轻轻留下。</p>
+        <h1 className="mt-3 font-heading text-[32px] font-semibold text-[#43332c]">关于时间</h1>
+        <p className="mt-3 text-[15px] leading-7 text-muted">时间会往前走，我们把值得记住的部分轻轻留下。</p>
       </div>
-      <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
         <FeatureCard icon={Waypoints} name="恋爱时间轴" stat="按时间翻阅共同回忆" href="/time/timeline" />
         <FeatureCard icon={Infinity} name="在一起计数" stat="每一天都算数" href="/time/counter" />
         <FeatureCard icon={Cake} name="纪念日" stat="下一次特别日子" href="/time/anniversaries" />

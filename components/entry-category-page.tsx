@@ -21,14 +21,16 @@ export async function EntryCategoryPage({
 }) {
   const { entries, userId, isDemo } = await getEntriesData(categories);
   return (
-    <main className="page-shell">
-      <Link href={backHref} className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-text">
+    <main className="page-shell max-w-[1100px] py-7">
+      <Link href={backHref} className="mb-6 inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-[var(--color-accent-strong)]">
         <ArrowLeft size={17} /> {backLabel}
       </Link>
-      <div className="mb-10 max-w-2xl">
+      <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+        <div className="max-w-2xl">
         <span className="eyebrow">{eyebrow}</span>
-        <h1 className="mt-3 font-heading text-4xl font-bold sm:text-5xl">{title}</h1>
-        <p className="mt-4 leading-7 text-muted">{description}</p>
+          <h1 className="mt-3 font-heading text-[32px] font-semibold leading-tight text-[#43332c]">{title}</h1>
+          <p className="mt-3 text-[15px] leading-7 text-muted">{description}</p>
+        </div>
       </div>
       <TimelineView
         entries={entries}
