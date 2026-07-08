@@ -140,9 +140,15 @@ export function EmojiTextField({
             {emoji}
           </button>
         ))}
-        <button type="button" className="emoji-more-button" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        <button
+          type="button"
+          className="emoji-more-button"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          aria-label="打开全部 emoji"
+          title="打开全部 emoji"
+        >
           <SmilePlus size={15} />
-          <span>全部</span>
         </button>
       </div>
       {open && (
