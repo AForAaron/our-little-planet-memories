@@ -1168,6 +1168,16 @@ export function ImportReviewWorkbench({
               <button className="button-secondary" type="button" onClick={closeDryRunModal} disabled={publishing || publishRunning}>
                 取消
               </button>
+              {publishProgress?.status === "completed" && (
+                <>
+                  <a className="button-secondary" href="/home">
+                    回到首页
+                  </a>
+                  <a className="button-primary" href="/time/timeline">
+                    查看时间轴
+                  </a>
+                </>
+              )}
               <button
                 className="button-primary"
                 type="button"
