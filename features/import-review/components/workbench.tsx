@@ -854,6 +854,15 @@ export function ImportReviewWorkbench({
     { label: "章节", value: overview.chapters.length, icon: ShieldCheck, tone: "chapter" },
   ];
   const dryRunRecord = dryRun ?? {};
+  const dryRunPreflight = dryRunRecord.preflight && typeof dryRunRecord.preflight === "object"
+    ? dryRunRecord.preflight as { blockers?: unknown[]; warnings?: unknown[] }
+    : {};
+  const dryRunBlockers = Array.isArray(dryRunPreflight.blockers)
+    ? dryRunPreflight.blockers.map(String)
+    : [];
+  const dryRunWarnings = Array.isArray(dryRunPreflight.warnings)
+    ? dryRunPreflight.warnings.map(String)
+    : [];
 
   return (
     <main className="review-shell">
@@ -1023,6 +1032,16 @@ export function ImportReviewWorkbench({
               ))}
             </div>
             <pre className="review-dryrun-json">{JSON.stringify(dryRun, null, 2)}</pre>
+            {(dryRunBlockers.length > 0 || dryRunWarnings.length > 0) && (
+              <div className="review-publish-confirm">
+                {dryRunBlockers.length > 0 && (
+                  <p>阻断项：{dryRunBlockers.join("；")}</p>
+                )}
+                {dryRunWarnings.length > 0 && (
+                  <p>提醒：{dryRunWarnings.join("；")}</p>
+                )}
+              </div>
+            )}
             <p className="mt-4 text-sm text-muted">这只是预览，不会连接 Neon 或 R2。</p>
           </section>
         </div>
@@ -1054,6 +1073,12 @@ export function ImportReviewWorkbench({
               <p>
                 这会把当前已批准内容写入 Neon，并把精选媒体上传到 R2。待审核、暂时搁置和已拒绝内容不会发布。
               </p>
+              {dryRunBlockers.length > 0 && (
+                <p>当前存在阻断项：{dryRunBlockers.join("；")}</p>
+              )}
+              {dryRunWarnings.length > 0 && (
+                <p>提醒：{dryRunWarnings.join("；")}</p>
+              )}
               <label className="label">
                 输入“正式发布”确认
                 <input
@@ -1073,7 +1098,7 @@ export function ImportReviewWorkbench({
                 className="button-primary"
                 type="button"
                 onClick={publishApproved}
-                disabled={publishing || Boolean(publishResult) || publishConfirmation !== "正式发布" || Number(dryRunRecord.events ?? 0) <= 0}
+                disabled={publishing || Boolean(publishResult) || dryRunBlockers.length > 0 || publishConfirmation !== "正式发布" || Number(dryRunRecord.events ?? 0) <= 0}
               >
                 {publishing ? <LoaderCircle size={16} className="animate-spin" /> : <CloudUpload size={16} />}
                 确认正式发布

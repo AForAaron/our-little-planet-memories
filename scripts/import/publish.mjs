@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import {
@@ -15,6 +15,8 @@ import {
 const execFileAsync = promisify(execFile);
 const APPLY = process.argv.includes("--apply");
 const DRY_RUN = process.argv.includes("--dry-run") || !APPLY;
+const SUPPORTED_MEDIA_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".mp4", ".wav"]);
+const DANGEROUS_MEDIA_EXTENSIONS = new Set([".exe", ".msi", ".bat", ".cmd", ".com", ".scr", ".ps1"]);
 
 function required(name) {
   const value = process.env[name];
@@ -48,6 +50,43 @@ async function commandExists(command) {
     return true;
   } catch {
     return false;
+  }
+}
+
+async function withPublishLock(task) {
+  if (DRY_RUN) return await task();
+  const lockFile = path.join(PUBLISH_ROOT, "publication.lock");
+  let handle;
+  try {
+    handle = await open(lockFile, "wx");
+    await handle.writeFile(
+      JSON.stringify(
+        {
+          pid: process.pid,
+          startedAt: new Date().toISOString(),
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+  } catch (error) {
+    if (error?.code === "EEXIST") {
+      throw new Error(
+        "另一个发布任务正在运行。如果确认没有任务在跑，请检查并删除 publish 目录下的 publication.lock 后重试。",
+      );
+    }
+    throw error;
+  } finally {
+    await handle?.close();
+  }
+
+  try {
+    return await task();
+  } finally {
+    await unlink(lockFile).catch((error) => {
+      if (error?.code !== "ENOENT") throw error;
+    });
   }
 }
 
@@ -205,16 +244,125 @@ async function buildSummary(approved, chapters, photos, messages) {
   };
 }
 
+async function preflightPublication(approved, chapters, messages) {
+  const blockers = [];
+  const warnings = [];
+  const chapterIds = new Set(chapters.map((chapter) => chapter.id));
+  const messageIds = new Set(messages.map((message) => message.id));
+  const seenCandidateIds = new Map();
+  const seenSourceRefs = new Map();
+  const seenSelectedMessages = new Map();
+  let wavCount = 0;
+
+  for (const candidate of approved) {
+    if (!candidate.id) {
+      blockers.push("发现缺少 id 的已批准事件。");
+      continue;
+    }
+    if (seenCandidateIds.has(candidate.id)) {
+      blockers.push(`事件 id 重复：${candidate.id}`);
+    }
+    seenCandidateIds.set(candidate.id, candidate);
+
+    if (!candidate.sourceRef) {
+      blockers.push(`事件 ${candidate.id} 缺少 sourceRef。`);
+    } else if (seenSourceRefs.has(candidate.sourceRef)) {
+      blockers.push(`事件 sourceRef 重复：${candidate.sourceRef}`);
+    }
+    seenSourceRefs.set(candidate.sourceRef, candidate);
+
+    if (!chapterIds.has(candidate.chapterId)) {
+      blockers.push(`事件 ${candidate.id} 缺少有效章节：${candidate.chapterId}`);
+    }
+
+    const candidateMediaPaths = new Set(candidate.mediaPaths ?? []);
+    const selectedMediaPaths = candidate.selectedMediaPaths ?? [];
+    const selectedMediaSet = new Set();
+    for (const sourcePath of selectedMediaPaths) {
+      if (selectedMediaSet.has(sourcePath)) {
+        blockers.push(`事件 ${candidate.id} 重复选择了同一个媒体：${sourcePath}`);
+      }
+      selectedMediaSet.add(sourcePath);
+
+      if (!candidateMediaPaths.has(sourcePath)) {
+        blockers.push(`事件 ${candidate.id} 选择了不属于它的媒体：${sourcePath}`);
+      }
+
+      const extension = path.extname(sourcePath).toLowerCase();
+      if (DANGEROUS_MEDIA_EXTENSIONS.has(extension)) {
+        blockers.push(`事件 ${candidate.id} 选择了危险附件：${sourcePath}`);
+      } else if (extension === ".silk") {
+        blockers.push(`事件 ${candidate.id} 选择了尚不支持发布的 SILK 语音：${sourcePath}`);
+      } else if (!SUPPORTED_MEDIA_EXTENSIONS.has(extension)) {
+        blockers.push(`事件 ${candidate.id} 选择了首期发布不支持的附件类型：${sourcePath}`);
+      }
+
+      if (extension === ".wav") wavCount += 1;
+      try {
+        await stat(resolveDataPath(sourcePath));
+      } catch {
+        blockers.push(`事件 ${candidate.id} 选择的媒体文件不存在或不可读：${sourcePath}`);
+      }
+    }
+
+    const selectedMessageSet = new Set();
+    for (const messageId of candidate.selectedMessageIds ?? []) {
+      if (selectedMessageSet.has(messageId)) {
+        blockers.push(`事件 ${candidate.id} 重复选择了同一条消息：${messageId}`);
+      }
+      selectedMessageSet.add(messageId);
+      if (!messageIds.has(messageId)) {
+        blockers.push(`事件 ${candidate.id} 选择了不存在的消息：${messageId}`);
+      }
+      const previous = seenSelectedMessages.get(messageId);
+      if (previous && previous !== candidate.id) {
+        blockers.push(`消息 ${messageId} 同时被事件 ${previous} 和 ${candidate.id} 选择。`);
+      }
+      seenSelectedMessages.set(messageId, candidate.id);
+    }
+  }
+
+  if (wavCount > 0 && !(await commandExists("ffmpeg"))) {
+    blockers.push(
+      `已批准内容中有 ${wavCount} 个 WAV 语音，但系统没有 ffmpeg。请安装 ffmpeg，或取消选择这些 WAV 语音。`,
+    );
+  }
+
+  if (approved.length > 20) {
+    warnings.push("首批批准事件超过 20 个，建议先缩小范围完成一次验收。");
+  }
+
+  return { blockers, warnings };
+}
+
+async function verifyDatabaseReady(sql, authorId) {
+  const [tables] = await sql`
+    select
+      to_regclass('public.profiles') as profiles,
+      to_regclass('public.memory_chapters') as memory_chapters,
+      to_regclass('public.entries') as entries,
+      to_regclass('public.media') as media,
+      to_regclass('public.chat_messages') as chat_messages,
+      to_regclass('public.chat_message_media') as chat_message_media
+  `;
+  const missingTables = Object.entries(tables)
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+  if (missingTables.length) {
+    throw new Error(`数据库缺少发布所需表，请先运行 migration：${missingTables.join(", ")}`);
+  }
+
+  const [author] = await sql`
+    select id from public.profiles where id = ${authorId} limit 1
+  `;
+  if (!author) {
+    throw new Error(`IMPORT_AUTHOR_ID 没有对应的 public.profiles 记录：${authorId}`);
+  }
+}
+
 async function publish() {
   await ensureWorkRoot();
   await mkdir(PUBLISH_ROOT, { recursive: true });
-  const manifestFile = path.join(PUBLISH_ROOT, "publication-manifest.json");
-  const previousManifest = await readFile(manifestFile, "utf8")
-    .then((value) => JSON.parse(value))
-    .catch((error) => {
-      if (error?.code === "ENOENT") return { events: {} };
-      throw error;
-    });
   const [candidates, chapters, photos, albumVideos, messages] = await Promise.all([
     readWorkJson("candidates.json", []),
     readWorkJson("chapters.json", []),
@@ -229,9 +377,13 @@ async function publish() {
     [...photos, ...albumVideos],
     messages,
   );
-  console.log(JSON.stringify(summary, null, 2));
+  const preflight = await preflightPublication(approved, chapters, messages);
+  console.log(JSON.stringify({ ...summary, preflight }, null, 2));
   if (DRY_RUN) return;
   if (!approved.length) throw new Error("没有已批准事件，拒绝空发布。");
+  if (preflight.blockers.length) {
+    throw new Error(`发布前检查未通过：\n- ${preflight.blockers.join("\n- ")}`);
+  }
   if (process.env.PUBLISH_CONFIRMED !== "YES") {
     throw new Error("实际发布需要显式设置 PUBLISH_CONFIRMED=YES。");
   }
@@ -243,179 +395,188 @@ async function publish() {
   const secretAccessKey = required("R2_SECRET_ACCESS_KEY");
   const bucket = required("R2_BUCKET");
 
-  const [{ S3Client, PutObjectCommand, DeleteObjectCommand }, { neon }] =
-    await Promise.all([
-      import("@aws-sdk/client-s3"),
-      import("@neondatabase/serverless"),
-    ]);
-  const s3 = new S3Client({
-    region: "auto",
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    credentials: { accessKeyId, secretAccessKey },
-  });
-  const sql = neon(databaseUrl);
-  const chapterById = new Map(chapters.map((chapter) => [chapter.id, chapter]));
-  const photoByPath = new Map(photos.map((photo) => [photo.sourcePath, photo]));
-  const messageById = new Map(messages.map((message) => [message.id, message]));
-  const manifest = {
-    schemaVersion: 1,
-    generatedAt: new Date().toISOString(),
-    events: { ...(previousManifest.events ?? {}) },
-  };
+  await withPublishLock(async () => {
+    const manifestFile = path.join(PUBLISH_ROOT, "publication-manifest.json");
+    const previousManifest = await readFile(manifestFile, "utf8")
+      .then((value) => JSON.parse(value))
+      .catch((error) => {
+        if (error?.code === "ENOENT") return { events: {} };
+        throw error;
+      });
+    const [{ S3Client, PutObjectCommand, DeleteObjectCommand }, { neon }] =
+      await Promise.all([
+        import("@aws-sdk/client-s3"),
+        import("@neondatabase/serverless"),
+      ]);
+    const s3 = new S3Client({
+      region: "auto",
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      credentials: { accessKeyId, secretAccessKey },
+    });
+    const sql = neon(databaseUrl);
+    await verifyDatabaseReady(sql, authorId);
+    const chapterById = new Map(chapters.map((chapter) => [chapter.id, chapter]));
+    const photoByPath = new Map(photos.map((photo) => [photo.sourcePath, photo]));
+    const messageById = new Map(messages.map((message) => [message.id, message]));
+    const manifest = {
+      schemaVersion: 1,
+      generatedAt: new Date().toISOString(),
+      events: { ...(previousManifest.events ?? {}) },
+    };
 
-  for (const candidate of approved) {
-    if (manifest.events[candidate.id]?.status === "published") {
-      console.log(`跳过已发布事件：${candidate.id}`);
-      continue;
-    }
-    const [existing] = await sql`
-      select id from public.entries
-      where source = 'wechat_import' and source_ref = ${candidate.sourceRef}
-      limit 1
-    `;
-    if (existing) {
-      manifest.events[candidate.id] = {
-        status: "published",
-        entryId: existing.id,
-        skipped: true,
-      };
-      continue;
-    }
+    for (const candidate of approved) {
+      if (manifest.events[candidate.id]?.status === "published") {
+        console.log(`跳过已发布事件：${candidate.id}`);
+        continue;
+      }
+      const [existing] = await sql`
+        select id from public.entries
+        where source = 'wechat_import' and source_ref = ${candidate.sourceRef}
+        limit 1
+      `;
+      if (existing) {
+        manifest.events[candidate.id] = {
+          status: "published",
+          entryId: existing.id,
+          skipped: true,
+        };
+        continue;
+      }
 
-    const chapter = chapterById.get(candidate.chapterId);
-    if (!chapter) throw new Error(`事件 ${candidate.id} 缺少有效章节。`);
-    const chapterId = randomUUID();
-    const entryId = randomUUID();
-    const placeId =
-      candidate.location || candidate.placeName ? randomUUID() : null;
-    const prepared = [];
-    const uploadedKeys = [];
-    try {
-      for (const sourcePath of candidate.selectedMediaPaths) {
-        const item = await prepareMedia(candidate, sourcePath, photoByPath);
-        prepared.push({ ...item, id: randomUUID() });
-        await s3.send(
-          new PutObjectCommand({
-            Bucket: bucket,
-            Key: item.r2Key,
-            Body: await readFile(item.display),
-            ContentType: item.mime,
-          }),
-        );
-        uploadedKeys.push(item.r2Key);
-        if (item.thumbnail && item.thumbnailR2Key) {
+      const chapter = chapterById.get(candidate.chapterId);
+      if (!chapter) throw new Error(`事件 ${candidate.id} 缺少有效章节。`);
+      const chapterId = randomUUID();
+      const entryId = randomUUID();
+      const placeId =
+        candidate.location || candidate.placeName ? randomUUID() : null;
+      const prepared = [];
+      const uploadedKeys = [];
+      try {
+        for (const sourcePath of candidate.selectedMediaPaths) {
+          const item = await prepareMedia(candidate, sourcePath, photoByPath);
+          prepared.push({ ...item, id: randomUUID() });
           await s3.send(
             new PutObjectCommand({
-              Bucket: bucket,
-              Key: item.thumbnailR2Key,
-              Body: await readFile(item.thumbnail),
-              ContentType: "image/webp",
+                Bucket: bucket,
+                Key: item.r2Key,
+                Body: await readFile(item.display),
+                ContentType: item.mime,
             }),
           );
-          uploadedKeys.push(item.thumbnailR2Key);
+          uploadedKeys.push(item.r2Key);
+          if (item.thumbnail && item.thumbnailR2Key) {
+            await s3.send(
+              new PutObjectCommand({
+                Bucket: bucket,
+                Key: item.thumbnailR2Key,
+                Body: await readFile(item.thumbnail),
+                ContentType: "image/webp",
+              }),
+            );
+            uploadedKeys.push(item.thumbnailR2Key);
+          }
         }
-      }
 
-      const queries = [
-        sql`
-          insert into public.memory_chapters
-            (id, source_ref, kind, title, summary, started_at, ended_at)
-          values
-            (${chapterId}, ${chapter.id}, ${chapter.kind}, ${chapter.title},
-             ${chapter.summary || null}, ${chapter.startAt}, ${chapter.endAt})
-          on conflict (source_ref) do update set
-            title = excluded.title,
-            summary = excluded.summary,
-            started_at = excluded.started_at,
-            ended_at = excluded.ended_at,
-            updated_at = now()
-          returning id
-        `,
-      ];
-      if (placeId) {
-        queries.push(sql`
-          insert into public.places
-            (id, name, category, lat, lng, privacy_level, precision_m)
-          values
-            (${placeId}, ${candidate.placeName || "未命名地点"}, 'other',
-             ${candidate.location?.latitude ?? null},
-             ${candidate.location?.longitude ?? null},
-             ${candidate.privacyLevel}, ${candidate.precisionM})
-        `);
-      }
-      queries.push(sql`
-        insert into public.entries
-          (id, chapter_id, author_id, category, title, body, happened_at,
-           happened_precision, place_id, source, source_ref, is_highlight)
-        values
-          (${entryId},
-           (select id from public.memory_chapters where source_ref = ${chapter.id}),
-           ${authorId}, ${candidate.category}, ${candidate.title},
-           ${candidate.summary || null}, ${candidate.startAt}, 'exact', ${placeId},
-           'wechat_import', ${candidate.sourceRef}, false)
-      `);
-      for (let index = 0; index < prepared.length; index += 1) {
-        const item = prepared[index];
-        queries.push(sql`
-          insert into public.media
-            (id, entry_id, r2_key, thumbnail_r2_key, mime, type, sort_order,
-             captured_at, width, height, sha256, lat, lng)
-          values
-            (${item.id}, ${entryId}, ${item.r2Key}, ${item.thumbnailR2Key},
-             ${item.mime}, ${item.type}, ${index}, ${item.capturedAt},
-             ${item.width}, ${item.height}, ${item.sha256},
-             ${candidate.location?.latitude ?? null},
-             ${candidate.location?.longitude ?? null})
-        `);
-      }
-      const selectedMessages = candidate.selectedMessageIds
-        .map((id) => messageById.get(id))
-        .filter(Boolean);
-      for (let index = 0; index < selectedMessages.length; index += 1) {
-        const message = selectedMessages[index];
-        queries.push(sql`
-          insert into public.chat_messages
-            (id, entry_id, sender_role, render_type, content, sent_at, sort_seq,
-             reply_to_ref, quote_title, quote_content, sequence)
-          values
-            (${message.id}, ${entryId}, ${message.senderRole}, ${message.renderType},
-             ${message.content}, ${message.sentAt}, ${message.sortSeq},
-             ${message.quote?.sourceServerId ?? null},
-             ${message.quote?.title ?? null}, ${message.quote?.content ?? null}, ${index})
-          on conflict (id) do nothing
-        `);
-        for (const linked of message.media) {
-          const item = prepared.find((media) => media.sourcePath === linked.sourcePath);
-          if (!item) continue;
+        const queries = [
+          sql`
+            insert into public.memory_chapters
+              (id, source_ref, kind, title, summary, started_at, ended_at)
+            values
+              (${chapterId}, ${chapter.id}, ${chapter.kind}, ${chapter.title},
+              ${chapter.summary || null}, ${chapter.startAt}, ${chapter.endAt})
+            on conflict (source_ref) do update set
+              title = excluded.title,
+              summary = excluded.summary,
+              started_at = excluded.started_at,
+              ended_at = excluded.ended_at,
+              updated_at = now()
+            returning id
+          `,
+        ];
+        if (placeId) {
           queries.push(sql`
-            insert into public.chat_message_media (message_id, media_id)
-            values (${message.id}, ${item.id})
-            on conflict do nothing
+            insert into public.places
+              (id, name, category, lat, lng, privacy_level, precision_m)
+            values
+              (${placeId}, ${candidate.placeName || "未命名地点"}, 'other',
+              ${candidate.location?.latitude ?? null},
+              ${candidate.location?.longitude ?? null},
+              ${candidate.privacyLevel}, ${candidate.precisionM})
           `);
         }
+        queries.push(sql`
+          insert into public.entries
+            (id, chapter_id, author_id, category, title, body, happened_at,
+            happened_precision, place_id, source, source_ref, is_highlight)
+          values
+            (${entryId},
+            (select id from public.memory_chapters where source_ref = ${chapter.id}),
+            ${authorId}, ${candidate.category}, ${candidate.title},
+            ${candidate.summary || null}, ${candidate.startAt}, 'exact', ${placeId},
+            'wechat_import', ${candidate.sourceRef}, false)
+        `);
+        for (let index = 0; index < prepared.length; index += 1) {
+          const item = prepared[index];
+          queries.push(sql`
+            insert into public.media
+              (id, entry_id, r2_key, thumbnail_r2_key, mime, type, sort_order,
+              captured_at, width, height, sha256, lat, lng)
+            values
+              (${item.id}, ${entryId}, ${item.r2Key}, ${item.thumbnailR2Key},
+              ${item.mime}, ${item.type}, ${index}, ${item.capturedAt},
+              ${item.width}, ${item.height}, ${item.sha256},
+              ${candidate.location?.latitude ?? null},
+              ${candidate.location?.longitude ?? null})
+          `);
+        }
+        const selectedMessages = candidate.selectedMessageIds
+          .map((id) => messageById.get(id))
+          .filter(Boolean);
+        for (let index = 0; index < selectedMessages.length; index += 1) {
+          const message = selectedMessages[index];
+          queries.push(sql`
+            insert into public.chat_messages
+              (id, entry_id, sender_role, render_type, content, sent_at, sort_seq,
+              reply_to_ref, quote_title, quote_content, sequence)
+            values
+              (${message.id}, ${entryId}, ${message.senderRole}, ${message.renderType},
+              ${message.content}, ${message.sentAt}, ${message.sortSeq},
+              ${message.quote?.sourceServerId ?? null},
+              ${message.quote?.title ?? null}, ${message.quote?.content ?? null}, ${index})
+          `);
+          for (const linked of message.media) {
+            const item = prepared.find((media) => media.sourcePath === linked.sourcePath);
+            if (!item) continue;
+            queries.push(sql`
+              insert into public.chat_message_media (message_id, media_id)
+              values (${message.id}, ${item.id})
+              on conflict do nothing
+            `);
+          }
+        }
+        await sql.transaction(queries);
+        manifest.events[candidate.id] = {
+          status: "published",
+          entryId,
+          chapterSourceRef: chapter.id,
+          mediaKeys: uploadedKeys,
+          publishedAt: new Date().toISOString(),
+        };
+        await writeFile(
+          manifestFile,
+          `${JSON.stringify(manifest, null, 2)}\n`,
+        );
+        console.log(`已发布：${candidate.title}`);
+      } catch (error) {
+        await Promise.allSettled(
+          uploadedKeys.map((key) =>
+            s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key })),
+          ),
+        );
+        throw error;
       }
-      await sql.transaction(queries);
-      manifest.events[candidate.id] = {
-        status: "published",
-        entryId,
-        chapterSourceRef: chapter.id,
-        mediaKeys: uploadedKeys,
-        publishedAt: new Date().toISOString(),
-      };
-      await writeFile(
-        manifestFile,
-        `${JSON.stringify(manifest, null, 2)}\n`,
-      );
-      console.log(`已发布：${candidate.title}`);
-    } catch (error) {
-      await Promise.allSettled(
-        uploadedKeys.map((key) =>
-          s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key })),
-        ),
-      );
-      throw error;
     }
-  }
+  });
 }
 
 publish().catch((error) => {
