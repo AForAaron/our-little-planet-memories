@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CircleAlert,
   CirclePause,
+  CloudUpload,
   Clock3,
   FileCheck2,
   GitMerge,
@@ -597,8 +598,12 @@ export function ImportReviewWorkbench({
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [dryRun, setDryRun] = useState<Record<string, unknown> | null>(null);
+  const [dryRunMode, setDryRunMode] = useState<"preview" | "publish" | null>(null);
+  const [publishConfirmation, setPublishConfirmation] = useState("");
+  const [publishResult, setPublishResult] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
   const [loading, startLoading] = useTransition();
+  const [publishing, startPublishing] = useTransition();
   const [reviewer, setReviewer] = useState(reviewLabels.self);
 
   useEffect(() => {
@@ -757,8 +762,52 @@ export function ImportReviewWorkbench({
     startLoading(async () => {
       try {
         setDryRun(await api("/api/import-review/dry-run"));
+        setDryRunMode("preview");
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "无法生成发布预览。");
+      }
+    });
+  }
+
+  function showPublishConfirm() {
+    startLoading(async () => {
+      try {
+        setDryRun(await api("/api/import-review/dry-run"));
+        setDryRunMode("publish");
+        setPublishConfirmation("");
+        setPublishResult(null);
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "无法生成发布预览。");
+      }
+    });
+  }
+
+  function closeDryRunModal() {
+    setDryRun(null);
+    setDryRunMode(null);
+    setPublishConfirmation("");
+    setPublishResult(null);
+  }
+
+  function publishApproved() {
+    if (!dryRun) return;
+    startPublishing(async () => {
+      try {
+        setPublishResult(await api("/api/import-review/publish", {
+          method: "POST",
+          headers: reviewHeaders(reviewer),
+          body: JSON.stringify({
+            confirmation: publishConfirmation,
+            expected: {
+              events: Number(dryRun.events ?? 0),
+              media: Number(dryRun.media ?? 0),
+              messages: Number(dryRun.messages ?? 0),
+            },
+          }),
+        }));
+        await loadOverview();
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "正式发布失败。");
       }
     });
   }
@@ -831,6 +880,7 @@ export function ImportReviewWorkbench({
           </div>
           <button className="button-secondary" onClick={() => startLoading(refresh)} disabled={loading}><RefreshCw size={16} />刷新</button>
           <button className="button-primary" onClick={showDryRun} disabled={loading}><Play size={16} />发布预览</button>
+          <button className="button-primary" onClick={showPublishConfirm} disabled={loading || publishing}><CloudUpload size={16} />正式发布</button>
         </div>
       </header>
 
@@ -947,15 +997,15 @@ export function ImportReviewWorkbench({
         </section>
       </div>
 
-      {dryRun && (
-        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setDryRun(null)}>
+      {dryRun && dryRunMode === "preview" && (
+        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && closeDryRunModal()}>
           <section className="modal-card review-publish-modal p-6 sm:p-8">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span className="eyebrow">Dry run</span>
                 <h2 className="mt-2 font-heading text-2xl font-bold">发布预览</h2>
               </div>
-              <button className="button-secondary size-10 !p-0" onClick={() => setDryRun(null)}><X size={16} /></button>
+              <button className="button-secondary size-10 !p-0" onClick={closeDryRunModal}><X size={16} /></button>
             </div>
             <div className="review-dryrun-grid">
               {([
@@ -974,6 +1024,64 @@ export function ImportReviewWorkbench({
             </div>
             <pre className="review-dryrun-json">{JSON.stringify(dryRun, null, 2)}</pre>
             <p className="mt-4 text-sm text-muted">这只是预览，不会连接 Neon 或 R2。</p>
+          </section>
+        </div>
+      )}
+
+      {dryRun && dryRunMode === "publish" && (
+        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !publishing && closeDryRunModal()}>
+          <section className="modal-card review-publish-modal p-6 sm:p-8">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="eyebrow">Publish</span>
+                <h2 className="mt-2 font-heading text-2xl font-bold">正式发布已批准内容</h2>
+              </div>
+              <button className="button-secondary size-10 !p-0" onClick={closeDryRunModal} disabled={publishing}><X size={16} /></button>
+            </div>
+            <div className="review-dryrun-grid">
+              {([
+                ["事件", dryRunRecord.events],
+                ["媒体", dryRunRecord.media],
+                ["消息", dryRunRecord.messages],
+              ] satisfies Array<[string, unknown]>).map(([label, value]) => (
+                <div key={label} className="review-dryrun-card">
+                  <b>{String(value ?? 0)}</b>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="review-publish-confirm">
+              <p>
+                这会把当前已批准内容写入 Neon，并把精选媒体上传到 R2。待审核、暂时搁置和已拒绝内容不会发布。
+              </p>
+              <label className="label">
+                输入“正式发布”确认
+                <input
+                  className="field"
+                  value={publishConfirmation}
+                  onChange={(event) => setPublishConfirmation(event.target.value)}
+                  placeholder="正式发布"
+                  disabled={publishing || Boolean(publishResult)}
+                />
+              </label>
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button className="button-secondary" type="button" onClick={closeDryRunModal} disabled={publishing}>
+                取消
+              </button>
+              <button
+                className="button-primary"
+                type="button"
+                onClick={publishApproved}
+                disabled={publishing || Boolean(publishResult) || publishConfirmation !== "正式发布" || Number(dryRunRecord.events ?? 0) <= 0}
+              >
+                {publishing ? <LoaderCircle size={16} className="animate-spin" /> : <CloudUpload size={16} />}
+                确认正式发布
+              </button>
+            </div>
+            {publishResult && (
+              <pre className="review-dryrun-json">{JSON.stringify(publishResult, null, 2)}</pre>
+            )}
           </section>
         </div>
       )}
