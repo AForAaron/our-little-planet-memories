@@ -1,7 +1,11 @@
 import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { promisify } from "node:util";
 import { NextResponse } from "next/server";
 import { canUseReview, dryRunSummary } from "@/features/import-review/server/store";
+import { getImportRoots } from "@/features/import-review/server/paths";
+import type { ReviewCandidate } from "@/features/import-review/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +21,24 @@ type PublishRequest = {
     messages?: number;
   };
 };
+
+async function commandExists(command: string) {
+  try {
+    await execFileAsync("/usr/bin/which", [command]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function selectedApprovedWavCount() {
+  const candidatesFile = path.join(getImportRoots().workRoot, "candidates.json");
+  const candidates = JSON.parse(await readFile(candidatesFile, "utf8")) as ReviewCandidate[];
+  return candidates
+    .filter((candidate) => candidate.status === "approved")
+    .flatMap((candidate) => candidate.selectedMediaPaths)
+    .filter((sourcePath) => /\.wav$/i.test(sourcePath)).length;
+}
 
 export async function POST(request: Request) {
   if (!canUseReview(request)) {
@@ -46,6 +68,16 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "发布预览已变化，请重新预览后再发布。", summary },
       { status: 409 },
+    );
+  }
+  const wavCount = await selectedApprovedWavCount();
+  if (wavCount > 0 && !(await commandExists("ffmpeg"))) {
+    return NextResponse.json(
+      {
+        error: `已批准内容中有 ${wavCount} 个 WAV 语音，但本机没有 ffmpeg。请先安装 ffmpeg，或在审核台取消选择这些 WAV 语音后再发布。`,
+        summary,
+      },
+      { status: 400 },
     );
   }
 
