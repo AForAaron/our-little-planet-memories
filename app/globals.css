@@ -809,7 +809,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .reviewer-switch button:nth-of-type(2) i { background: var(--color-accent); }
 .review-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 1rem;
   padding-block: 1.25rem;
   color: var(--color-text-muted);
@@ -844,6 +844,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .review-stat-card.is-pending i { color: #a06e2a; background: #fbefdc; }
 .review-stat-card.is-approved i { color: #3f7a58; background: #e6f0e6; }
+.review-stat-card.is-paused i { color: #6f6478; background: #eee9f2; }
 .review-stat-card.is-chapter i { color: #64748b; background: #e9edf3; }
 .review-layout {
   display: grid;
@@ -986,6 +987,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .review-chip.is-draft { color: #a06e2a; background: #fbefdc; border-color: #eecf9e; }
 .review-chip.is-approved { color: #3f7a58; background: #e6f0e6; border-color: #bcd8bf; }
 .review-chip.is-rejected { color: #a55f56; background: #f6e6e2; border-color: #e2c5be; }
+.review-chip.is-paused { color: #6f6478; background: #eee9f2; border-color: #d8cbdf; }
 .review-chip.is-score { margin-left: auto; font-weight: 700; }
 .review-candidate-meta {
   display: flex;

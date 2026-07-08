@@ -1,4 +1,4 @@
-export type ReviewStatus = "draft" | "approved" | "rejected";
+export type ReviewStatus = "draft" | "approved" | "rejected" | "paused";
 export type PrivacyLevel = "exact" | "approximate" | "private";
 
 export type LocationPoint = {

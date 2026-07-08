@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleAlert,
+  CirclePause,
   Clock3,
   FileCheck2,
   GitMerge,
@@ -26,7 +27,6 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { ChatBubbleThread } from "@/components/chat-bubble-thread";
-import { EmojiTextField } from "@/components/emoji-text-field";
 import type {
   CandidateDetail,
   CandidatePatch,
@@ -38,7 +38,8 @@ import type {
   ReviewStatus,
 } from "@/features/import-review/types";
 
-type Filter = "all" | ReviewStatus | "event" | "unclassified";
+type StatusView = "review" | "approved" | "paused" | "rejected";
+type KindFilter = "all" | "event" | "unclassified";
 
 function mediaUrl(sourcePath: string) {
   return `/api/import-review/media?path=${encodeURIComponent(sourcePath)}`;
@@ -80,7 +81,15 @@ function dateInputToIso(value: string) {
 }
 
 function statusLabel(status: ReviewStatus) {
-  return status === "approved" ? "已批准" : status === "rejected" ? "已拒绝" : "待审核";
+  if (status === "approved") return "已批准";
+  if (status === "rejected") return "已拒绝";
+  if (status === "paused") return "暂时搁置";
+  return "待审核";
+}
+
+function viewMatchesStatus(candidate: CandidateSummary, view: StatusView) {
+  if (view === "review") return candidate.status === "draft";
+  return candidate.status === view;
 }
 
 function sourceTypeLabel(sourceType: CandidateSummary["sourceType"]) {
@@ -283,6 +292,9 @@ function DetailEditor({
             <button className="button-secondary review-action-button" type="button" onClick={() => save("rejected")} disabled={saving}>
               <X size={16} /> 拒绝
             </button>
+            <button className="button-secondary review-action-button" type="button" onClick={() => save("paused")} disabled={saving}>
+              <CirclePause size={16} /> 暂时搁置
+            </button>
             <button className="button-secondary review-action-button" type="button" onClick={() => save()} disabled={saving}>
               <Save size={16} /> 保存
             </button>
@@ -317,20 +329,11 @@ function DetailEditor({
             <SectionHeading index="01" title="故事本身" meta="标题给人看，摘要给未来的你们看" />
             <label className="label">
               标题
-              <EmojiTextField
-                value={candidate.title}
-                onChange={(value) => patch("title", value)}
-                emojis={["💕", "✨", "🌙", "📍", "🏔️", "🌊", "🍽️", "🎬", "🎂", "🐾"]}
-              />
+              <input className="field" value={candidate.title} onChange={(event) => patch("title", event.target.value)} />
             </label>
             <label className="label">
               记忆摘要
-              <EmojiTextField
-                as="textarea"
-                className="min-h-28 resize-y"
-                value={candidate.summary}
-                onChange={(value) => patch("summary", value)}
-              />
+              <textarea className="field min-h-28 resize-y" value={candidate.summary} onChange={(event) => patch("summary", event.target.value)} />
             </label>
           </div>
           <label className="label">
@@ -359,12 +362,7 @@ function DetailEditor({
           </label>
           <label className="label">
             地点名称
-            <EmojiTextField
-              value={candidate.placeName}
-              placeholder="由你确认，不发送坐标给外部服务"
-              onChange={(value) => patch("placeName", value)}
-              emojis={["📍", "🏔️", "🌊", "🏨", "🍽️", "☕", "🎡", "🌉", "🌸", "✨"]}
-            />
+            <input className="field" value={candidate.placeName} placeholder="由你确认，不发送坐标给外部服务" onChange={(event) => patch("placeName", event.target.value)} />
           </label>
           <label className="label">
             地点隐私
@@ -376,13 +374,7 @@ function DetailEditor({
           </label>
           <label className="label md:col-span-2">
             审核备注
-            <EmojiTextField
-              as="textarea"
-              className="min-h-20 resize-y"
-              value={candidate.reviewNotes ?? ""}
-              onChange={(value) => patch("reviewNotes", value)}
-              emojis={["✅", "⚠️", "✂️", "📍", "🖼️", "🎙️", "💡", "✨"]}
-            />
+            <textarea className="field min-h-20 resize-y" value={candidate.reviewNotes ?? ""} onChange={(event) => patch("reviewNotes", event.target.value)} />
           </label>
         </div>
       </section>
@@ -600,7 +592,8 @@ export function ImportReviewWorkbench({
   const [detail, setDetail] = useState<CandidateDetail | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
-  const [filter, setFilter] = useState<Filter>("all");
+  const [statusView, setStatusView] = useState<StatusView>("review");
+  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [dryRun, setDryRun] = useState<Record<string, unknown> | null>(null);
@@ -627,7 +620,7 @@ export function ImportReviewWorkbench({
   const loadOverview = useCallback(async () => {
     const next = await api<ReviewOverview>("/api/import-review/overview");
     setOverview(next);
-    setSelectedId((current) => current ?? next.candidates[0]?.id ?? null);
+    setSelectedId((current) => current ?? next.candidates.find((candidate) => candidate.status === "draft")?.id ?? null);
   }, []);
 
   useEffect(() => {
@@ -656,26 +649,46 @@ export function ImportReviewWorkbench({
     if (!overview) return [];
     const normalizedQuery = query.trim().toLowerCase();
     return overview.candidates.filter((candidate) => {
-      const matchesFilter =
-        filter === "all" ||
-        candidate.status === filter ||
-        candidate.classification === filter;
+      const matchesStatus = viewMatchesStatus(candidate, statusView);
+      const matchesKind = kindFilter === "all" || candidate.classification === kindFilter;
       const matchesQuery =
         !normalizedQuery ||
         `${candidate.title} ${candidate.summary} ${candidate.placeName} ${(candidate.keywords ?? []).join(" ")}`
           .toLowerCase()
           .includes(normalizedQuery);
-      return matchesFilter && matchesQuery;
+      return matchesStatus && matchesKind && matchesQuery;
     });
-  }, [overview, filter, query]);
+  }, [overview, statusView, kindFilter, query]);
   const pageSize = 60;
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const visibleCandidates = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
-  useEffect(() => setPage(0), [filter, query]);
+  useEffect(() => setPage(0), [statusView, kindFilter, query]);
   useEffect(() => {
     if (page >= pageCount) setPage(pageCount - 1);
   }, [page, pageCount]);
+  useEffect(() => {
+    if (!overview) return;
+    if (!filtered.length) {
+      setSelectedId(null);
+      setDetail(null);
+      return;
+    }
+    if (!selectedId || !filtered.some((candidate) => candidate.id === selectedId)) {
+      setSelectedId(filtered[0].id);
+    }
+  }, [filtered, overview, selectedId]);
+  useEffect(() => {
+    const visibleIds = new Set(filtered.map((candidate) => candidate.id));
+    setSelectedForMerge((current) => {
+      const next = statusView === "review"
+        ? new Set([...current].filter((id) => visibleIds.has(id)))
+        : new Set<string>();
+      return next.size === current.size && [...next].every((id) => current.has(id))
+        ? current
+        : next;
+    });
+  }, [filtered, statusView]);
 
   const routeCandidates = useMemo(
     () =>
@@ -768,19 +781,27 @@ export function ImportReviewWorkbench({
 
   const approved = overview.candidates.filter((candidate) => candidate.status === "approved").length;
   const draft = overview.candidates.filter((candidate) => candidate.status === "draft").length;
+  const paused = overview.candidates.filter((candidate) => candidate.status === "paused").length;
   const rejected = overview.candidates.filter((candidate) => candidate.status === "rejected").length;
-  const filterCounts: Record<Filter, number> = {
-    all: overview.candidates.length,
-    draft,
+  const statusCounts: Record<StatusView, number> = {
+    review: draft,
     approved,
+    paused,
     rejected,
-    event: overview.candidates.filter((candidate) => candidate.classification === "event").length,
-    unclassified: overview.candidates.filter((candidate) => candidate.classification === "unclassified").length,
+  };
+  const currentStatusCandidates = overview.candidates.filter((candidate) =>
+    viewMatchesStatus(candidate, statusView),
+  );
+  const kindCounts: Record<KindFilter, number> = {
+    all: currentStatusCandidates.length,
+    event: currentStatusCandidates.filter((candidate) => candidate.classification === "event").length,
+    unclassified: currentStatusCandidates.filter((candidate) => candidate.classification === "unclassified").length,
   };
   const stats = [
     { label: "全部候选", value: overview.candidates.length, icon: ListChecks, tone: "neutral" },
     { label: "待审核", value: draft, icon: Clock3, tone: "pending" },
     { label: "已批准", value: approved, icon: CheckCircle2, tone: "approved" },
+    { label: "暂时搁置", value: paused, icon: CirclePause, tone: "paused" },
     { label: "章节", value: overview.chapters.length, icon: ShieldCheck, tone: "chapter" },
   ];
   const dryRunRecord = dryRun ?? {};
@@ -836,19 +857,30 @@ export function ImportReviewWorkbench({
             </label>
             <div className="review-filter-row">
               {([
-                ["all", "全部"],
-                ["draft", "待审核"],
+                ["review", "待审核"],
                 ["approved", "已批准"],
-                ["event", "事件"],
-                ["unclassified", "碎片"],
-              ] as [Filter, string][]).map(([value, label]) => (
-                <button key={value} className={`review-filter ${filter === value ? "is-active" : ""}`} onClick={() => setFilter(value)}>
+                ["paused", "暂时搁置"],
+                ["rejected", "已拒绝"],
+              ] as [StatusView, string][]).map(([value, label]) => (
+                <button key={value} className={`review-filter ${statusView === value ? "is-active" : ""}`} onClick={() => setStatusView(value)}>
                   {label}
-                  <span>{filterCounts[value]}</span>
+                  <span>{statusCounts[value]}</span>
                 </button>
               ))}
             </div>
-            {selectedForMerge.size > 1 && (
+            <div className="review-filter-row">
+              {([
+                ["all", "全部"],
+                ["event", "事件"],
+                ["unclassified", "碎片"],
+              ] as [KindFilter, string][]).map(([value, label]) => (
+                <button key={value} className={`review-filter ${kindFilter === value ? "is-active" : ""}`} onClick={() => setKindFilter(value)}>
+                  {label}
+                  <span>{kindCounts[value]}</span>
+                </button>
+              ))}
+            </div>
+            {statusView === "review" && selectedForMerge.size > 1 && (
               <button className="button-primary" onClick={merge} disabled={loading}><GitMerge size={16} />合并 {selectedForMerge.size} 个事件</button>
             )}
             <div className="review-list-pager">
@@ -863,16 +895,18 @@ export function ImportReviewWorkbench({
             {visibleCandidates.map((candidate) => (
               <article key={candidate.id} className={`review-candidate ${candidate.id === selectedId ? "is-active" : ""}`}>
                 <div className="flex gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedForMerge.has(candidate.id)}
-                    onChange={() => {
-                      const next = new Set(selectedForMerge);
-                      if (next.has(candidate.id)) next.delete(candidate.id); else next.add(candidate.id);
-                      setSelectedForMerge(next);
-                    }}
-                    aria-label="选择合并"
-                  />
+                  {statusView === "review" && (
+                    <input
+                      type="checkbox"
+                      checked={selectedForMerge.has(candidate.id)}
+                      onChange={() => {
+                        const next = new Set(selectedForMerge);
+                        if (next.has(candidate.id)) next.delete(candidate.id); else next.add(candidate.id);
+                        setSelectedForMerge(next);
+                      }}
+                      aria-label="选择合并"
+                    />
+                  )}
                   <button className="min-w-0 flex-1 text-left" onClick={() => setSelectedId(candidate.id)}>
                     <div className="review-candidate-kicker">
                       <time>{formatTime(candidate.startAt)}</time>
@@ -911,7 +945,6 @@ export function ImportReviewWorkbench({
             <div className="surface grid min-h-64 place-items-center text-muted">选择一个候选事件开始整理</div>
           )}
         </section>
-        <ReviewInspector detail={detail} overview={overview} />
       </div>
 
       {dryRun && (
