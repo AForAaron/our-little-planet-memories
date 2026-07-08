@@ -1,16 +1,14 @@
-import { execFile } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { spawn } from "node:child_process";
+import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { promisify } from "node:util";
 import { NextResponse } from "next/server";
 import { canUseReview, dryRunSummary } from "@/features/import-review/server/store";
 import { getImportRoots } from "@/features/import-review/server/paths";
-import type { ReviewCandidate } from "@/features/import-review/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const execFileAsync = promisify(execFile);
 const CONFIRMATION = "正式发布";
 
 type PublishRequest = {
@@ -22,22 +20,58 @@ type PublishRequest = {
   };
 };
 
-async function commandExists(command: string) {
+function progressFile() {
+  return path.join(getImportRoots().publishRoot, "publication-progress.json");
+}
+
+async function readProgress() {
   try {
-    await execFileAsync("/usr/bin/which", [command]);
-    return true;
-  } catch {
-    return false;
+    return JSON.parse(await readFile(progressFile(), "utf8")) as Record<string, unknown>;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { status: "idle", logs: [] };
+    }
+    throw error;
   }
 }
 
-async function selectedApprovedWavCount() {
-  const candidatesFile = path.join(getImportRoots().workRoot, "candidates.json");
-  const candidates = JSON.parse(await readFile(candidatesFile, "utf8")) as ReviewCandidate[];
-  return candidates
-    .filter((candidate) => candidate.status === "approved")
-    .flatMap((candidate) => candidate.selectedMediaPaths)
-    .filter((sourcePath) => /\.wav$/i.test(sourcePath)).length;
+async function publishIsLocked() {
+  try {
+    await stat(path.join(getImportRoots().publishRoot, "publication.lock"));
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+async function writeInitialProgress(summary: Record<string, unknown>) {
+  const value = {
+    id: randomUUID(),
+    status: "starting",
+    startedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    phase: "启动发布任务",
+    current: 0,
+    total: Number(summary.events ?? 0),
+    summary,
+    error: null,
+    logs: [
+      {
+        at: new Date().toISOString(),
+        message: "已启动后台发布任务",
+      },
+    ],
+  };
+  await writeFile(progressFile(), `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  return value;
+}
+
+export async function GET(request: Request) {
+  if (!canUseReview(request)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  return NextResponse.json(await readProgress());
 }
 
 export async function POST(request: Request) {
@@ -70,49 +104,32 @@ export async function POST(request: Request) {
       { status: 409 },
     );
   }
-  const wavCount = await selectedApprovedWavCount();
-  if (wavCount > 0 && !(await commandExists("ffmpeg"))) {
+  if (await publishIsLocked()) {
     return NextResponse.json(
-      {
-        error: `已批准内容中有 ${wavCount} 个 WAV 语音，但本机没有 ffmpeg。请先安装 ffmpeg，或在审核台取消选择这些 WAV 语音后再发布。`,
-        summary,
-      },
-      { status: 400 },
+      { error: "已有发布任务正在运行，请等待当前任务结束。", progress: await readProgress() },
+      { status: 409 },
     );
   }
 
-  try {
-    const { stdout, stderr } = await execFileAsync(
-      process.execPath,
-      ["--env-file-if-exists=.env.local", "scripts/import/publish.mjs", "--apply"],
-      {
-        cwd: process.cwd(),
-        env: {
-          ...process.env,
-          PUBLISH_CONFIRMED: "YES",
-        },
-        maxBuffer: 1024 * 1024 * 12,
-        timeout: 1000 * 60 * 30,
+  const progress = await writeInitialProgress(summary as Record<string, unknown>);
+  const child = spawn(
+    process.execPath,
+    ["--env-file-if-exists=.env.local", "scripts/import/publish.mjs", "--apply"],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        PUBLISH_CONFIRMED: "YES",
+        PUBLISH_PROGRESS_FILE: progressFile(),
       },
-    );
-    return NextResponse.json({
-      summary,
-      output: stdout.trim(),
-      warnings: stderr.trim(),
-    });
-  } catch (error) {
-    const childError = error as Error & {
-      stdout?: string;
-      stderr?: string;
-    };
-    return NextResponse.json(
-      {
-        error: childError.message || "正式发布失败。",
-        output: childError.stdout?.trim() ?? "",
-        warnings: childError.stderr?.trim() ?? "",
-        summary,
-      },
-      { status: 500 },
-    );
-  }
+      stdio: "ignore",
+      detached: false,
+    },
+  );
+  child.unref();
+  return NextResponse.json({
+    started: true,
+    pid: child.pid,
+    progress,
+  });
 }

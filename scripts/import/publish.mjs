@@ -17,6 +17,34 @@ const APPLY = process.argv.includes("--apply");
 const DRY_RUN = process.argv.includes("--dry-run") || !APPLY;
 const SUPPORTED_MEDIA_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".mp4", ".wav"]);
 const DANGEROUS_MEDIA_EXTENSIONS = new Set([".exe", ".msi", ".bat", ".cmd", ".com", ".scr", ".ps1"]);
+const PROGRESS_FILE = process.env.PUBLISH_PROGRESS_FILE;
+const progress = {
+  status: DRY_RUN ? "dry-run" : "running",
+  startedAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  phase: DRY_RUN ? "预览" : "准备发布",
+  current: 0,
+  total: 0,
+  summary: null,
+  error: null,
+  logs: [],
+};
+
+async function writeProgress(patch = {}) {
+  if (!PROGRESS_FILE) return;
+  Object.assign(progress, patch, { updatedAt: new Date().toISOString() });
+  await mkdir(path.dirname(PROGRESS_FILE), { recursive: true });
+  await writeFile(PROGRESS_FILE, `${JSON.stringify(progress, null, 2)}\n`, "utf8");
+}
+
+async function progressLog(message, patch = {}) {
+  const entry = {
+    at: new Date().toISOString(),
+    message,
+  };
+  progress.logs = [...progress.logs, entry].slice(-200);
+  await writeProgress({ ...patch, lastMessage: message });
+}
 
 function required(name) {
   const value = process.env[name];
@@ -361,6 +389,8 @@ async function verifyDatabaseReady(sql, authorId) {
 }
 
 async function publish() {
+  await writeProgress();
+  await progressLog("读取审核工作数据", { phase: "读取数据" });
   await ensureWorkRoot();
   await mkdir(PUBLISH_ROOT, { recursive: true });
   const [candidates, chapters, photos, albumVideos, messages] = await Promise.all([
@@ -377,6 +407,11 @@ async function publish() {
     [...photos, ...albumVideos],
     messages,
   );
+  await progressLog(`找到 ${approved.length} 个已批准事件`, {
+    phase: "发布前检查",
+    total: approved.length,
+    summary,
+  });
   const preflight = await preflightPublication(approved, chapters, messages);
   console.log(JSON.stringify({ ...summary, preflight }, null, 2));
   if (DRY_RUN) return;
@@ -395,7 +430,9 @@ async function publish() {
   const secretAccessKey = required("R2_SECRET_ACCESS_KEY");
   const bucket = required("R2_BUCKET");
 
+  await progressLog("等待发布锁", { phase: "等待发布锁" });
   await withPublishLock(async () => {
+    await progressLog("已获得发布锁，读取发布 manifest", { phase: "读取发布记录" });
     const manifestFile = path.join(PUBLISH_ROOT, "publication-manifest.json");
     const previousManifest = await readFile(manifestFile, "utf8")
       .then((value) => JSON.parse(value))
@@ -408,12 +445,14 @@ async function publish() {
         import("@aws-sdk/client-s3"),
         import("@neondatabase/serverless"),
       ]);
+    await progressLog("连接 R2 和 Neon", { phase: "连接云端" });
     const s3 = new S3Client({
       region: "auto",
       endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
       credentials: { accessKeyId, secretAccessKey },
     });
     const sql = neon(databaseUrl);
+    await progressLog("检查数据库表和发布作者", { phase: "检查数据库" });
     await verifyDatabaseReady(sql, authorId);
     const chapterById = new Map(chapters.map((chapter) => [chapter.id, chapter]));
     const photoByPath = new Map(photos.map((photo) => [photo.sourcePath, photo]));
@@ -424,8 +463,20 @@ async function publish() {
       events: { ...(previousManifest.events ?? {}) },
     };
 
-    for (const candidate of approved) {
+    for (let candidateIndex = 0; candidateIndex < approved.length; candidateIndex += 1) {
+      const candidate = approved[candidateIndex];
+      const current = candidateIndex + 1;
+      await progressLog(`处理事件 ${current}/${approved.length}：${candidate.title}`, {
+        phase: "处理事件",
+        current,
+        total: approved.length,
+      });
       if (manifest.events[candidate.id]?.status === "published") {
+        await progressLog(`跳过已发布事件：${candidate.title}`, {
+          phase: "跳过已发布",
+          current,
+          total: approved.length,
+        });
         console.log(`跳过已发布事件：${candidate.id}`);
         continue;
       }
@@ -435,6 +486,11 @@ async function publish() {
         limit 1
       `;
       if (existing) {
+        await progressLog(`云端已存在，标记跳过：${candidate.title}`, {
+          phase: "跳过已存在",
+          current,
+          total: approved.length,
+        });
         manifest.events[candidate.id] = {
           status: "published",
           entryId: existing.id,
@@ -452,9 +508,19 @@ async function publish() {
       const prepared = [];
       const uploadedKeys = [];
       try {
-        for (const sourcePath of candidate.selectedMediaPaths) {
+        for (let mediaIndex = 0; mediaIndex < candidate.selectedMediaPaths.length; mediaIndex += 1) {
+          const sourcePath = candidate.selectedMediaPaths[mediaIndex];
+          await progressLog(
+            `处理媒体 ${mediaIndex + 1}/${candidate.selectedMediaPaths.length}：${path.basename(sourcePath)}`,
+            { phase: "处理媒体", current, total: approved.length },
+          );
           const item = await prepareMedia(candidate, sourcePath, photoByPath);
           prepared.push({ ...item, id: randomUUID() });
+          await progressLog(`上传媒体：${path.basename(item.r2Key)}`, {
+            phase: "上传 R2",
+            current,
+            total: approved.length,
+          });
           await s3.send(
             new PutObjectCommand({
                 Bucket: bucket,
@@ -465,6 +531,11 @@ async function publish() {
           );
           uploadedKeys.push(item.r2Key);
           if (item.thumbnail && item.thumbnailR2Key) {
+            await progressLog(`上传缩略图：${path.basename(item.thumbnailR2Key)}`, {
+              phase: "上传 R2",
+              current,
+              total: approved.length,
+            });
             await s3.send(
               new PutObjectCommand({
                 Bucket: bucket,
@@ -477,6 +548,11 @@ async function publish() {
           }
         }
 
+        await progressLog(`写入数据库：${candidate.title}`, {
+          phase: "写入数据库",
+          current,
+          total: approved.length,
+        });
         const queries = [
           sql`
             insert into public.memory_chapters
@@ -555,6 +631,11 @@ async function publish() {
           }
         }
         await sql.transaction(queries);
+        await progressLog(`写入发布记录：${candidate.title}`, {
+          phase: "写入发布记录",
+          current,
+          total: approved.length,
+        });
         manifest.events[candidate.id] = {
           status: "published",
           entryId,
@@ -568,6 +649,11 @@ async function publish() {
         );
         console.log(`已发布：${candidate.title}`);
       } catch (error) {
+        await progressLog(`事件失败，清理已上传媒体：${candidate.title}`, {
+          phase: "失败清理",
+          current,
+          total: approved.length,
+        });
         await Promise.allSettled(
           uploadedKeys.map((key) =>
             s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key })),
@@ -577,9 +663,22 @@ async function publish() {
       }
     }
   });
+  await progressLog("发布完成", {
+    status: "completed",
+    phase: "完成",
+    current: approved.length,
+    total: approved.length,
+  });
 }
 
 publish().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exitCode = 1;
+  const message = error instanceof Error ? error.message : String(error);
+  writeProgress({
+    status: "failed",
+    phase: "失败",
+    error: message,
+  }).finally(() => {
+    console.error(message);
+    process.exitCode = 1;
+  });
 });

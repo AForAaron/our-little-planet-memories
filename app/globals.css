@@ -1383,6 +1383,61 @@ button, a { -webkit-tap-highlight-color: transparent; }
   font-size: .82rem;
   line-height: 1.65;
 }
+.review-publish-progress {
+  display: grid;
+  gap: .7rem;
+  margin-top: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: .9rem;
+  background: var(--color-surface-soft);
+  padding: 1rem;
+}
+.review-publish-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color-text);
+  font-size: .82rem;
+  font-weight: 800;
+}
+.review-publish-progress-head b {
+  font-variant-numeric: tabular-nums;
+}
+.review-publish-progress-bar {
+  height: .55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-line) 55%, var(--color-surface));
+}
+.review-publish-progress-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transition: width .35s ease;
+}
+.review-publish-log {
+  display: grid;
+  max-height: 13rem;
+  overflow: auto;
+  gap: .42rem;
+  border-radius: .7rem;
+  background: var(--color-surface);
+  padding: .75rem;
+}
+.review-publish-log p {
+  display: grid;
+  grid-template-columns: 4.8rem minmax(0, 1fr);
+  gap: .55rem;
+  color: var(--color-text);
+  font-size: .72rem;
+  line-height: 1.45;
+}
+.review-publish-log time {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
 .review-dryrun-json {
   max-height: 45vh;
   overflow: auto;

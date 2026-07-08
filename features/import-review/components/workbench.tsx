@@ -41,6 +41,15 @@ import type {
 
 type StatusView = "review" | "approved" | "paused" | "rejected";
 type KindFilter = "all" | "event" | "unclassified";
+type PublishProgress = {
+  status?: string;
+  phase?: string;
+  current?: number;
+  total?: number;
+  lastMessage?: string;
+  error?: string | null;
+  logs?: Array<{ at?: string; message?: string }>;
+};
 
 function mediaUrl(sourcePath: string) {
   return `/api/import-review/media?path=${encodeURIComponent(sourcePath)}`;
@@ -601,6 +610,7 @@ export function ImportReviewWorkbench({
   const [dryRunMode, setDryRunMode] = useState<"preview" | "publish" | null>(null);
   const [publishConfirmation, setPublishConfirmation] = useState("");
   const [publishResult, setPublishResult] = useState<Record<string, unknown> | null>(null);
+  const [publishProgress, setPublishProgress] = useState<PublishProgress | null>(null);
   const [error, setError] = useState("");
   const [loading, startLoading] = useTransition();
   const [publishing, startPublishing] = useTransition();
@@ -773,6 +783,8 @@ export function ImportReviewWorkbench({
     startLoading(async () => {
       try {
         setDryRun(await api("/api/import-review/dry-run"));
+        const progress = await api<PublishProgress>("/api/import-review/publish");
+        setPublishProgress(progress.status && progress.status !== "idle" ? progress : null);
         setDryRunMode("publish");
         setPublishConfirmation("");
         setPublishResult(null);
@@ -787,13 +799,14 @@ export function ImportReviewWorkbench({
     setDryRunMode(null);
     setPublishConfirmation("");
     setPublishResult(null);
+    setPublishProgress(null);
   }
 
   function publishApproved() {
     if (!dryRun) return;
     startPublishing(async () => {
       try {
-        setPublishResult(await api("/api/import-review/publish", {
+        const result = await api<{ started: boolean; progress: PublishProgress }>("/api/import-review/publish", {
           method: "POST",
           headers: reviewHeaders(reviewer),
           body: JSON.stringify({
@@ -804,13 +817,35 @@ export function ImportReviewWorkbench({
               messages: Number(dryRun.messages ?? 0),
             },
           }),
-        }));
-        await loadOverview();
+        });
+        setPublishProgress(result.progress);
+        setPublishResult(null);
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "正式发布失败。");
       }
     });
   }
+
+  useEffect(() => {
+    const status = publishProgress?.status;
+    const shouldPoll =
+      dryRunMode === "publish" &&
+      Boolean(status && !["completed", "failed", "idle"].includes(status));
+    if (!shouldPoll) return;
+    const timer = window.setInterval(async () => {
+      try {
+        const next = await api<PublishProgress>("/api/import-review/publish");
+        setPublishProgress(next);
+        if (next.status === "completed") {
+          setPublishResult(next as Record<string, unknown>);
+          await loadOverview();
+        }
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "无法读取发布进度。");
+      }
+    }, 1_000);
+    return () => window.clearInterval(timer);
+  }, [dryRunMode, loadOverview, publishProgress?.status]);
 
   if (!overview && loading) {
     return <main className="grid min-h-screen place-items-center"><LoaderCircle className="animate-spin text-accent" size={32} /></main>;
@@ -863,6 +898,12 @@ export function ImportReviewWorkbench({
   const dryRunWarnings = Array.isArray(dryRunPreflight.warnings)
     ? dryRunPreflight.warnings.map(String)
     : [];
+  const publishRunning = Boolean(
+    publishProgress?.status &&
+    !["completed", "failed", "idle"].includes(publishProgress.status),
+  );
+  const publishLogs = publishProgress?.logs ?? [];
+  const publishTotal = publishProgress?.total ?? Number(dryRunRecord.events ?? 0);
 
   return (
     <main className="review-shell">
@@ -1048,14 +1089,14 @@ export function ImportReviewWorkbench({
       )}
 
       {dryRun && dryRunMode === "publish" && (
-        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !publishing && closeDryRunModal()}>
+        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !publishing && !publishRunning && closeDryRunModal()}>
           <section className="modal-card review-publish-modal p-6 sm:p-8">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span className="eyebrow">Publish</span>
                 <h2 className="mt-2 font-heading text-2xl font-bold">正式发布已批准内容</h2>
               </div>
-              <button className="button-secondary size-10 !p-0" onClick={closeDryRunModal} disabled={publishing}><X size={16} /></button>
+              <button className="button-secondary size-10 !p-0" onClick={closeDryRunModal} disabled={publishing || publishRunning}><X size={16} /></button>
             </div>
             <div className="review-dryrun-grid">
               {([
@@ -1086,22 +1127,55 @@ export function ImportReviewWorkbench({
                   value={publishConfirmation}
                   onChange={(event) => setPublishConfirmation(event.target.value)}
                   placeholder="正式发布"
-                  disabled={publishing || Boolean(publishResult)}
+                  disabled={publishing || publishRunning || Boolean(publishResult)}
                 />
               </label>
             </div>
+            {publishProgress && (
+              <div className="review-publish-progress">
+                <div className="review-publish-progress-head">
+                  <span>{publishProgress.phase ?? "发布中"}</span>
+                  <b>{publishProgress.current ?? 0}/{publishTotal}</b>
+                </div>
+                <div className="review-publish-progress-bar">
+                  <i
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.round(
+                          ((publishProgress.current ?? 0) /
+                            Math.max(1, publishTotal)) *
+                            100,
+                        ),
+                      )}%`,
+                    }}
+                  />
+                </div>
+                {publishProgress.error && (
+                  <p className="review-inline-error">{publishProgress.error}</p>
+                )}
+                <div className="review-publish-log">
+                  {publishLogs.slice(-12).map((entry, index) => (
+                    <p key={`${entry.at ?? index}-${entry.message ?? ""}`}>
+                      <time>{entry.at ? formatTime(entry.at) : "--"}</time>
+                      <span>{entry.message}</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="mt-5 flex flex-wrap justify-end gap-2">
-              <button className="button-secondary" type="button" onClick={closeDryRunModal} disabled={publishing}>
+              <button className="button-secondary" type="button" onClick={closeDryRunModal} disabled={publishing || publishRunning}>
                 取消
               </button>
               <button
                 className="button-primary"
                 type="button"
                 onClick={publishApproved}
-                disabled={publishing || Boolean(publishResult) || dryRunBlockers.length > 0 || publishConfirmation !== "正式发布" || Number(dryRunRecord.events ?? 0) <= 0}
+                disabled={publishing || publishRunning || Boolean(publishResult) || dryRunBlockers.length > 0 || publishConfirmation !== "正式发布" || Number(dryRunRecord.events ?? 0) <= 0}
               >
-                {publishing ? <LoaderCircle size={16} className="animate-spin" /> : <CloudUpload size={16} />}
-                确认正式发布
+                {publishing || publishRunning ? <LoaderCircle size={16} className="animate-spin" /> : <CloudUpload size={16} />}
+                {publishRunning ? "发布中" : "确认正式发布"}
               </button>
             </div>
             {publishResult && (
