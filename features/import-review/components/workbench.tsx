@@ -23,6 +23,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  UploadCloud,
   UserRound,
   X,
 } from "lucide-react";
@@ -39,7 +40,7 @@ import type {
   ReviewStatus,
 } from "@/features/import-review/types";
 
-type StatusView = "review" | "approved" | "paused" | "rejected";
+type StatusView = "review" | "approved" | "published" | "paused" | "rejected";
 type KindFilter = "all" | "event" | "unclassified";
 type PublishProgress = {
   status?: string;
@@ -99,6 +100,10 @@ function statusLabel(status: ReviewStatus) {
 
 function viewMatchesStatus(candidate: CandidateSummary, view: StatusView) {
   if (view === "review") return candidate.status === "draft";
+  if (view === "approved") {
+    return candidate.status === "approved" && candidate.publicationStatus !== "published";
+  }
+  if (view === "published") return candidate.publicationStatus === "published";
   return candidate.status === view;
 }
 
@@ -132,7 +137,9 @@ function categoryLabel(category: string) {
 function CandidateBadge({ candidate }: { candidate: CandidateSummary }) {
   return (
     <div className="review-candidate-meta">
-      <span className={`review-chip is-${candidate.status}`}>{statusLabel(candidate.status)}</span>
+      <span className={`review-chip is-${candidate.publicationStatus === "published" ? "published" : candidate.status}`}>
+        {candidate.publicationStatus === "published" ? "已发布" : statusLabel(candidate.status)}
+      </span>
       <span className="review-chip">{sourceTypeLabel(candidate.sourceType)}</span>
       <span className="review-chip">
         {candidate.messageCount} 消息 · {candidate.mediaCount} 媒体
@@ -330,6 +337,12 @@ function DetailEditor({
                 <span className="ml-3">
                   审核决定：{candidate.reviewedBy}
                   {candidate.reviewedAt ? ` · ${formatTime(candidate.reviewedAt)}` : ""}
+                </span>
+              )}
+              {candidate.publicationStatus === "published" && (
+                <span className="ml-3">
+                  已发布
+                  {candidate.publishedAt ? ` · ${formatTime(candidate.publishedAt)}` : ""}
                 </span>
               )}
               <span className="ml-3">版本 {candidate.revision ?? 0}</span>
@@ -863,13 +876,17 @@ export function ImportReviewWorkbench({
     );
   }
 
-  const approved = overview.candidates.filter((candidate) => candidate.status === "approved").length;
+  const approved = overview.candidates.filter(
+    (candidate) => candidate.status === "approved" && candidate.publicationStatus !== "published",
+  ).length;
+  const published = overview.candidates.filter((candidate) => candidate.publicationStatus === "published").length;
   const draft = overview.candidates.filter((candidate) => candidate.status === "draft").length;
   const paused = overview.candidates.filter((candidate) => candidate.status === "paused").length;
   const rejected = overview.candidates.filter((candidate) => candidate.status === "rejected").length;
   const statusCounts: Record<StatusView, number> = {
     review: draft,
     approved,
+    published,
     paused,
     rejected,
   };
@@ -885,6 +902,7 @@ export function ImportReviewWorkbench({
     { label: "全部候选", value: overview.candidates.length, icon: ListChecks, tone: "neutral" },
     { label: "待审核", value: draft, icon: Clock3, tone: "pending" },
     { label: "已批准", value: approved, icon: CheckCircle2, tone: "approved" },
+    { label: "已发布", value: published, icon: UploadCloud, tone: "published" },
     { label: "暂时搁置", value: paused, icon: CirclePause, tone: "paused" },
     { label: "章节", value: overview.chapters.length, icon: ShieldCheck, tone: "chapter" },
   ];
@@ -959,6 +977,7 @@ export function ImportReviewWorkbench({
               {([
                 ["review", "待审核"],
                 ["approved", "已批准"],
+                ["published", "已发布"],
                 ["paused", "暂时搁置"],
                 ["rejected", "已拒绝"],
               ] as [StatusView, string][]).map(([value, label]) => (

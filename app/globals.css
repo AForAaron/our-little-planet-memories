@@ -841,6 +841,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .review-stat-card.is-pending i { color: #a06e2a; background: #fbefdc; }
 .review-stat-card.is-approved i { color: #3f7a58; background: #e6f0e6; }
+.review-stat-card.is-published i { color: #4f6f91; background: #e8eef7; }
 .review-stat-card.is-paused i { color: #6f6478; background: #eee9f2; }
 .review-stat-card.is-chapter i { color: #64748b; background: #e9edf3; }
 .review-layout {
@@ -983,6 +984,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .review-chip.is-draft { color: #a06e2a; background: #fbefdc; border-color: #eecf9e; }
 .review-chip.is-approved { color: #3f7a58; background: #e6f0e6; border-color: #bcd8bf; }
+.review-chip.is-published { color: #4f6f91; background: #e8eef7; border-color: #c9d6e8; }
 .review-chip.is-rejected { color: #a55f56; background: #f6e6e2; border-color: #e2c5be; }
 .review-chip.is-paused { color: #6f6478; background: #eee9f2; border-color: #d8cbdf; }
 .review-chip.is-score { margin-left: auto; font-weight: 700; }

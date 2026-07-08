@@ -1,4 +1,5 @@
 export type ReviewStatus = "draft" | "approved" | "rejected" | "paused";
+export type PublicationStatus = "pending" | "published";
 export type PrivacyLevel = "exact" | "approximate" | "private";
 
 export type LocationPoint = {
@@ -74,6 +75,9 @@ export type ReviewCandidate = {
   reviewedAt?: string | null;
   lastEditedBy?: string | null;
   lastEditedAt?: string | null;
+  publicationStatus?: PublicationStatus;
+  publishedEntryId?: string | null;
+  publishedAt?: string | null;
 };
 
 export type PhotoAsset = {

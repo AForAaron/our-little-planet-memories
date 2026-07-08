@@ -28,6 +28,17 @@ async function readJson<T>(name: string): Promise<T> {
   return JSON.parse(await readFile(workPath(name), "utf8")) as T;
 }
 
+async function readPublishJson<T>(name: string, fallback: T): Promise<T> {
+  try {
+    return JSON.parse(
+      await readFile(path.join(getImportRoots().publishRoot, name), "utf8"),
+    ) as T;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return fallback;
+    throw error;
+  }
+}
+
 async function writeJson(name: string, value: unknown) {
   const { workRoot } = getImportRoots();
   await mkdir(workRoot, { recursive: true });
@@ -284,12 +295,25 @@ export class ReviewConflictError extends Error {
   }
 }
 
+type PublicationManifest = {
+  events?: Record<
+    string,
+    {
+      status?: string;
+      entryId?: string;
+      publishedAt?: string;
+    }
+  >;
+};
+
 export async function getOverview(): Promise<ReviewOverview> {
-  const [stats, chapters, candidates] = await Promise.all([
+  const [stats, chapters, candidates, publicationManifest] = await Promise.all([
     readJson<Record<string, unknown>>("stats.json"),
     readJson<Chapter[]>("chapters.json"),
     readJson<ReviewCandidate[]>("candidates.json"),
+    readPublishJson<PublicationManifest>("publication-manifest.json", { events: {} }),
   ]);
+  const publishedEvents = publicationManifest.events ?? {};
   return {
     stats,
     chapters,
@@ -302,6 +326,12 @@ export async function getOverview(): Promise<ReviewOverview> {
         ...candidate
       }) => ({
         ...candidate,
+        publicationStatus:
+          publishedEvents[candidate.id]?.status === "published"
+            ? "published"
+            : "pending",
+        publishedEntryId: publishedEvents[candidate.id]?.entryId ?? null,
+        publishedAt: publishedEvents[candidate.id]?.publishedAt ?? null,
         messageCount: messageIds.length,
         selectedMessageCount: selectedMessageIds.length,
         mediaCount: mediaPaths.length,
