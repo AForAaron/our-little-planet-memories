@@ -1,15 +1,17 @@
 import { randomUUID } from "node:crypto";
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import { NextResponse } from "next/server";
-import { canUseReview, dryRunSummary } from "@/features/import-review/server/store";
+import { canUseReview } from "@/features/import-review/server/store";
 import { getImportRoots } from "@/features/import-review/server/paths";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const CONFIRMATION = "正式发布";
+const execFileAsync = promisify(execFile);
 
 type PublishRequest = {
   confirmation?: string;
@@ -67,6 +69,20 @@ async function writeInitialProgress(summary: Record<string, unknown>) {
   return value;
 }
 
+async function publishDryRunSummary() {
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    ["--env-file-if-exists=.env.local", "scripts/import/publish.mjs", "--dry-run"],
+    {
+      cwd: process.cwd(),
+      env: process.env,
+      maxBuffer: 1024 * 1024 * 4,
+      timeout: 1000 * 60 * 5,
+    },
+  );
+  return JSON.parse(stdout) as Record<string, unknown>;
+}
+
 export async function GET(request: Request) {
   if (!canUseReview(request)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -87,10 +103,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const summary = await dryRunSummary();
+  const summary = await publishDryRunSummary();
   if (!Number(summary.events)) {
     return NextResponse.json(
-      { error: "没有已批准事件，拒绝空发布。", summary },
+      { error: "没有新的已批准事件需要发布。", summary },
       { status: 400 },
     );
   }

@@ -267,9 +267,26 @@ async function buildSummary(approved, chapters, photos, messages) {
       ...(approved.length > 20
         ? ["首批批准事件超过 20 个，建议先缩小范围完成一次验收。"]
         : []),
-      ...(approved.length === 0 ? ["还没有批准任何事件。"] : []),
+      ...(approved.length === 0 ? ["没有新的已批准事件需要发布。"] : []),
     ],
   };
+}
+
+async function readPublicationManifest() {
+  const manifestFile = path.join(PUBLISH_ROOT, "publication-manifest.json");
+  return await readFile(manifestFile, "utf8")
+    .then((value) => JSON.parse(value))
+    .catch((error) => {
+      if (error?.code === "ENOENT") return { events: {} };
+      throw error;
+    });
+}
+
+function pendingApprovedCandidates(approved, manifest) {
+  const published = manifest.events ?? {};
+  return approved.filter(
+    (candidate) => published[candidate.id]?.status !== "published",
+  );
 }
 
 async function preflightPublication(approved, chapters, messages) {
@@ -401,21 +418,27 @@ async function publish() {
     readWorkJson("messages.json", []),
   ]);
   const approved = candidates.filter((candidate) => candidate.status === "approved");
+  const publicationManifest = await readPublicationManifest();
+  const pendingApproved = pendingApprovedCandidates(approved, publicationManifest);
   const summary = await buildSummary(
-    approved,
+    pendingApproved,
     chapters,
     [...photos, ...albumVideos],
     messages,
   );
-  await progressLog(`找到 ${approved.length} 个已批准事件`, {
+  const publishedCount = approved.length - pendingApproved.length;
+  summary.approved = approved.length;
+  summary.pending = pendingApproved.length;
+  summary.published = publishedCount;
+  await progressLog(`找到 ${pendingApproved.length} 个待发布事件，${publishedCount} 个已发布事件`, {
     phase: "发布前检查",
-    total: approved.length,
+    total: pendingApproved.length,
     summary,
   });
-  const preflight = await preflightPublication(approved, chapters, messages);
+  const preflight = await preflightPublication(pendingApproved, chapters, messages);
   console.log(JSON.stringify({ ...summary, preflight }, null, 2));
   if (DRY_RUN) return;
-  if (!approved.length) throw new Error("没有已批准事件，拒绝空发布。");
+  if (!pendingApproved.length) throw new Error("没有新的已批准事件需要发布。");
   if (preflight.blockers.length) {
     throw new Error(`发布前检查未通过：\n- ${preflight.blockers.join("\n- ")}`);
   }
@@ -434,12 +457,7 @@ async function publish() {
   await withPublishLock(async () => {
     await progressLog("已获得发布锁，读取发布 manifest", { phase: "读取发布记录" });
     const manifestFile = path.join(PUBLISH_ROOT, "publication-manifest.json");
-    const previousManifest = await readFile(manifestFile, "utf8")
-      .then((value) => JSON.parse(value))
-      .catch((error) => {
-        if (error?.code === "ENOENT") return { events: {} };
-        throw error;
-      });
+    const previousManifest = await readPublicationManifest();
     const [{ S3Client, PutObjectCommand, DeleteObjectCommand }, { neon }] =
       await Promise.all([
         import("@aws-sdk/client-s3"),
@@ -463,19 +481,19 @@ async function publish() {
       events: { ...(previousManifest.events ?? {}) },
     };
 
-    for (let candidateIndex = 0; candidateIndex < approved.length; candidateIndex += 1) {
-      const candidate = approved[candidateIndex];
+    for (let candidateIndex = 0; candidateIndex < pendingApproved.length; candidateIndex += 1) {
+      const candidate = pendingApproved[candidateIndex];
       const current = candidateIndex + 1;
-      await progressLog(`处理事件 ${current}/${approved.length}：${candidate.title}`, {
+      await progressLog(`处理事件 ${current}/${pendingApproved.length}：${candidate.title}`, {
         phase: "处理事件",
         current,
-        total: approved.length,
+        total: pendingApproved.length,
       });
       if (manifest.events[candidate.id]?.status === "published") {
         await progressLog(`跳过已发布事件：${candidate.title}`, {
           phase: "跳过已发布",
           current,
-          total: approved.length,
+          total: pendingApproved.length,
         });
         console.log(`跳过已发布事件：${candidate.id}`);
         continue;
@@ -489,7 +507,7 @@ async function publish() {
         await progressLog(`云端已存在，标记跳过：${candidate.title}`, {
           phase: "跳过已存在",
           current,
-          total: approved.length,
+          total: pendingApproved.length,
         });
         manifest.events[candidate.id] = {
           status: "published",
@@ -512,14 +530,14 @@ async function publish() {
           const sourcePath = candidate.selectedMediaPaths[mediaIndex];
           await progressLog(
             `处理媒体 ${mediaIndex + 1}/${candidate.selectedMediaPaths.length}：${path.basename(sourcePath)}`,
-            { phase: "处理媒体", current, total: approved.length },
+            { phase: "处理媒体", current, total: pendingApproved.length },
           );
           const item = await prepareMedia(candidate, sourcePath, photoByPath);
           prepared.push({ ...item, id: randomUUID() });
           await progressLog(`上传媒体：${path.basename(item.r2Key)}`, {
             phase: "上传 R2",
             current,
-            total: approved.length,
+            total: pendingApproved.length,
           });
           await s3.send(
             new PutObjectCommand({
@@ -534,7 +552,7 @@ async function publish() {
             await progressLog(`上传缩略图：${path.basename(item.thumbnailR2Key)}`, {
               phase: "上传 R2",
               current,
-              total: approved.length,
+              total: pendingApproved.length,
             });
             await s3.send(
               new PutObjectCommand({
@@ -551,7 +569,7 @@ async function publish() {
         await progressLog(`写入数据库：${candidate.title}`, {
           phase: "写入数据库",
           current,
-          total: approved.length,
+          total: pendingApproved.length,
         });
         const queries = [
           sql`
@@ -634,7 +652,7 @@ async function publish() {
         await progressLog(`写入发布记录：${candidate.title}`, {
           phase: "写入发布记录",
           current,
-          total: approved.length,
+          total: pendingApproved.length,
         });
         manifest.events[candidate.id] = {
           status: "published",
@@ -652,7 +670,7 @@ async function publish() {
         await progressLog(`事件失败，清理已上传媒体：${candidate.title}`, {
           phase: "失败清理",
           current,
-          total: approved.length,
+          total: pendingApproved.length,
         });
         await Promise.allSettled(
           uploadedKeys.map((key) =>
@@ -666,8 +684,8 @@ async function publish() {
   await progressLog("发布完成", {
     status: "completed",
     phase: "完成",
-    current: approved.length,
-    total: approved.length,
+    current: pendingApproved.length,
+    total: pendingApproved.length,
   });
 }
 

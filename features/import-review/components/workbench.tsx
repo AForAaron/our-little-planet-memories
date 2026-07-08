@@ -1059,11 +1059,12 @@ export function ImportReviewWorkbench({
             </div>
             <div className="review-dryrun-grid">
               {([
-                ["事件", dryRunRecord.events],
+                ["待发布事件", dryRunRecord.events],
                 ["章节", dryRunRecord.chapters],
                 ["媒体", dryRunRecord.media],
                 ["消息", dryRunRecord.messages],
                 ["语音", dryRunRecord.voices],
+                ["已发布", dryRunRecord.published],
                 ["原始媒体 MiB", dryRunRecord.originalMediaMiB],
               ] satisfies Array<[string, unknown]>).map(([label, value]) => (
                 <div key={label} className="review-dryrun-card">
