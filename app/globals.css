@@ -527,23 +527,22 @@ button, a { -webkit-tap-highlight-color: transparent; }
   display: grid;
   gap: .65rem;
 }
-.entry-upload-card input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+.entry-upload-control {
+  display: none;
 }
 .entry-upload-box {
   display: grid;
+  width: 100%;
   min-height: 9.5rem;
   place-items: center;
   align-content: center;
   gap: .55rem;
   border: 1.8px dashed #e4cfbe;
   border-radius: 1rem;
+  background: transparent;
   color: #b79a88;
   cursor: pointer;
+  font: inherit;
   padding: 1.6rem;
   text-align: center;
   transition: border-color var(--transition), background var(--transition), color var(--transition);
