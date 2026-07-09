@@ -9,7 +9,12 @@ export async function PageFootprints({
   pagePath: string;
   title?: string;
 }) {
-  const events = await getFootprints({ pagePath, limit: 6 });
+  const events = await getFootprints({
+    pagePath,
+    excludeTargetType: "follow_up",
+    failSoft: true,
+    limit: 6,
+  });
 
   return (
     <section className="footprint-panel">

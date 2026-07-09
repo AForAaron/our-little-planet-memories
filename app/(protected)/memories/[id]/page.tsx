@@ -2,7 +2,9 @@ import { ArrowLeft, CalendarDays, MapPin, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChatBubbleThread } from "@/components/chat-bubble-thread";
+import { EntryFollowUps } from "@/components/entry-follow-ups";
 import { PageFootprints } from "@/components/page-footprints";
+import { getEntryFollowUps } from "@/lib/data/footprints";
 import { getMemoryDetail } from "@/lib/data/memories";
 import type { Media } from "@/lib/database.types";
 import { formatDate } from "@/lib/utils";
@@ -90,6 +92,8 @@ export default async function MemoryDetailPage({
   const { entry, chapter, place, messages } = detail;
   const backTarget = backTargetForCategory(entry.category);
   const visibleMedia = entry.media?.filter((item) => item.display_url) ?? [];
+  const pagePath = `/memories/${entry.id}`;
+  const followUps = await getEntryFollowUps(entry.id, pagePath);
 
   return (
     <main className="page-shell max-w-[960px] py-7">
@@ -164,6 +168,15 @@ export default async function MemoryDetailPage({
           )}
         </section>
 
+        <div className="mt-8">
+          <EntryFollowUps
+            entryId={entry.id}
+            pagePath={pagePath}
+            pageTitle={entry.title || "无题回忆"}
+            initialEvents={followUps}
+          />
+        </div>
+
         {messages.length ? (
           <section className="mt-8">
             <div className="rounded-[24px] bg-[var(--color-surface-soft)] p-5 shadow-[inset_0_2px_6px_rgb(0_0_0_/_6%)] sm:p-7">
@@ -180,7 +193,7 @@ export default async function MemoryDetailPage({
         ) : null}
 
         <div className="mt-8">
-          <PageFootprints pagePath={`/memories/${entry.id}`} title="这段回忆的足迹" />
+          <PageFootprints pagePath={pagePath} title="这段回忆的足迹" />
         </div>
       </article>
     </main>

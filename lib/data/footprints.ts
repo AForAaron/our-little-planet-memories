@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, gte, ne, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, ne, or, type SQL } from "drizzle-orm";
 import { getCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
 import type {
@@ -215,10 +215,18 @@ export async function updatePresence(input: {
 export async function getFootprints({
   pagePath,
   includeInstant = false,
+  targetType,
+  targetId,
+  excludeTargetType,
+  failSoft = false,
   limit = 40,
 }: {
   pagePath?: string;
   includeInstant?: boolean;
+  targetType?: string;
+  targetId?: string;
+  excludeTargetType?: string;
+  failSoft?: boolean;
   limit?: number;
 } = {}) {
   if (!isLiveMode()) {
@@ -235,19 +243,40 @@ export async function getFootprints({
   const normalizedPath = pagePath ? normalizePath(pagePath) : undefined;
   const clauses: SQL[] = [];
   if (normalizedPath) clauses.push(eq(footprintEvents.pagePath, normalizedPath));
+  if (targetType) clauses.push(eq(footprintEvents.targetType, targetType));
+  if (targetId) clauses.push(eq(footprintEvents.targetId, targetId));
+  if (excludeTargetType) {
+    clauses.push(or(isNull(footprintEvents.targetType), ne(footprintEvents.targetType, excludeTargetType))!);
+  }
   if (!includeInstant) {
     clauses.push(or(ne(footprintEvents.eventType, "message"), ne(footprintEvents.scope, "site"))!);
   }
 
-  const rows = await db
-    .select({ event: footprintEvents, profile: profiles })
-    .from(footprintEvents)
-    .leftJoin(profiles, eq(footprintEvents.authorId, profiles.id))
-    .where(clauses.length ? and(...clauses) : undefined)
-    .orderBy(desc(footprintEvents.createdAt))
-    .limit(Math.max(1, Math.min(limit, 80)));
+  let rows: { event: FootprintRow; profile: typeof profiles.$inferSelect | null }[];
+  try {
+    rows = await db
+      .select({ event: footprintEvents, profile: profiles })
+      .from(footprintEvents)
+      .leftJoin(profiles, eq(footprintEvents.authorId, profiles.id))
+      .where(clauses.length ? and(...clauses) : undefined)
+      .orderBy(desc(footprintEvents.createdAt))
+      .limit(Math.max(1, Math.min(limit, 80)));
+  } catch (error) {
+    if (failSoft) return [];
+    throw error;
+  }
 
   return rows.map((row) => mapFootprint(row.event, row.profile));
+}
+
+export async function getEntryFollowUps(entryId: string, pagePath: string) {
+  return getFootprints({
+    pagePath,
+    targetType: "follow_up",
+    targetId: entryId,
+    failSoft: true,
+    limit: 80,
+  });
 }
 
 export async function createFootprint(input: {
