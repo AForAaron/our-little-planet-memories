@@ -1,4 +1,4 @@
-import { ArrowLeft, Clapperboard, ListChecks, NotebookPen } from "lucide-react";
+import { ArrowLeft, Clapperboard, Footprints, ListChecks, NotebookPen } from "lucide-react";
 import Link from "next/link";
 import { FeatureCard } from "@/components/feature-card";
 import { getHomeData } from "@/lib/data/memories";
@@ -23,6 +23,7 @@ export default async function DailyPage() {
         <FeatureCard icon={NotebookPen} name="共同日记" stat={`${counts.diary ?? 0} 篇日记`} href="/daily/diary" tone="pink" />
         <FeatureCard icon={ListChecks} name="愿望清单" stat="一起完成的小目标" href="/daily/wishlist" tone="pink" />
         <FeatureCard icon={Clapperboard} name="观影记录" stat={`${counts.watch ?? 0} 部作品`} href="/daily/watch" tone="pink" />
+        <FeatureCard icon={Footprints} name="足迹流" stat="最近留下的小纸条和同屏停留" href="/footprints" tone="pink" />
       </div>
     </main>
   );

@@ -1,4 +1,4 @@
-import type { Entry, Relationship } from "@/lib/database.types";
+import type { Entry, FootprintEvent, PresenceState, Relationship } from "@/lib/database.types";
 
 const now = Date.now();
 
@@ -159,5 +159,61 @@ export const DEMO_ENTRIES: Entry[] = [
     updated_at: new Date(now).toISOString(),
     media: [],
     profiles: { display_name: "我们", avatar_url: null, color: null },
+  },
+];
+
+export const DEMO_PRESENCE: PresenceState[] = [
+  {
+    user_id: "demo-partner",
+    current_path: "/time/timeline",
+    page_title: "恋爱时间轴",
+    last_seen_at: new Date(now - 8_000).toISOString(),
+    updated_at: new Date(now - 8_000).toISOString(),
+    profile: { display_name: "沈沈", avatar_url: null, color: null },
+  },
+];
+
+export const DEMO_FOOTPRINTS: FootprintEvent[] = [
+  {
+    id: "demo-footprint-1",
+    author_id: "demo-partner",
+    event_type: "message",
+    scope: "entry",
+    page_path: "/memories/demo-1",
+    page_title: "周末的海边日落",
+    target_type: "entry",
+    target_id: "demo-1",
+    body: "下次还想一起去看海。",
+    reaction: null,
+    created_at: new Date(now - 24 * 60 * 1000).toISOString(),
+    profile: { display_name: "沈沈", avatar_url: null, color: null },
+  },
+  {
+    id: "demo-footprint-2",
+    author_id: "demo-self",
+    event_type: "reaction",
+    scope: "page",
+    page_path: "/daily/wishlist",
+    page_title: "愿望清单",
+    target_type: "wishlist",
+    target_id: null,
+    body: null,
+    reaction: "想去",
+    created_at: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+    profile: { display_name: "张张", avatar_url: null, color: null },
+  },
+  {
+    id: "demo-footprint-3",
+    author_id: "demo-system",
+    event_type: "co_presence",
+    scope: "page",
+    page_path: "/time/timeline",
+    page_title: "恋爱时间轴",
+    target_type: null,
+    target_id: null,
+    body: "你们刚才一起停在这里。",
+    reaction: null,
+    created_at: new Date(now - 5 * 60 * 60 * 1000).toISOString(),
+    profile: { display_name: "小星球", avatar_url: null, color: null },
   },
 ];

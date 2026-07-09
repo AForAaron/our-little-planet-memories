@@ -207,3 +207,48 @@ export const chatMessageMedia = pgTable(
     primaryKey({ columns: [table.messageId, table.mediaId] }),
   ],
 );
+
+export const presenceState = pgTable("presence_state", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  currentPath: text("current_path").notNull(),
+  pageTitle: text("page_title"),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const footprintEvents = pgTable(
+  "footprint_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    scope: text("scope").notNull().default("page"),
+    pagePath: text("page_path").notNull(),
+    pageTitle: text("page_title"),
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    body: text("body"),
+    reaction: text("reaction"),
+    createdAt,
+  },
+  (table) => [
+    index("footprint_events_created_at_idx").on(table.createdAt),
+    index("footprint_events_page_path_idx").on(table.pagePath, table.createdAt),
+    check(
+      "footprint_events_event_type_check",
+      sql`${table.eventType} in ('message', 'reaction', 'summon', 'co_presence', 'visit')`,
+    ),
+    check(
+      "footprint_events_scope_check",
+      sql`${table.scope} in ('site', 'page', 'entry', 'wishlist', 'place')`,
+    ),
+  ],
+);
