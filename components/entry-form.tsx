@@ -1,6 +1,6 @@
 "use client";
 
-import { Crosshair, ImagePlus, LoaderCircle, MapPinned, Search, X } from "lucide-react";
+import { Crosshair, FileAudio, Film, ImagePlus, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { EmojiTextField } from "@/components/emoji-text-field";
@@ -63,10 +63,28 @@ type GeocodeResult = {
   category?: string;
 };
 
+type SelectedMediaPreview = {
+  file: File;
+  kind: MediaType | "file";
+  url: string;
+};
+
 function localDateTime(iso?: string) {
   const date = iso ? new Date(iso) : new Date();
   const offset = date.getTimezoneOffset() * 60_000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function mediaKindForFile(file: File): SelectedMediaPreview["kind"] {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("audio/")) return "audio";
+  return "file";
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
 }
 
 async function uploadFiles(files: File[]) {
@@ -169,6 +187,8 @@ export function EntryForm({
   const [geocodePending, setGeocodePending] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<SelectedMediaPreview[]>([]);
   const draftKey = useMemo(
     () => `little-planet-entry-draft:${entry?.id ?? "new"}:${defaultCategory}`,
     [defaultCategory, entry?.id],
@@ -203,8 +223,35 @@ export function EntryForm({
     }
   }, [draft, draftKey]);
 
+  useEffect(() => {
+    const previews = selectedFiles.map((file) => ({
+      file,
+      kind: mediaKindForFile(file),
+      url: URL.createObjectURL(file),
+    }));
+    setSelectedMedia(previews);
+    return () => {
+      previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [selectedFiles]);
+
   function updateDraft<K extends keyof EntryDraft>(key: K, value: EntryDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  function selectFiles(files: File[]) {
+    const usableFiles = files.filter((file) => file.size > 0);
+    if (usableFiles.length > 20) {
+      setError("一次最多添加 20 个媒体文件。");
+    } else {
+      setError("");
+    }
+    setSelectedFiles(usableFiles.slice(0, 20));
+  }
+
+  function removeSelectedFile(index: number) {
+    setSelectedFiles((current) => current.filter((_, currentIndex) => currentIndex !== index));
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function useCurrentLocation() {
@@ -280,11 +327,8 @@ export function EntryForm({
     startTransition(async () => {
       try {
         const formData = new FormData(event.currentTarget);
-        const files = formData
-          .getAll("media_files")
-          .filter((item): item is File => item instanceof File && item.size > 0);
         formData.delete("media_files");
-        const uploaded = await uploadFiles(files);
+        const uploaded = await uploadFiles(selectedFiles);
         formData.set("uploaded_media", JSON.stringify(uploaded));
         let response: Response;
         if (entry) {
@@ -302,6 +346,8 @@ export function EntryForm({
         const result = await readJsonResponse<{ id?: string }>(response, "保存回忆失败。");
         if (!response.ok) throw new Error(result.error || "保存回忆失败。");
         window.localStorage.removeItem(draftKey);
+        setSelectedFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         router.refresh();
         onClose();
       } catch (caught) {
@@ -575,16 +621,65 @@ export function EntryForm({
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav"
                 multiple
+                onChange={(event) => selectFiles(Array.from(event.currentTarget.files ?? []))}
               />
               <button
                 className="entry-upload-box"
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  selectFiles(Array.from(event.dataTransfer.files));
+                }}
               >
                 <ImagePlus size={22} />
-                <b>点击上传，或把文件拖到这里</b>
+                <b>{selectedFiles.length ? `已选择 ${selectedFiles.length} 个文件` : "点击上传，或把文件拖到这里"}</b>
                 <em>最多 20 个；图片 20MB、视频 500MB、音频 100MB</em>
               </button>
+              {selectedMedia.length > 0 && (
+                <div className="entry-selected-media" aria-live="polite">
+                  {selectedMedia.map((item, index) => (
+                    <div
+                      className="entry-selected-media-item"
+                      key={`${item.file.name}-${item.file.size}-${item.file.lastModified}-${index}`}
+                    >
+                      <div className="entry-selected-media-preview">
+                        {item.kind === "image" ? (
+                          <img src={item.url} alt="" />
+                        ) : item.kind === "video" ? (
+                          <video src={item.url} muted playsInline />
+                        ) : item.kind === "audio" ? (
+                          <FileAudio size={22} />
+                        ) : (
+                          <Film size={22} />
+                        )}
+                      </div>
+                      <div className="entry-selected-media-copy">
+                        <b title={item.file.name}>{item.file.name}</b>
+                        <span>
+                          {item.kind === "image"
+                            ? "图片"
+                            : item.kind === "video"
+                              ? "视频"
+                              : item.kind === "audio"
+                                ? "音频"
+                                : "文件"}{" "}
+                          · {formatFileSize(item.file.size)}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="entry-selected-media-remove"
+                        onClick={() => removeSelectedFile(index)}
+                        aria-label={`移除 ${item.file.name}`}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <p className="entry-draft-note">
               文字、时间和地点会自动保存到这台电脑的本地草稿；浏览器出于安全限制不能自动恢复已选择的文件。
