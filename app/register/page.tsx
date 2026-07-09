@@ -1,5 +1,6 @@
 import { UserPlus } from "lucide-react";
 import Link from "next/link";
+import { BrandIcon } from "@/components/brand-icon";
 import { PasswordField } from "@/components/password-field";
 import { signUp } from "@/app/login/actions";
 
@@ -17,10 +18,7 @@ export default async function RegisterPage({
       <span className="tiny-star bottom-[18%] right-[16%] bg-[var(--color-amber)] [animation-delay:1s]" />
       <section className="surface relative w-full max-w-lg rounded-[28px] p-7 shadow-lift sm:p-10">
         <span className="brand-mark mx-auto" aria-hidden="true">
-          <svg className="brand-orbit" viewBox="0 0 24 24" fill="none">
-            <circle cx="9.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
-            <circle cx="14.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
-          </svg>
+          <BrandIcon className="brand-orbit" id="register-brand" />
         </span>
         <div className="mt-6 text-center">
           <span className="eyebrow"><UserPlus size={14} /> Two people only</span>

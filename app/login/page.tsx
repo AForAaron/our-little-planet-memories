@@ -1,5 +1,6 @@
 import { LockKeyhole } from "lucide-react";
 import Link from "next/link";
+import { BrandIcon } from "@/components/brand-icon";
 import { PasswordField } from "@/components/password-field";
 import { signIn } from "./actions";
 import { isLiveMode, isNeonConfigured } from "@/lib/config/backend";
@@ -17,7 +18,7 @@ export default async function LoginPage({
   return (
     <main className="grid min-h-screen overflow-hidden bg-[var(--color-bg)] md:grid-cols-[1.05fr_1fr]">
       <section className="hero cosmos-panel relative hidden min-h-screen flex-col justify-between overflow-hidden p-16 text-[var(--color-on-accent)] md:flex lg:p-[72px]">
-        <div className="absolute left-[44%] top-[46%] size-[108px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_32%_28%,var(--color-on-accent),var(--color-amber-soft)_55%,var(--color-accent)_100%)] shadow-[var(--shadow-accent)]" />
+        <BrandIcon className="absolute left-[44%] top-[46%] size-[170px] -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_26px_32px_rgb(110_70_50_/_24%)]" id="login-hero-planet" />
         <div className="absolute left-[44%] top-[46%] size-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[color-mix(in_srgb,var(--color-on-accent)_20%,transparent)]" />
         <div className="absolute left-[44%] top-[46%] size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-[color-mix(in_srgb,var(--color-on-accent)_35%,transparent)]" />
         <span className="tiny-star left-[22%] top-[18%]" />
@@ -25,10 +26,7 @@ export default async function LoginPage({
         <span className="tiny-star left-[30%] top-[62%] [animation-delay:1.4s]" />
         <div className="relative flex items-center gap-3">
           <span className="grid size-[42px] place-items-center rounded-[13px] border border-[color-mix(in_srgb,var(--color-on-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-on-accent)_22%,transparent)] backdrop-blur">
-            <svg className="size-[22px]" viewBox="0 0 24 24" fill="none">
-              <circle cx="9.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
-              <circle cx="14.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
-            </svg>
+            <BrandIcon className="size-[28px]" id="login-hero-brand" />
           </span>
           <span className="text-[15px] font-medium tracking-[.04em]">张张和沈沈</span>
         </div>
@@ -56,10 +54,7 @@ export default async function LoginPage({
         <div className="w-full max-w-[400px] rounded-[28px] border border-line bg-[var(--color-surface)] p-8 shadow-lift sm:p-10">
           <div className="mb-9 md:hidden">
             <span className="brand-mark mb-5" aria-hidden="true">
-              <svg className="brand-orbit" viewBox="0 0 24 24" fill="none">
-                <circle cx="9.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
-                <circle cx="14.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
-              </svg>
+              <BrandIcon className="brand-orbit" id="login-mobile-brand" />
             </span>
             <h1 className="font-heading text-2xl font-semibold">我们的小星球</h1>
           </div>
