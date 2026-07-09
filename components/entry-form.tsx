@@ -1,7 +1,7 @@
 "use client";
 
 import { Crosshair, ImagePlus, LoaderCircle, MapPinned, Search, X } from "lucide-react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { EmojiTextField } from "@/components/emoji-text-field";
 import { LocationPicker } from "@/components/location-picker";
@@ -168,6 +168,7 @@ export function EntryForm({
   const [geocodeResults, setGeocodeResults] = useState<GeocodeResult[]>([]);
   const [geocodePending, setGeocodePending] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const draftKey = useMemo(
     () => `little-planet-entry-draft:${entry?.id ?? "new"}:${defaultCategory}`,
     [defaultCategory, entry?.id],
@@ -565,20 +566,26 @@ export function EntryForm({
               </label>
             </fieldset>
 
-            <label className="entry-upload-card">
+            <div className="entry-upload-card">
               <span className="entry-label">图片 / 视频 / 音频</span>
               <input
+                ref={fileInputRef}
+                className="entry-upload-control"
                 name="media_files"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav"
                 multiple
               />
-              <span className="entry-upload-box">
+              <button
+                className="entry-upload-box"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <ImagePlus size={22} />
                 <b>点击上传，或把文件拖到这里</b>
                 <em>最多 20 个；图片 20MB、视频 500MB、音频 100MB</em>
-              </span>
-            </label>
+              </button>
+            </div>
             <p className="entry-draft-note">
               文字、时间和地点会自动保存到这台电脑的本地草稿；浏览器出于安全限制不能自动恢复已选择的文件。
             </p>
