@@ -689,8 +689,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   box-shadow: var(--shadow-button);
 }
 .brand-orbit {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.75rem;
+  height: 1.75rem;
 }
 .cosmos-panel {
   position: relative;

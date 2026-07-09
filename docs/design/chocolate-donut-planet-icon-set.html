@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>纯巧克力甜甜圈星球图标示例</title>
+  <style>
+    :root {
+      --bg: #f6ffea;
+      --surface: #fffaf0;
+      --surface-soft: #fff3cf;
+      --text: #3f5057;
+      --muted: #6b8790;
+      --accent: #fa855a;
+      --accent-strong: #c93638;
+      --blue: #62c4da;
+      --cream: #fff8ec;
+      --cream-yellow: #ffde96;
+      --dough-light: #f9e2b4;
+      --dough-mid: #e8bd7d;
+      --dough-edge: #d39a62;
+      --choco-light: #a67652;
+      --choco: #8b5a3c;
+      --choco-dark: #67432f;
+      --line: rgb(93 115 126 / 18%);
+      --shadow: 0 22px 54px -34px rgb(80 120 130 / 48%);
+      --shadow-warm: 0 18px 36px -20px rgb(250 133 90 / 62%);
+      --radius: 28px;
+      --font-heading: "Noto Serif SC", "Songti SC", "STSong", serif;
+      --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgb(250 133 90 / 12%) 0 9rem, transparent 16rem),
+        radial-gradient(circle at 88% 6%, rgb(98 196 218 / 15%) 0 8rem, transparent 15rem),
+        var(--bg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    svg { display: block; }
+    h1, h2, h3, p { margin: 0; }
+
+    .page {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 72px;
+    }
+
+    .eyebrow {
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin-top: 10px;
+      font-family: var(--font-heading);
+      font-size: clamp(34px, 4vw, 54px);
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 720px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .section {
+      margin-top: 34px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 750;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      border-radius: 5px;
+      background: var(--accent);
+    }
+
+    .section-note {
+      max-width: 440px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgb(255 250 240 / 78%);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-pad { padding: 24px; }
+
+    .icon-stage {
+      display: grid;
+      min-height: 220px;
+      place-items: center;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 27% 24%, rgb(255 248 236 / 92%) 0 24px, transparent 62px),
+        linear-gradient(135deg, rgb(255 243 207 / 70%), rgb(246 255 234 / 74%));
+    }
+
+    .brand-box {
+      display: grid;
+      width: var(--size);
+      height: var(--size);
+      place-items: center;
+      border-radius: var(--corner);
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      box-shadow: var(--shadow-warm);
+    }
+
+    .brand-box.cream {
+      background: linear-gradient(145deg, #fff8ec, #ffe5bc);
+      box-shadow: 0 16px 36px -22px rgb(110 70 50 / 56%);
+    }
+
+    .brand-box.cool {
+      background: linear-gradient(135deg, #62c4da, #fa855a 68%, #ffde96);
+      box-shadow: 0 18px 40px -22px rgb(80 120 130 / 54%);
+    }
+
+    .spec-title {
+      margin-top: 18px;
+      font-size: 15px;
+      font-weight: 850;
+    }
+
+    .spec-text {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .nav-mock {
+      display: flex;
+      min-height: 96px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgb(246 255 234 / 86%);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-name {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .button-pill {
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: var(--cream);
+      padding: 11px 16px;
+      box-shadow: var(--shadow-warm);
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      min-height: 420px;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items: center;
+      overflow: hidden;
+      padding: 42px;
+      color: #fff8f1;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--accent) 48%, var(--cream-yellow) 100%);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      right: -140px;
+      top: -130px;
+      width: 520px;
+      height: 520px;
+      border: 1px dashed rgb(255 248 236 / 34%);
+      border-radius: 50%;
+    }
+
+    .hero-copy,
+    .hero-art { position: relative; z-index: 1; }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgb(255 248 236 / 42%);
+      border-radius: 999px;
+      background: rgb(255 248 236 / 18%);
+      padding: 8px 13px;
+      font-size: 12px;
+      letter-spacing: .14em;
+    }
+
+    .hero h2 {
+      margin-top: 22px;
+      font-family: var(--font-heading);
+      font-size: 46px;
+      line-height: 1.22;
+    }
+
+    .hero p {
+      max-width: 420px;
+      margin-top: 18px;
+      color: rgb(255 248 241 / 88%);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .hero-art {
+      display: grid;
+      min-height: 260px;
+      place-items: center;
+    }
+
+    .favicon-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      padding: 24px;
+    }
+
+    .favicon-cell {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .watermark-card {
+      display: grid;
+      min-height: 300px;
+      place-items: center;
+      background:
+        linear-gradient(135deg, rgb(255 243 207 / 88%), rgb(246 255 234 / 90%)),
+        repeating-linear-gradient(135deg, #f8ddaa 0 12px, #fff8ec 12px 24px);
+    }
+
+    .usage {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .usage-item {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgb(255 250 240 / 72%);
+      padding: 18px;
+    }
+
+    .usage-item h3 {
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .usage-item p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 900px) {
+      .grid.three,
+      .grid.two,
+      .hero,
+      .usage { grid-template-columns: 1fr; }
+      .section-head { align-items: start; flex-direction: column; }
+      .section-note { text-align: left; }
+      .nav-actions span:not(.button-pill) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="dough" x1="11" y1="14" x2="54" y2="52" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#f9e2b4" />
+        <stop offset=".54" stop-color="#e8bd7d" />
+        <stop offset="1" stop-color="#d39a62" />
+      </linearGradient>
+      <linearGradient id="choco" x1="12" y1="14" x2="52" y2="42" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#a67652" />
+        <stop offset=".6" stop-color="#8b5a3c" />
+        <stop offset="1" stop-color="#67432f" />
+      </linearGradient>
+      <linearGradient id="darkChoco" x1="14" y1="17" x2="50" y2="44" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#80533b" />
+        <stop offset="1" stop-color="#4f3325" />
+      </linearGradient>
+      <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%">
+        <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#67432f" flood-opacity=".18" />
+      </filter>
+      <clipPath id="ringClip">
+        <path d="M9.8 34.7C9.2 25.8 19.4 18 31.5 17.2c13.4-.8 23.1 6.3 23.5 15.1.4 9-9.1 15.4-21.8 16.4C20.3 49.7 10.5 43.8 9.8 34.7Z" />
+      </clipPath>
+      <mask id="hole">
+        <rect width="64" height="64" fill="#fff" />
+        <path d="M24.8 34.6c-.2-3.4 3.1-6.2 7.6-6.4 4.7-.2 8.2 2.1 8.5 5.6.2 3.6-3.2 6.3-7.9 6.5-4.7.3-8-2.1-8.2-5.7Z" fill="#000" />
+      </mask>
+
+      <symbol id="chocolatePlanet" viewBox="0 0 64 64">
+        <g transform="rotate(-8 32 34)">
+          <path d="M5.8 34.6C15 25.2 49.4 22.4 59.1 30.5" fill="none" stroke="#fff8ec" stroke-width="1.45" stroke-linecap="round" stroke-dasharray="1.2 4" opacity=".62" />
+        </g>
+        <g filter="url(#softShadow)">
+          <g transform="rotate(-11 32 34)" mask="url(#hole)">
+            <path d="M9.8 34.7C9.2 25.8 19.4 18 31.5 17.2c13.4-.8 23.1 6.3 23.5 15.1.4 9-9.1 15.4-21.8 16.4C20.3 49.7 10.5 43.8 9.8 34.7Z" fill="url(#dough)" />
+            <path d="M8.8 24.8c4.7-6.8 13-10.4 22.8-10.9 11.8-.6 21.5 3.8 23.8 11.7-4.2 5.2-8 1.2-12.1 4.4-4.7 3.6-7.4 8.3-12 4.3-4.5-3.9-7.5 2.9-12.2 1.6-4.3-1.1-6-6.5-10.3-11.1Z" fill="url(#choco)" clip-path="url(#ringClip)" />
+            <path d="M18.4 23.8c4.9-2.7 13.4-4.4 21.5-2.9" fill="none" stroke="#fff8ec" stroke-width="2.6" stroke-linecap="round" opacity=".22" clip-path="url(#ringClip)" />
+            <circle cx="21.2" cy="27.5" r="1" fill="#fff8ec" opacity=".88" />
+            <circle cx="44.7" cy="31.2" r=".85" fill="#fff8ec" opacity=".62" />
+            <rect x="35.3" y="23.4" width="4.8" height="1.7" rx=".85" fill="#ffde96" transform="rotate(-18 37.7 24.25)" opacity=".9" />
+            <rect x="18.8" y="31.2" width="4.3" height="1.6" rx=".8" fill="#62c4da" transform="rotate(28 20.95 32)" opacity=".72" />
+          </g>
+        </g>
+        <g transform="rotate(-8 32 34)">
+          <path d="M6.1 34.7C14.8 44 49.3 47.1 59 38.9" fill="none" stroke="#fff8ec" stroke-width="1.75" stroke-linecap="round" opacity=".76" />
+        </g>
+      </symbol>
+
+      <symbol id="chocolatePlanetBold" viewBox="0 0 64 64">
+        <g transform="rotate(-11 32 34)" mask="url(#hole)">
+          <path d="M9.8 34.7C9.2 25.8 19.4 18 31.5 17.2c13.4-.8 23.1 6.3 23.5 15.1.4 9-9.1 15.4-21.8 16.4C20.3 49.7 10.5 43.8 9.8 34.7Z" fill="url(#dough)" />
+          <path d="M8.8 24.8c4.7-6.8 13-10.4 22.8-10.9 11.8-.6 21.5 3.8 23.8 11.7-4.2 5.2-8 1.2-12.1 4.4-4.7 3.6-7.4 8.3-12 4.3-4.5-3.9-7.5 2.9-12.2 1.6-4.3-1.1-6-6.5-10.3-11.1Z" fill="url(#darkChoco)" clip-path="url(#ringClip)" />
+        </g>
+        <path d="M6 35c9.8-9 42.2-11.2 52-3M8.2 36.5c9.5 8 39 10.2 48.8 2" fill="none" stroke="#fff8ec" stroke-width="1.8" stroke-linecap="round" opacity=".8" />
+      </symbol>
+
+      <symbol id="chocolatePlanetLine" viewBox="0 0 64 64">
+        <path d="M8 34.5c8.6-9.6 39.8-12 49-3" fill="none" stroke="#8b5a3c" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 5" opacity=".42" />
+        <g transform="rotate(-11 32 34)">
+          <path d="M9.8 34.7C9.2 25.8 19.4 18 31.5 17.2c13.4-.8 23.1 6.3 23.5 15.1.4 9-9.1 15.4-21.8 16.4C20.3 49.7 10.5 43.8 9.8 34.7Z" fill="none" stroke="#8b5a3c" stroke-width="2.4" />
+          <path d="M24.8 34.6c-.2-3.4 3.1-6.2 7.6-6.4 4.7-.2 8.2 2.1 8.5 5.6.2 3.6-3.2 6.3-7.9 6.5-4.7.3-8-2.1-8.2-5.7Z" fill="none" stroke="#8b5a3c" stroke-width="2.1" />
+          <path d="M14 25c5-4.2 12.7-6.3 21-5.4 7.5.8 13.5 3.8 16.2 8.5" fill="none" stroke="#8b5a3c" stroke-width="2.2" stroke-linecap="round" />
+        </g>
+        <path d="M8.4 36.5c9.4 8 39 10.2 48.6 2" fill="none" stroke="#8b5a3c" stroke-width="2" stroke-linecap="round" opacity=".48" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <main class="page">
+    <header>
+      <div class="eyebrow">Chocolate Donut Planet · Icon Set</div>
+      <h1>纯巧克力甜甜圈星球图标</h1>
+      <p class="lead">去掉草莓后，图标会更克制、更高级，也更不容易偏向甜品店。这里保留“甜甜圈星球 + 奶巧克力淋面 + 轨道”的核心记忆点，适合你现在温柔、私密、有宇宙感的页面。</p>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">01 图标变体</h2>
+        <p class="section-note">建议主站使用第一款。第二款适合登录页，第三款适合水印和空状态。</p>
+      </div>
+      <div class="grid three">
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box" style="--size:72px; --corner:1.45rem">
+              <svg width="52" height="52" viewBox="0 0 64 64"><use href="#chocolatePlanet" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">A · 主品牌版</h3>
+          <p class="spec-text">最推荐。奶油甜甜圈、巧克力淋面、前后轨道都完整，识别度足够，但没有草莓那么甜。</p>
+        </article>
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box cream" style="--size:72px; --corner:1.45rem">
+              <svg width="54" height="54" viewBox="0 0 64 64"><use href="#chocolatePlanetBold" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">B · 奶油浅底版</h3>
+          <p class="spec-text">更柔和，适合登录页、注册页、设置页。容器不抢眼，图标像一枚小徽章。</p>
+        </article>
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box cream" style="--size:72px; --corner:1.45rem">
+              <svg width="52" height="52" viewBox="0 0 64 64"><use href="#chocolatePlanetLine" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">C · 线性水印版</h3>
+          <p class="spec-text">适合照片占位、空状态、页面角落。只保留轮廓和巧克力语义，存在感最低。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">02 顶部导航示例</h2>
+        <p class="section-note">如果你只想替换最上面的图标，用 A 方案即可。</p>
+      </div>
+      <article class="panel">
+        <div class="nav-mock">
+          <div class="brand-lockup">
+            <span class="brand-box" style="--size:40px; --corner:.8rem">
+              <svg width="28" height="28" viewBox="0 0 64 64"><use href="#chocolatePlanet" /></svg>
+            </span>
+            <span class="brand-name">我们的小星球</span>
+          </div>
+          <div class="nav-actions">
+            <span>设置</span>
+            <span class="button-pill">添加回忆</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">03 Hero 装饰示例</h2>
+        <p class="section-note">大图案可以使用无容器版本，作为宇宙轨道的一部分。</p>
+      </div>
+      <article class="panel">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="hero-pill"><span style="width:6px;height:6px;border-radius:99px;background:#fff8ec"></span> PRIVATE MEMORY PLANET</div>
+            <h2>在同一颗<br />巧克力小星球上</h2>
+            <p>纯巧克力版更安静、耐看。它不像草莓版那么跳，但更容易和你现有的浅绿、珊瑚橙、奶油黄页面融合。</p>
+          </div>
+          <div class="hero-art">
+            <svg width="250" height="250" viewBox="0 0 64 64" style="filter: drop-shadow(0 26px 32px rgb(110 70 50 / 24%));">
+              <use href="#chocolatePlanet" />
+            </svg>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">04 小尺寸 / Favicon</h2>
+        <p class="section-note">小尺寸不放糖针也可以，重点保留“巧克力甜甜圈 + 轨道”。</p>
+      </div>
+      <article class="panel">
+        <div class="favicon-row">
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:16px; --corner:4px">
+              <svg width="13" height="13" viewBox="0 0 64 64"><use href="#chocolatePlanetBold" /></svg>
+            </span>
+            16px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:24px; --corner:7px">
+              <svg width="18" height="18" viewBox="0 0 64 64"><use href="#chocolatePlanetBold" /></svg>
+            </span>
+            24px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:32px; --corner:9px">
+              <svg width="24" height="24" viewBox="0 0 64 64"><use href="#chocolatePlanetBold" /></svg>
+            </span>
+            32px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:64px; --corner:16px">
+              <svg width="46" height="46" viewBox="0 0 64 64"><use href="#chocolatePlanetBold" /></svg>
+            </span>
+            64px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box cool" style="--size:96px; --corner:23px">
+              <svg width="70" height="70" viewBox="0 0 64 64"><use href="#chocolatePlanet" /></svg>
+            </span>
+            app icon
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">05 水印 / 空状态</h2>
+        <p class="section-note">不需要每次都出现完整彩色图标。线性版更适合做轻装饰。</p>
+      </div>
+      <div class="grid two">
+        <article class="panel">
+          <div class="watermark-card">
+            <svg width="170" height="170" viewBox="0 0 64 64" opacity=".2">
+              <use href="#chocolatePlanetLine" />
+            </svg>
+          </div>
+        </article>
+        <article class="panel panel-pad">
+          <div class="icon-stage" style="min-height:300px;text-align:center;padding:28px">
+            <div>
+              <svg width="96" height="96" viewBox="0 0 64 64" style="margin:0 auto 18px">
+                <use href="#chocolatePlanetLine" />
+              </svg>
+              <h3 style="font-family:var(--font-heading);font-size:24px">这里还没有回忆</h3>
+              <p style="max-width:340px;margin:8px auto 0;color:var(--muted);font-size:14px;line-height:1.8">一颗安静的巧克力小星球，等你们把第一段故事放进来。</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">06 使用建议</h2>
+        <p class="section-note">纯巧克力版的优势是耐看，适合长期作为主 logo。</p>
+      </div>
+      <div class="usage">
+        <div class="usage-item">
+          <h3>主 logo 用 A</h3>
+          <p>A 方案最平衡，适合直接替换顶部导航图标。</p>
+        </div>
+        <div class="usage-item">
+          <h3>登录页用 B</h3>
+          <p>浅底版更温柔，能弱化巧克力深色带来的重量。</p>
+        </div>
+        <div class="usage-item">
+          <h3>空状态用 C</h3>
+          <p>线性版适合做水印和空状态，不会让页面显得太满。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

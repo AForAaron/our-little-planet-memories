@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>草莓巧克力甜甜圈星球图案系统</title>
+  <style>
+    :root {
+      --bg: #f6ffea;
+      --surface: #fffaf0;
+      --surface-soft: #fff3cf;
+      --text: #3f5057;
+      --muted: #6b8790;
+      --accent: #fa855a;
+      --accent-strong: #c93638;
+      --blue: #62c4da;
+      --cream: #fff8ec;
+      --cream-yellow: #ffde96;
+      --dough-light: #f8ddaa;
+      --dough-mid: #e5b574;
+      --dough-edge: #d49a62;
+      --choco-light: #9a6847;
+      --choco: #8b5a3c;
+      --choco-dark: #6e4632;
+      --straw: #f15f6d;
+      --straw-dark: #c93638;
+      --leaf: #6fa982;
+      --line: rgb(93 115 126 / 18%);
+      --shadow: 0 22px 54px -34px rgb(80 120 130 / 48%);
+      --shadow-warm: 0 18px 36px -20px rgb(250 133 90 / 62%);
+      --radius: 28px;
+      --font-heading: "Noto Serif SC", "Songti SC", "STSong", serif;
+      --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgb(250 133 90 / 12%) 0 9rem, transparent 16rem),
+        radial-gradient(circle at 88% 6%, rgb(98 196 218 / 16%) 0 8rem, transparent 15rem),
+        var(--bg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    svg { display: block; }
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 72px;
+    }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 30px;
+    }
+
+    .eyebrow {
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      margin-top: 10px;
+      font-family: var(--font-heading);
+      font-size: clamp(34px, 4vw, 56px);
+      font-weight: 700;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 680px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .token-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      max-width: 380px;
+    }
+
+    .token {
+      display: inline-flex;
+      min-height: 30px;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgb(255 250 240 / 72%);
+      padding: 6px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      background: var(--c);
+      box-shadow: inset 0 0 0 1px rgb(63 80 87 / 10%);
+    }
+
+    .section {
+      margin-top: 34px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      border-radius: 5px;
+      background: var(--accent);
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgb(255 250 240 / 78%);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-pad { padding: 24px; }
+
+    .spec-title {
+      margin-top: 18px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .spec-text {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .icon-stage {
+      display: grid;
+      min-height: 210px;
+      place-items: center;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 28% 24%, rgb(255 248 236 / 90%) 0 24px, transparent 60px),
+        linear-gradient(135deg, rgb(255 243 207 / 70%), rgb(246 255 234 / 74%));
+    }
+
+    .brand-box {
+      display: grid;
+      width: var(--size);
+      height: var(--size);
+      place-items: center;
+      border-radius: var(--corner);
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      box-shadow: var(--shadow-warm);
+    }
+
+    .brand-box.light {
+      background: linear-gradient(145deg, #fff8ec, #ffe5bc);
+      box-shadow: 0 16px 36px -22px rgb(110 70 50 / 56%);
+    }
+
+    .nav-mock {
+      display: flex;
+      min-height: 96px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 28px;
+      border-radius: 0;
+      border-bottom: 1px solid var(--line);
+      background: rgb(246 255 234 / 86%);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-name {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .button-pill {
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: var(--cream);
+      padding: 11px 16px;
+      box-shadow: var(--shadow-warm);
+    }
+
+    .hero-mock {
+      position: relative;
+      display: grid;
+      min-height: 430px;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 28px;
+      align-items: center;
+      overflow: hidden;
+      padding: 42px;
+      color: #fff8f1;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--accent) 48%, var(--cream-yellow) 100%);
+    }
+
+    .hero-mock::before {
+      content: "";
+      position: absolute;
+      inset: -25% auto auto 44%;
+      width: 520px;
+      height: 520px;
+      border: 1px dashed rgb(255 248 236 / 34%);
+      border-radius: 50%;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 430px;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgb(255 248 236 / 42%);
+      border-radius: 999px;
+      background: rgb(255 248 236 / 18%);
+      padding: 8px 13px;
+      font-size: 12px;
+      letter-spacing: .14em;
+    }
+
+    .hero-copy h2 {
+      margin-top: 22px;
+      font-family: var(--font-heading);
+      font-size: 46px;
+      line-height: 1.22;
+    }
+
+    .hero-copy p {
+      margin-top: 18px;
+      color: rgb(255 248 241 / 88%);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .hero-planet {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      min-height: 260px;
+      place-items: center;
+    }
+
+    .empty-state {
+      display: grid;
+      min-height: 330px;
+      place-items: center;
+      padding: 38px;
+      text-align: center;
+    }
+
+    .empty-state h3 {
+      margin-top: 18px;
+      font-family: var(--font-heading);
+      font-size: 24px;
+    }
+
+    .empty-state p {
+      max-width: 360px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .photo-placeholder {
+      position: relative;
+      display: grid;
+      min-height: 330px;
+      place-items: end start;
+      overflow: hidden;
+      padding: 20px;
+      background:
+        linear-gradient(135deg, rgb(255 243 207 / 88%), rgb(246 255 234 / 90%)),
+        repeating-linear-gradient(135deg, #f8ddaa 0 12px, #fff8ec 12px 24px);
+    }
+
+    .photo-placeholder::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 18% 22%, rgb(250 133 90 / 12%) 0 3px, transparent 4px),
+        radial-gradient(circle at 78% 28%, rgb(98 196 218 / 16%) 0 3px, transparent 4px),
+        radial-gradient(circle at 62% 76%, rgb(201 54 56 / 12%) 0 2px, transparent 3px);
+      background-size: 120px 120px;
+    }
+
+    .watermark {
+      position: absolute;
+      right: -18px;
+      top: 12px;
+      opacity: .2;
+    }
+
+    .photo-label {
+      position: relative;
+      z-index: 1;
+      border-radius: 999px;
+      background: rgb(255 250 240 / 84%);
+      padding: 7px 12px;
+      color: #b47c63;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .pattern-board {
+      min-height: 330px;
+      background:
+        radial-gradient(circle at 20% 18%, rgb(255 248 236 / 86%) 0 30px, transparent 78px),
+        linear-gradient(135deg, rgb(255 250 240 / 92%), rgb(246 255 234 / 88%));
+    }
+
+    .pattern-layer {
+      width: 100%;
+      height: 100%;
+      min-height: 330px;
+    }
+
+    .favicon-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      padding: 24px;
+    }
+
+    .favicon-cell {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .dark-sample {
+      color: #d0e1cb;
+      background: linear-gradient(135deg, #500303, #5d737e);
+    }
+
+    .dark-sample .nav-mock {
+      border-color: rgb(208 225 203 / 20%);
+      background: rgb(93 115 126 / 55%);
+    }
+
+    .dark-sample .brand-name,
+    .dark-sample .nav-actions { color: #d0e1cb; }
+
+    .usage {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .usage-item {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgb(255 250 240 / 72%);
+      padding: 18px;
+    }
+
+    .usage-item h3 {
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .usage-item p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 900px) {
+      .masthead,
+      .hero-mock,
+      .grid.three,
+      .grid.two,
+      .usage {
+        grid-template-columns: 1fr;
+      }
+
+      .token-strip { justify-content: flex-start; }
+      .section-head { align-items: start; flex-direction: column; }
+      .section-note { text-align: left; }
+      .nav-actions span:not(.button-pill) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="donutDough" x1="12" y1="13" x2="54" y2="51" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#f9e2b4" />
+        <stop offset=".52" stop-color="#e9bd7d" />
+        <stop offset="1" stop-color="#d49a62" />
+      </linearGradient>
+      <linearGradient id="donutChoco" x1="12" y1="16" x2="52" y2="43" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#a17150" />
+        <stop offset=".58" stop-color="#8b5a3c" />
+        <stop offset="1" stop-color="#6e4632" />
+      </linearGradient>
+      <radialGradient id="strawberryFill" cx=".35" cy=".22" r=".85">
+        <stop offset="0" stop-color="#ff8790" />
+        <stop offset=".52" stop-color="#f15f6d" />
+        <stop offset="1" stop-color="#c93638" />
+      </radialGradient>
+      <filter id="softLift" x="-20%" y="-20%" width="140%" height="150%">
+        <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#6e4632" flood-opacity=".18" />
+      </filter>
+      <clipPath id="donutClip">
+        <path d="M9.8 34.7C9.2 25.7 19.3 18 31.2 17.2c13.6-.9 23.2 6.3 23.6 15.2.4 9-9 15.3-21.7 16.3C20.2 49.7 10.5 43.7 9.8 34.7Z" />
+      </clipPath>
+      <mask id="donutHole">
+        <rect width="64" height="64" fill="#fff" />
+        <path d="M24.6 34.7c-.2-3.4 3.2-6.3 7.7-6.5 4.7-.2 8.2 2.1 8.5 5.6.3 3.6-3.1 6.2-7.9 6.5-4.7.3-8.1-2-8.3-5.6Z" fill="#000" />
+      </mask>
+
+      <symbol id="donutPlanet" viewBox="0 0 64 64">
+        <g transform="rotate(-8 32 34)">
+          <path d="M5.7 34.6C14.8 25 49.7 22.1 59.4 30.5" fill="none" stroke="#fff8ec" stroke-width="1.45" stroke-linecap="round" stroke-dasharray="1.2 4" opacity=".62" />
+        </g>
+        <g filter="url(#softLift)">
+          <g transform="rotate(-11 32 34)" mask="url(#donutHole)">
+            <path d="M9.8 34.7C9.2 25.7 19.3 18 31.2 17.2c13.6-.9 23.2 6.3 23.6 15.2.4 9-9 15.3-21.7 16.3C20.2 49.7 10.5 43.7 9.8 34.7Z" fill="url(#donutDough)" />
+            <path d="M8.4 25.3c4.7-7.2 13-10.8 23.1-11.3 11.9-.5 21.9 4 24.2 12.3-4.8 5.3-8.4.1-12.7 3.8-4.5 3.9-7.4 8.4-12 4.4-4.4-3.9-7.5 2.9-12.3 1.5-4.3-1.2-5.8-6.5-10.3-10.7Z" fill="url(#donutChoco)" clip-path="url(#donutClip)" />
+            <path d="M17.2 23.8c4.6-2.8 13.4-4.8 22-3.2" fill="none" stroke="#fff8ec" stroke-width="2.6" stroke-linecap="round" opacity=".22" clip-path="url(#donutClip)" />
+            <circle cx="22" cy="27" r="1.05" fill="#fff8ec" opacity=".92" />
+            <rect x="36.2" y="22.8" width="4.8" height="1.7" rx=".85" fill="#ffde96" transform="rotate(-19 38.6 23.65)" opacity=".95" />
+            <rect x="18.3" y="31.1" width="4.3" height="1.6" rx=".8" fill="#62c4da" transform="rotate(28 20.45 31.9)" opacity=".82" />
+          </g>
+        </g>
+        <g transform="translate(43.8 37.2) rotate(15)">
+          <path d="M-.1-6.1C4.2-6.4 6.8-2.8 6.8 1.8c0 4.8-3 7.6-6.9 10.1-3.8-2.4-6.8-5.3-6.8-10.1 0-4.6 2.6-8.2 6.8-7.9Z" fill="url(#strawberryFill)" />
+          <path d="M-4.2-5.2c1.6-2 3.6-2.3 4.3.1.8-2.4 2.9-2 4.2-.2-1.3 1.4-2.8 1.8-4.2.7-1.5 1.1-3 .6-4.3-.6Z" fill="#6fa982" />
+          <g fill="#fff8ec" opacity=".74">
+            <ellipse cx="-2.8" cy="-1.1" rx=".48" ry=".8" transform="rotate(-20 -2.8 -1.1)" />
+            <ellipse cx="1.5" cy=".2" rx=".48" ry=".8" transform="rotate(15 1.5 .2)" />
+            <ellipse cx="-1" cy="3.2" rx=".48" ry=".8" transform="rotate(20 -1 3.2)" />
+          </g>
+        </g>
+        <g transform="rotate(-8 32 34)">
+          <path d="M5.9 34.7C14.7 44.3 49.4 47.1 59.2 38.8" fill="none" stroke="#fff8ec" stroke-width="1.75" stroke-linecap="round" opacity=".76" />
+        </g>
+      </symbol>
+
+      <symbol id="donutPlanetSimple" viewBox="0 0 64 64">
+        <g transform="rotate(-10 32 34)" mask="url(#donutHole)">
+          <path d="M9.8 34.7C9.2 25.7 19.3 18 31.2 17.2c13.6-.9 23.2 6.3 23.6 15.2.4 9-9 15.3-21.7 16.3C20.2 49.7 10.5 43.7 9.8 34.7Z" fill="url(#donutDough)" />
+          <path d="M8.4 25.3c4.7-7.2 13-10.8 23.1-11.3 11.9-.5 21.9 4 24.2 12.3-4.8 5.3-8.4.1-12.7 3.8-4.5 3.9-7.4 8.4-12 4.4-4.4-3.9-7.5 2.9-12.3 1.5-4.3-1.2-5.8-6.5-10.3-10.7Z" fill="url(#donutChoco)" clip-path="url(#donutClip)" />
+        </g>
+        <circle cx="45.5" cy="39.5" r="4.6" fill="url(#strawberryFill)" />
+        <path d="M6 35c10-9 42-11 52-3M8 36.5c9.5 8 39 10.2 49 2" fill="none" stroke="#fff8ec" stroke-width="1.8" stroke-linecap="round" opacity=".78" />
+      </symbol>
+
+      <symbol id="strawberrySlice" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="13" fill="url(#strawberryFill)" />
+        <circle cx="20" cy="20" r="12.2" fill="none" stroke="#fff8ec" stroke-width="2" opacity=".9" />
+        <circle cx="20" cy="20" r="4.2" fill="#fff8ec" opacity=".82" />
+        <g fill="#c93638" opacity=".68">
+          <ellipse cx="20" cy="10.6" rx="1" ry="1.6" />
+          <ellipse cx="27.1" cy="14" rx="1" ry="1.6" transform="rotate(52 27.1 14)" />
+          <ellipse cx="29.1" cy="22" rx="1" ry="1.6" transform="rotate(102 29.1 22)" />
+          <ellipse cx="24" cy="28.2" rx="1" ry="1.6" transform="rotate(146 24 28.2)" />
+          <ellipse cx="16" cy="28.2" rx="1" ry="1.6" transform="rotate(-146 16 28.2)" />
+          <ellipse cx="10.9" cy="22" rx="1" ry="1.6" transform="rotate(-102 10.9 22)" />
+          <ellipse cx="12.9" cy="14" rx="1" ry="1.6" transform="rotate(-52 12.9 14)" />
+        </g>
+      </symbol>
+
+      <symbol id="tinyPatternSet" viewBox="0 0 220 140">
+        <g fill="none" stroke="#fff8ec" stroke-linecap="round">
+          <path d="M22 40c22-18 70-18 92 0" stroke-width="1.6" opacity=".7" />
+          <path d="M118 96c18-12 52-12 70-1" stroke-width="1.4" opacity=".58" stroke-dasharray="2 6" />
+        </g>
+        <g opacity=".72">
+          <use href="#strawberrySlice" x="36" y="74" width="22" height="22" />
+          <use href="#strawberrySlice" x="164" y="26" width="18" height="18" />
+        </g>
+        <g opacity=".7">
+          <rect x="94" y="30" width="12" height="4" rx="2" fill="#8b5a3c" transform="rotate(22 100 32)" />
+          <rect x="132" y="66" width="10" height="4" rx="2" fill="#62c4da" transform="rotate(-18 137 68)" />
+          <rect x="68" y="112" width="11" height="4" rx="2" fill="#fa855a" transform="rotate(-32 73.5 114)" />
+          <circle cx="24" cy="110" r="2.3" fill="#ffde96" />
+          <circle cx="196" cy="88" r="2" fill="#c93638" opacity=".62" />
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <main class="page">
+    <header class="masthead">
+      <div>
+        <div class="eyebrow">Pattern System · Our Little Planet</div>
+        <h1>草莓巧克力甜甜圈星球</h1>
+        <p class="lead">一套更软、更贴合现有页面的品牌图案系统。主图标负责记忆点，hero 和空状态轻轻呼应，背景微图案只留一点甜味和宇宙感。</p>
+      </div>
+      <div class="token-strip" aria-label="设计色彩">
+        <span class="token"><span class="swatch" style="--c:#f6ffea"></span>#f6ffea</span>
+        <span class="token"><span class="swatch" style="--c:#fffaf0"></span>#fffaf0</span>
+        <span class="token"><span class="swatch" style="--c:#fa855a"></span>#fa855a</span>
+        <span class="token"><span class="swatch" style="--c:#c93638"></span>#c93638</span>
+        <span class="token"><span class="swatch" style="--c:#62c4da"></span>#62c4da</span>
+        <span class="token"><span class="swatch" style="--c:#8b5a3c"></span>#8b5a3c</span>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">01 主品牌图标</h2>
+        <p class="section-note">完整元素：甜甜圈星球、奶巧克力、草莓、前后轨道。用于左上角、登录注册、品牌识别。</p>
+      </div>
+      <div class="grid three">
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box" style="--size:40px; --corner:.8rem">
+              <svg width="28" height="28" viewBox="0 0 64 64"><use href="#donutPlanet" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">顶部导航 · 40px</h3>
+          <p class="spec-text">替换当前最上方品牌图标。外层保持珊瑚橙渐变，内部图形放大到 28px，让草莓和轨道在小尺寸下仍可读。</p>
+        </article>
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box" style="--size:64px; --corner:1.35rem">
+              <svg width="46" height="46" viewBox="0 0 64 64"><use href="#donutPlanet" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">登录/注册 · 64px</h3>
+          <p class="spec-text">更精致的一版，适合登录页品牌入口。保留柔和阴影和容器仪式感，不把页面变成甜品主题。</p>
+        </article>
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box light" style="--size:88px; --corner:1.75rem">
+              <svg width="68" height="68" viewBox="0 0 64 64"><use href="#donutPlanet" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">柔和展示版</h3>
+          <p class="spec-text">用于说明页、设置页或关于页。浅容器减少品牌色压迫感，图标本体更像一枚温柔徽章。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">02 顶部导航落地</h2>
+        <p class="section-note">文字不变，只替换左侧标志。浅色和深色主题都保持识别。</p>
+      </div>
+      <div class="grid two">
+        <article class="panel">
+          <div class="nav-mock">
+            <div class="brand-lockup">
+              <span class="brand-box" style="--size:40px; --corner:.8rem">
+                <svg width="28" height="28" viewBox="0 0 64 64"><use href="#donutPlanet" /></svg>
+              </span>
+              <span class="brand-name">我们的小星球</span>
+            </div>
+            <div class="nav-actions">
+              <span>设置</span>
+              <span class="button-pill">添加回忆</span>
+            </div>
+          </div>
+        </article>
+        <article class="panel dark-sample">
+          <div class="nav-mock">
+            <div class="brand-lockup">
+              <span class="brand-box" style="--size:40px; --corner:.8rem">
+                <svg width="28" height="28" viewBox="0 0 64 64"><use href="#donutPlanet" /></svg>
+              </span>
+              <span class="brand-name">我们的小星球</span>
+            </div>
+            <div class="nav-actions">
+              <span>设置</span>
+              <span class="button-pill">添加回忆</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">03 首页 Hero 装饰</h2>
+        <p class="section-note">无容器大图案，作为宇宙感的一部分出现，不压过文字和最近回忆卡片。</p>
+      </div>
+      <article class="panel">
+        <div class="hero-mock">
+          <div class="hero-copy">
+            <div class="hero-pill"><span style="width:6px;height:6px;border-radius:99px;background:#fff8ec"></span> PRIVATE MEMORY PLANET</div>
+            <h2>张张 &amp; 沈沈<br />在同一颗小星球上</h2>
+            <p>甜甜圈只是一个轻轻的品牌符号：它保留“小星球”的轨道，也带一点属于两个人的甜。</p>
+          </div>
+          <div class="hero-planet">
+            <svg width="250" height="250" viewBox="0 0 64 64" style="filter: drop-shadow(0 26px 32px rgb(110 70 50 / 24%));">
+              <use href="#donutPlanet" />
+            </svg>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">04 页面辅助图案</h2>
+        <p class="section-note">空状态、照片占位、背景微图案都只借用局部元素，让品牌有延续但不过量。</p>
+      </div>
+      <div class="grid three">
+        <article class="panel">
+          <div class="empty-state">
+            <svg width="112" height="112" viewBox="0 0 64 64"><use href="#donutPlanetSimple" /></svg>
+            <h3>还没有回忆</h3>
+            <p>第一颗甜甜圈小星球已经准备好了，等你们把今天轻轻放进来。</p>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="photo-placeholder">
+            <svg class="watermark" width="210" height="210" viewBox="0 0 64 64"><use href="#donutPlanet" /></svg>
+            <span class="photo-label">Cover photo · 16:10</span>
+          </div>
+        </article>
+        <article class="panel pattern-board">
+          <svg class="pattern-layer" viewBox="0 0 440 330" preserveAspectRatio="none">
+            <use href="#tinyPatternSet" x="18" y="24" width="220" height="140" opacity=".78" />
+            <use href="#tinyPatternSet" x="198" y="150" width="220" height="140" opacity=".48" />
+            <use href="#tinyPatternSet" x="-38" y="188" width="220" height="140" opacity=".32" />
+          </svg>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">05 Favicon / App Icon</h2>
+        <p class="section-note">极小尺寸减少细节，只保留甜甜圈环、草莓红点和轨道感。</p>
+      </div>
+      <article class="panel">
+        <div class="favicon-row">
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:16px; --corner:4px">
+              <svg width="13" height="13" viewBox="0 0 64 64"><use href="#donutPlanetSimple" /></svg>
+            </span>
+            16px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:24px; --corner:7px">
+              <svg width="18" height="18" viewBox="0 0 64 64"><use href="#donutPlanetSimple" /></svg>
+            </span>
+            24px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:32px; --corner:9px">
+              <svg width="24" height="24" viewBox="0 0 64 64"><use href="#donutPlanetSimple" /></svg>
+            </span>
+            32px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:64px; --corner:16px">
+              <svg width="46" height="46" viewBox="0 0 64 64"><use href="#donutPlanetSimple" /></svg>
+            </span>
+            64px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:96px; --corner:23px">
+              <svg width="70" height="70" viewBox="0 0 64 64"><use href="#donutPlanetSimple" /></svg>
+            </span>
+            app icon
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">06 使用规则</h2>
+        <p class="section-note">一套图案要克制地出现，才会像品牌，而不是装饰堆叠。</p>
+      </div>
+      <div class="usage">
+        <div class="usage-item">
+          <h3>完整图标只用于品牌位</h3>
+          <p>导航、登录、注册、favicon 使用完整甜甜圈星球。不要在每张卡片里重复完整图标。</p>
+        </div>
+        <div class="usage-item">
+          <h3>Hero 可以放大</h3>
+          <p>首页或登录页可以用无容器大图案，但透明度和阴影要轻，让文字仍是主角。</p>
+        </div>
+        <div class="usage-item">
+          <h3>空状态用简化版</h3>
+          <p>没有数据时用简化甜甜圈星球，少糖针、少细节，看起来更安静。</p>
+        </div>
+        <div class="usage-item">
+          <h3>背景只用碎片</h3>
+          <p>背景微图案只放草莓切片、轨道线、糖针和星点，透明度控制在 20%-50%。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
