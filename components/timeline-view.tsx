@@ -80,7 +80,7 @@ export function TimelineView({
             return (
               <article key={entry.id} className="grid grid-cols-[4.8rem_2rem_minmax(0,1fr)] gap-0 sm:grid-cols-[7.25rem_2.75rem_minmax(0,1fr)]">
                 <time className="pt-5 text-right">
-                  <span className="block font-heading text-xl font-semibold text-[#43332c] sm:text-[22px]">{date.monthDay}</span>
+                  <span className="block font-heading text-xl font-semibold text-text sm:text-[22px]">{date.monthDay}</span>
                   <span className="mt-1 block font-mono text-[11px] text-[#b39c8d]">{date.year}</span>
                 </time>
                 <div className="relative flex justify-center">
@@ -88,7 +88,7 @@ export function TimelineView({
                   <span className="absolute top-6 size-4 rounded-full border-[3px] border-[var(--color-surface)] bg-[var(--color-accent)] shadow-[0_0_0_5px_rgb(236_124_104_/_14%)]" />
                 </div>
                 <div className="pb-8 pl-2">
-                  <div className="surface overflow-hidden rounded-[22px] transition hover:-translate-y-1 hover:shadow-[0_28px_50px_-24px_rgb(180_110_90_/_55%)]">
+                  <div className="surface overflow-hidden rounded-[22px] transition hover:-translate-y-1 hover:shadow-lift">
                     {firstMedia ? (
                       firstMedia.type === "image" ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -108,7 +108,7 @@ export function TimelineView({
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h2 className="font-heading text-xl font-semibold text-[#43332c]">
+                          <h2 className="font-heading text-xl font-semibold text-text">
                             <Link href={`/memories/${entry.id}`} className="hover:text-[var(--color-accent-strong)]">
                               {entry.title || "无题回忆"}
                             </Link>
@@ -123,9 +123,9 @@ export function TimelineView({
                         )}
                       </div>
                       {entry.body && <p className="mt-4 line-clamp-3 whitespace-pre-wrap text-[13.5px] leading-7 text-muted">{entry.body}</p>}
-                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#f2e6da] pt-4 text-xs text-[#a08a7c]">
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4 text-xs text-muted">
                         <span className="inline-flex items-center gap-2">
-                          <span className="grid size-[22px] place-items-center rounded-full bg-gradient-to-br from-[#f5a08e] to-[#e4735f] text-[11px] text-white">
+                          <span className="grid size-[22px] place-items-center rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-strong)] text-[11px] text-white">
                             {entry.profiles?.display_name?.slice(0, 1) ?? "♡"}
                           </span>
                           由 {entry.profiles?.display_name ?? "我们"} 记录
@@ -146,7 +146,7 @@ export function TimelineView({
         <div className="surface grid min-h-80 place-items-center rounded-[22px] p-8 text-center">
           <div>
             <span className="mx-auto grid size-16 place-items-center rounded-[18px] bg-[var(--color-accent-soft)] text-accent"><ImageIcon size={28} /></span>
-            <h2 className="mt-5 font-heading text-xl font-semibold text-[#43332c]">故事的第一页还是空白</h2>
+            <h2 className="mt-5 font-heading text-xl font-semibold text-text">故事的第一页还是空白</h2>
             <p className="mt-2 text-sm text-muted">从最近一次让你们笑起来的小事开始吧。</p>
             <button className="button-primary mt-6" onClick={() => setEditing("new")}><Plus size={18} /> 写下第一条</button>
           </div>

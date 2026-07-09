@@ -88,7 +88,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
   return (
     <div className="grid gap-7 lg:grid-cols-[.8fr_1.2fr]">
       <form action={(formData) => run(() => createWishFromForm(formData))} className="surface h-fit rounded-[24px] p-6">
-        <h2 className="font-heading text-xl font-semibold text-[#43332c]">写下一个愿望</h2>
+        <h2 className="font-heading text-xl font-semibold text-text">写下一个愿望</h2>
         <label className="label mt-5">
           想一起完成什么
           <EmojiTextField
@@ -138,7 +138,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
               {item.isDone ? <RotateCcw size={16} /> : <Check size={17} />}
             </button>
             <div className="min-w-0 flex-1">
-              <h3 className={`font-heading font-semibold text-[#43332c] ${item.isDone ? "line-through" : ""}`}>{item.title}</h3>
+              <h3 className={`font-heading font-semibold text-text ${item.isDone ? "line-through" : ""}`}>{item.title}</h3>
               {item.description && <p className="mt-1 text-sm leading-6 text-muted">{item.description}</p>}
             </div>
             <button

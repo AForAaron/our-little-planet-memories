@@ -70,9 +70,9 @@ export default async function MemoryDetailPage({
         <div className="mb-8">
           <div className="mb-4 flex flex-wrap items-center gap-2.5">
             <span className="rounded-full bg-[var(--color-accent-soft)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-accent-strong)]">{CATEGORY_LABELS[entry.category] ?? entry.category}</span>
-            {chapter && <span className="rounded-full bg-[#f5ede3] px-3.5 py-1.5 text-xs text-[#a08a7c]">{chapter.title}</span>}
+            {chapter && <span className="rounded-full bg-[#f5ede3] px-3.5 py-1.5 text-xs text-muted">{chapter.title}</span>}
           </div>
-          <h1 className="font-heading text-[34px] font-bold leading-[1.3] text-[#43332c] sm:text-[38px]">
+          <h1 className="font-heading text-[34px] font-bold leading-[1.3] text-text sm:text-[38px]">
             {entry.title || "无题回忆"}
           </h1>
           <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3 text-[13.5px] text-muted">
@@ -113,16 +113,16 @@ export default async function MemoryDetailPage({
             {entry.body || "这段回忆还没有写下说明。"}
           </p>
           {(entry.mood || entry.rating) && (
-            <div className="mt-6 flex flex-wrap gap-8 border-t border-[#f2e6da] pt-5">
+            <div className="mt-6 flex flex-wrap gap-8 border-t border-line pt-5">
               {entry.mood && (
                 <div>
-                  <div className="mb-2 text-xs text-[#a08a7c]">那天的心情</div>
-                  <div className="font-medium text-[#43332c]">{entry.mood}</div>
+                  <div className="mb-2 text-xs text-muted">那天的心情</div>
+                  <div className="font-medium text-text">{entry.mood}</div>
                 </div>
               )}
               {entry.rating && (
                 <div>
-                  <div className="mb-2 text-xs text-[#a08a7c]">这一天的评分</div>
+                  <div className="mb-2 text-xs text-muted">这一天的评分</div>
                   <div className="tracking-[2px] text-[#e0925a]">{"★".repeat(entry.rating)}</div>
                 </div>
               )}
@@ -132,8 +132,8 @@ export default async function MemoryDetailPage({
 
         {messages.length ? (
           <section className="mt-8">
-            <div className="rounded-[24px] bg-[#efe6dc] p-5 shadow-[inset_0_2px_6px_rgb(120_90_70_/_6%)] sm:p-7">
-              <h2 className="mb-6 flex items-center justify-center gap-2 text-center font-heading text-base font-semibold text-[#6a564c]">
+            <div className="rounded-[24px] bg-[var(--color-surface-soft)] p-5 shadow-[inset_0_2px_6px_rgb(0_0_0_/_6%)] sm:p-7">
+              <h2 className="mb-6 flex items-center justify-center gap-2 text-center font-heading text-base font-semibold text-text">
                 <MessageCircle size={18} /> 当天的聊天记录
               </h2>
               <ChatBubbleThread

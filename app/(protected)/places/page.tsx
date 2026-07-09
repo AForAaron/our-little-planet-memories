@@ -14,7 +14,7 @@ export default async function PlacesPage() {
       </Link>
       <div className="mb-10 max-w-2xl">
         <span className="eyebrow">Our world</span>
-        <h1 className="mt-3 font-heading text-[32px] font-semibold text-[#43332c]">关于足迹</h1>
+        <h1 className="mt-3 font-heading text-[32px] font-semibold text-text">关于足迹</h1>
         <p className="mt-3 text-[15px] leading-7 text-muted">
           走过的路、吃过的店、停留过的城市，都在这里慢慢变成地图。
         </p>

@@ -19,22 +19,22 @@ export function SectionHeading({
     coral: {
       accent: "var(--color-accent)",
       soft: "var(--color-accent-soft)",
-      gradient: "linear-gradient(135deg, #f6b0a0, #ec7c68)",
-      border: "#f3cfc4",
+      gradient: "linear-gradient(135deg, var(--color-accent), var(--color-accent-strong))",
+      border: "var(--color-line)",
       fallback: Clock3,
     },
     amber: {
       accent: "var(--color-amber)",
       soft: "var(--color-amber-soft)",
-      gradient: "linear-gradient(135deg, #efc48c, #db9a57)",
-      border: "#eed3ac",
+      gradient: "linear-gradient(135deg, var(--color-amber-soft), var(--color-amber))",
+      border: "var(--color-line)",
       fallback: MapIcon,
     },
     pink: {
       accent: "var(--color-pink)",
       soft: "var(--color-pink-soft)",
-      gradient: "linear-gradient(135deg, #f4b9c0, #ec94a3)",
-      border: "#f3c9d0",
+      gradient: "linear-gradient(135deg, var(--color-pink-soft), var(--color-pink))",
+      border: "var(--color-line)",
       fallback: Heart,
     },
   };
@@ -44,14 +44,14 @@ export function SectionHeading({
     <div className="mb-5 flex flex-wrap items-end justify-between gap-5">
       <div className="flex items-center gap-4">
         <span
-          className="grid size-12 shrink-0 place-items-center rounded-[15px] text-[var(--color-on-accent)] shadow-[0_12px_24px_-10px_rgb(224_112_94_/_60%)]"
+          className="grid size-12 shrink-0 place-items-center rounded-[15px] text-[var(--color-on-accent)] shadow-[var(--shadow-button)]"
           style={{ background: config.gradient }}
           aria-hidden="true"
         >
           <HeadingIcon size={24} />
         </span>
         <div>
-          <h2 className="font-heading text-[23px] font-semibold leading-tight text-[#43332c]">{title}</h2>
+          <h2 className="font-heading text-[23px] font-semibold leading-tight text-text">{title}</h2>
           <p className="mt-1 text-[13.5px] text-muted">{description}</p>
         </div>
       </div>

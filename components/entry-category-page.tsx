@@ -28,7 +28,7 @@ export async function EntryCategoryPage({
       <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-2xl">
         <span className="eyebrow">{eyebrow}</span>
-          <h1 className="mt-3 font-heading text-[32px] font-semibold leading-tight text-[#43332c]">{title}</h1>
+          <h1 className="mt-3 font-heading text-[32px] font-semibold leading-tight text-text">{title}</h1>
           <p className="mt-3 text-[15px] leading-7 text-muted">{description}</p>
         </div>
       </div>

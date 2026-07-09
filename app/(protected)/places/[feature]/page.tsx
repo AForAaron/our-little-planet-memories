@@ -27,7 +27,7 @@ async function MapDataPage({ foodOnly = false }: { foodOnly?: boolean }) {
       </Link>
       <div className="mb-8">
         <span className="eyebrow"><Globe2 size={14} /> {foodOnly ? "Food map" : "Our world"}</span>
-        <h1 className="mt-3 font-heading text-[32px] font-semibold text-[#43332c]">{foodOnly ? "探店地图" : "足迹地图"}</h1>
+        <h1 className="mt-3 font-heading text-[32px] font-semibold text-text">{foodOnly ? "探店地图" : "足迹地图"}</h1>
         <p className="mt-3 max-w-2xl text-[15px] leading-7 text-muted">
           {foodOnly
             ? "把一起吃过、想再去、值得记住的味道放在同一张地图上。"
@@ -39,11 +39,11 @@ async function MapDataPage({ foodOnly = false }: { foodOnly?: boolean }) {
       </section>
       <div className="mt-7 grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
         {points.map((point) => (
-          <Link key={point.id} href={`/memories/${point.id}`} className="surface rounded-[20px] p-5 transition-transform hover:-translate-y-1 hover:shadow-[0_26px_44px_-22px_rgb(180_110_90_/_55%)]">
+          <Link key={point.id} href={`/memories/${point.id}`} className="surface rounded-[20px] p-5 transition-transform hover:-translate-y-1 hover:shadow-lift">
             <span className="grid size-[42px] place-items-center rounded-[13px] bg-[var(--color-amber-soft)] text-[var(--color-amber)]">
               <MapPin size={20} />
             </span>
-            <h2 className="mt-4 font-heading font-semibold text-[#43332c]">{point.title}</h2>
+            <h2 className="mt-4 font-heading font-semibold text-text">{point.title}</h2>
             <p className="mt-2 text-sm text-muted">{point.placeName} · {formatDate(point.happenedAt)}</p>
             <p className="mt-2 font-mono text-xs text-muted">{point.latitude}, {point.longitude}</p>
           </Link>
@@ -53,7 +53,7 @@ async function MapDataPage({ foodOnly = false }: { foodOnly?: boolean }) {
         <section className="mt-12">
           <div className="mb-8 max-w-2xl">
             <span className="eyebrow">Food memories</span>
-            <h2 className="mt-3 font-heading text-[28px] font-semibold text-[#43332c]">探店记录</h2>
+            <h2 className="mt-3 font-heading text-[28px] font-semibold text-text">探店记录</h2>
             <p className="mt-3 leading-7 text-muted">
               吃过的味道、给过的评分，以及值得再去一次的地方。
             </p>

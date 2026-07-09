@@ -12,7 +12,7 @@ export default function TimePage() {
       </Link>
       <div className="max-w-2xl">
         <span className="eyebrow">Time & memories</span>
-        <h1 className="mt-3 font-heading text-[32px] font-semibold text-[#43332c]">关于时间</h1>
+        <h1 className="mt-3 font-heading text-[32px] font-semibold text-text">关于时间</h1>
         <p className="mt-3 text-[15px] leading-7 text-muted">时间会往前走，我们把值得记住的部分轻轻留下。</p>
       </div>
       <div className="mt-10 grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">

@@ -24,7 +24,7 @@ export default async function RegisterPage({
         </span>
         <div className="mt-6 text-center">
           <span className="eyebrow"><UserPlus size={14} /> Two people only</span>
-          <h1 className="mt-3 font-heading text-[27px] font-semibold text-[#43332c]">建立你的账号</h1>
+          <h1 className="mt-3 font-heading text-[27px] font-semibold text-text">建立你的账号</h1>
           <p className="mt-2 text-sm leading-6 text-muted">
             只有配置在白名单中的两个邮箱可以注册。
           </p>

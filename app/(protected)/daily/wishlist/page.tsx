@@ -13,7 +13,7 @@ export default async function WishlistPage() {
         <ArrowLeft size={17} /> 关于日常
       </Link>
       <span className="eyebrow"><Sparkles size={14} /> Things we will do</span>
-      <h1 className="mt-3 font-heading text-[32px] font-semibold text-[#43332c]">愿望清单</h1>
+      <h1 className="mt-3 font-heading text-[32px] font-semibold text-text">愿望清单</h1>
       <p className="mb-9 mt-3 max-w-2xl text-[15px] leading-7 text-muted">想去的地方、想做的小事，都先放在这里，等某一天一起划掉。</p>
       <WishlistBoard items={items} isDemo={isDemo} />
     </main>

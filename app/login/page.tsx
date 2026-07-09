@@ -51,20 +51,20 @@ export default async function LoginPage({
       </section>
 
       <section className="relative flex min-h-screen items-center justify-center px-6 py-12">
-        <span className="tiny-star right-[15%] top-[10%] bg-[#f0b7a6]" />
-        <span className="tiny-star bottom-[12%] left-[14%] bg-[#ebc79a] [animation-delay:1s]" />
-        <div className="w-full max-w-[400px] rounded-[28px] border border-[rgb(74_58_51_/_7%)] bg-[var(--color-surface)] p-8 shadow-lift sm:p-10">
+        <span className="tiny-star right-[15%] top-[10%] bg-[var(--color-accent)]" />
+        <span className="tiny-star bottom-[12%] left-[14%] bg-[var(--color-amber)] [animation-delay:1s]" />
+        <div className="w-full max-w-[400px] rounded-[28px] border border-line bg-[var(--color-surface)] p-8 shadow-lift sm:p-10">
           <div className="mb-9 md:hidden">
             <span className="brand-mark mb-5" aria-hidden="true">
               <svg className="brand-orbit" viewBox="0 0 24 24" fill="none">
-                <circle cx="9.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
-                <circle cx="14.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+                <circle cx="9.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
+                <circle cx="14.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
               </svg>
             </span>
             <h1 className="font-heading text-2xl font-semibold">我们的小星球</h1>
           </div>
           <span className="eyebrow"><LockKeyhole size={14} /> Private space</span>
-          <h2 className="mt-3 font-heading text-[27px] font-semibold text-[#43332c]">欢迎回来</h2>
+          <h2 className="mt-3 font-heading text-[27px] font-semibold text-text">欢迎回来</h2>
           <p className="mt-2 text-sm leading-6 text-muted">只属于两个人的私密空间。</p>
 
           {error && (

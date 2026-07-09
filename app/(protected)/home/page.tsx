@@ -65,7 +65,7 @@ export default async function HomePage() {
               <div className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold tracking-[.04em] text-[var(--color-accent-strong)]">
                 最近的一段回忆 {latest && `· ${formatDate(latest.happened_at)}`}
               </div>
-              <h3 className="mt-2 font-heading text-lg font-semibold text-[#43332c]">{latest?.title ?? "还没有回忆，写下第一条吧"}</h3>
+              <h3 className="mt-2 font-heading text-lg font-semibold text-text">{latest?.title ?? "还没有回忆，写下第一条吧"}</h3>
               <p className="mt-1.5 line-clamp-2 text-[13px] leading-6 text-muted">{latest?.body ?? "两个人的故事，正等着从这里开始。"}</p>
             </div>
           </Link>

@@ -66,7 +66,7 @@ async function AnniversariesPage() {
             </span>
             <div>
               <p className="text-xs font-semibold text-muted">下一个纪念日</p>
-              <p className="font-heading text-lg font-semibold text-[#43332c]">{next.entry.title} · 还有 {next.days} 天</p>
+              <p className="font-heading text-lg font-semibold text-text">{next.entry.title} · 还有 {next.days} 天</p>
             </div>
           </div>
         </div>

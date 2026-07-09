@@ -14,7 +14,7 @@ export default async function DailyPage() {
       </Link>
       <div className="mb-10 max-w-2xl">
         <span className="eyebrow">Daily life</span>
-        <h1 className="mt-3 font-heading text-[32px] font-semibold text-[#43332c]">关于日常</h1>
+        <h1 className="mt-3 font-heading text-[32px] font-semibold text-text">关于日常</h1>
         <p className="mt-3 text-[15px] leading-7 text-muted">
           平淡的小事也有自己的光：日记、愿望、电影，都放在这里。
         </p>

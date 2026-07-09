@@ -11,8 +11,8 @@ export async function getSiteSettings() {
     return {
       relationship: DEMO_RELATIONSHIP,
       profiles: [
-        { id: "demo-a", displayName: "我", theme: "warm" },
-        { id: "demo-b", displayName: "你", theme: "starlight" },
+        { id: "demo-a", displayName: "我", theme: "light" },
+        { id: "demo-b", displayName: "你", theme: "dark" },
       ],
       isDemo: true,
     };

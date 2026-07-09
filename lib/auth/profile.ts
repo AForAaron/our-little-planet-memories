@@ -26,7 +26,7 @@ export async function ensureProfile(user: AuthUser) {
       id: user.id,
       displayName: user.name?.trim() || user.email.split("@")[0],
       avatarUrl: user.image ?? null,
-      theme: "warm",
+      theme: "light",
     })
     .onConflictDoNothing();
 }
