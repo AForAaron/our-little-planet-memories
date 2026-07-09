@@ -8,6 +8,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "我们的小星球", template: "%s · 我们的小星球" },
   description: "只属于两个人的回忆宇宙",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

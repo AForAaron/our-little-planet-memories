@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="10" y1="8" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fa855a" />
+      <stop offset="1" stop-color="#c93638" />
+    </linearGradient>
+    <linearGradient id="dough" x1="11" y1="14" x2="54" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f9e2b4" />
+      <stop offset=".54" stop-color="#e8bd7d" />
+      <stop offset="1" stop-color="#d39a62" />
+    </linearGradient>
+    <linearGradient id="choco" x1="12" y1="14" x2="52" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#80533b" />
+      <stop offset="1" stop-color="#4f3325" />
+    </linearGradient>
+    <clipPath id="ringClip">
+      <path d="M9.8 34.7C9.2 25.8 19.4 18 31.5 17.2c13.4-.8 23.1 6.3 23.5 15.1.4 9-9.1 15.4-21.8 16.4C20.3 49.7 10.5 43.8 9.8 34.7Z" />
+    </clipPath>
+    <mask id="hole">
+      <rect width="64" height="64" fill="#fff" />
+      <path d="M24.8 34.6c-.2-3.4 3.1-6.2 7.6-6.4 4.7-.2 8.2 2.1 8.5 5.6.2 3.6-3.2 6.3-7.9 6.5-4.7.3-8-2.1-8.2-5.7Z" fill="#000" />
+    </mask>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#bg)" />
+  <path d="M6 35c9.8-9 42.2-11.2 52-3" fill="none" stroke="#fff8ec" stroke-width="2" stroke-linecap="round" opacity=".75" />
+  <g transform="rotate(-11 32 34)" mask="url(#hole)">
+    <path d="M9.8 34.7C9.2 25.8 19.4 18 31.5 17.2c13.4-.8 23.1 6.3 23.5 15.1.4 9-9.1 15.4-21.8 16.4C20.3 49.7 10.5 43.8 9.8 34.7Z" fill="url(#dough)" />
+    <path d="M8.8 24.8c4.7-6.8 13-10.4 22.8-10.9 11.8-.6 21.5 3.8 23.8 11.7-4.2 5.2-8 1.2-12.1 4.4-4.7 3.6-7.4 8.3-12 4.3-4.5-3.9-7.5 2.9-12.2 1.6-4.3-1.1-6-6.5-10.3-11.1Z" fill="url(#choco)" clip-path="url(#ringClip)" />
+  </g>
+  <path d="M8.2 36.5c9.5 8 39 10.2 48.8 2" fill="none" stroke="#fff8ec" stroke-width="2.15" stroke-linecap="round" opacity=".88" />
+</svg>
