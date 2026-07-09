@@ -74,3 +74,36 @@ export type Relationship = {
   partner_b: string | null;
   updated_at: string;
 };
+
+export type PresenceState = {
+  user_id: string;
+  current_path: string;
+  page_title: string | null;
+  last_seen_at: string;
+  updated_at: string;
+  profile?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
+};
+
+export type FootprintEventType =
+  | "message"
+  | "reaction"
+  | "summon"
+  | "co_presence"
+  | "visit";
+
+export type FootprintScope = "site" | "page" | "entry" | "wishlist" | "place";
+
+export type FootprintEvent = {
+  id: string;
+  author_id: string;
+  event_type: FootprintEventType;
+  scope: FootprintScope;
+  page_path: string;
+  page_title: string | null;
+  target_type: string | null;
+  target_id: string | null;
+  body: string | null;
+  reaction: string | null;
+  created_at: string;
+  profile?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
+};

@@ -15,6 +15,13 @@
       "when": 1783394859682,
       "tag": "0001_slow_annihilus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783589952378,
+      "tag": "0002_narrow_kate_bishop",
+      "breakpoints": true
     }
   ]
 }

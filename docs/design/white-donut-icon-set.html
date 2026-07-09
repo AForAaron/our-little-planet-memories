@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>纯白倾斜甜甜圈图标设计</title>
+  <style>
+    :root {
+      --bg: #f6ffea;
+      --surface: #fffaf0;
+      --text: #3f5057;
+      --muted: #6b8790;
+      --accent: #fa855a;
+      --accent-strong: #c93638;
+      --blue: #62c4da;
+      --cream: #fff8ec;
+      --line: rgb(93 115 126 / 18%);
+      --shadow: 0 22px 54px -34px rgb(80 120 130 / 48%);
+      --shadow-warm: 0 18px 36px -20px rgb(250 133 90 / 62%);
+      --radius: 28px;
+      --font-heading: "Noto Serif SC", "Songti SC", "STSong", serif;
+      --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgb(250 133 90 / 12%) 0 9rem, transparent 16rem),
+        radial-gradient(circle at 88% 6%, rgb(98 196 218 / 15%) 0 8rem, transparent 15rem),
+        var(--bg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    svg { display: block; }
+    h1, h2, h3, p { margin: 0; }
+
+    .page {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 72px;
+    }
+
+    .eyebrow {
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin-top: 10px;
+      font-family: var(--font-heading);
+      font-size: clamp(34px, 4vw, 54px);
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .section { margin-top: 34px; }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 750;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      border-radius: 5px;
+      background: var(--accent);
+    }
+
+    .section-note {
+      max-width: 460px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgb(255 250 240 / 78%);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-pad { padding: 24px; }
+
+    .icon-stage {
+      display: grid;
+      min-height: 230px;
+      place-items: center;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 26% 24%, rgb(255 248 236 / 92%) 0 24px, transparent 62px),
+        linear-gradient(135deg, rgb(255 243 207 / 70%), rgb(246 255 234 / 74%));
+    }
+
+    .brand-box {
+      display: grid;
+      width: var(--size);
+      height: var(--size);
+      place-items: center;
+      border-radius: var(--corner);
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      box-shadow: var(--shadow-warm);
+    }
+
+    .brand-box.blue {
+      background: linear-gradient(135deg, var(--blue), var(--accent) 72%);
+    }
+
+    .brand-box.dark {
+      background: linear-gradient(135deg, #5d737e, #500303);
+    }
+
+    .spec-title {
+      margin-top: 18px;
+      font-size: 15px;
+      font-weight: 850;
+    }
+
+    .spec-text {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .nav-mock {
+      display: flex;
+      min-height: 96px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgb(246 255 234 / 86%);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-name {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .button-pill {
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: var(--cream);
+      padding: 11px 16px;
+      box-shadow: var(--shadow-warm);
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      min-height: 420px;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items: center;
+      overflow: hidden;
+      padding: 42px;
+      color: #fff8f1;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--accent) 48%, #ffde96 100%);
+    }
+
+    .hero-copy,
+    .hero-art { position: relative; z-index: 1; }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgb(255 248 236 / 42%);
+      border-radius: 999px;
+      background: rgb(255 248 236 / 18%);
+      padding: 8px 13px;
+      font-size: 12px;
+      letter-spacing: .14em;
+    }
+
+    .hero h2 {
+      margin-top: 22px;
+      font-family: var(--font-heading);
+      font-size: 46px;
+      line-height: 1.22;
+    }
+
+    .hero p {
+      max-width: 420px;
+      margin-top: 18px;
+      color: rgb(255 248 241 / 88%);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .hero-art {
+      display: grid;
+      min-height: 260px;
+      place-items: center;
+    }
+
+    .favicon-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      padding: 24px;
+    }
+
+    .favicon-cell {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .usage {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .usage-item {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgb(255 250 240 / 72%);
+      padding: 18px;
+    }
+
+    .usage-item h3 {
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .usage-item p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 900px) {
+      .grid.three,
+      .grid.two,
+      .hero,
+      .usage { grid-template-columns: 1fr; }
+      .section-head { align-items: start; flex-direction: column; }
+      .section-note { text-align: left; }
+      .nav-actions span:not(.button-pill) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="whiteSoftShadow" x="-25%" y="-25%" width="150%" height="155%">
+        <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#6e4632" flood-opacity=".16" />
+      </filter>
+      <mask id="whiteDonutHole">
+        <rect width="64" height="64" fill="#fff" />
+        <path d="M23.8 33.6c-.5-3.9 3.3-7.3 8.6-7.9 5.5-.5 9.9 2 10.4 5.9.5 4-3.4 7.3-8.9 7.8-5.4.6-9.6-1.8-10.1-5.8Z" fill="#000" />
+      </mask>
+      <clipPath id="whiteDonutClip">
+        <path d="M8.8 35.2C7.8 25.5 18.6 16.9 31.5 15.6c14.2-1.4 24.2 5.8 25 15.2.8 9.7-9.4 17.2-22.8 18.5C20.4 50.7 9.7 45 8.8 35.2Z" />
+      </clipPath>
+
+      <symbol id="whiteDonutSolid" viewBox="0 0 64 64">
+        <g filter="url(#whiteSoftShadow)">
+          <g transform="rotate(-12 32 34)" mask="url(#whiteDonutHole)">
+            <path d="M8.8 35.2C7.8 25.5 18.6 16.9 31.5 15.6c14.2-1.4 24.2 5.8 25 15.2.8 9.7-9.4 17.2-22.8 18.5C20.4 50.7 9.7 45 8.8 35.2Z" fill="#fff8ec" />
+            <path d="M13.6 25.3c5.2-5.2 13.3-8 22.1-6.9 7.4.9 13.2 4 16.1 8.3-4.9 2.8-8.5 2.3-11.8 5.4-4.6 4.3-7.2 7.4-12 3.9-4.9-3.6-7.8 3.8-12.7.6-2.1-1.4-2.6-6-1.7-11.3Z" fill="#ffffff" opacity=".7" clip-path="url(#whiteDonutClip)" />
+            <path d="M17.6 24.7c4.8-3.2 14.4-5.1 23.6-3.2" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".42" clip-path="url(#whiteDonutClip)" />
+            <path d="M15.2 40.6c5.2 3.7 15.8 5.5 26.6 1.1" fill="none" stroke="#e9d7bd" stroke-width="1.8" stroke-linecap="round" opacity=".52" clip-path="url(#whiteDonutClip)" />
+          </g>
+        </g>
+      </symbol>
+
+      <symbol id="whiteDonutSketch" viewBox="0 0 64 64">
+        <g transform="rotate(-12 32 34)">
+          <path d="M8.8 35.2C7.8 25.5 18.6 16.9 31.5 15.6c14.2-1.4 24.2 5.8 25 15.2.8 9.7-9.4 17.2-22.8 18.5C20.4 50.7 9.7 45 8.8 35.2Z" fill="none" stroke="#fff8ec" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M23.8 33.6c-.5-3.9 3.3-7.3 8.6-7.9 5.5-.5 9.9 2 10.4 5.9.5 4-3.4 7.3-8.9 7.8-5.4.6-9.6-1.8-10.1-5.8Z" fill="none" stroke="#fff8ec" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M15.6 25.8c5.5-4.6 14.7-6.3 24.8-3.8" fill="none" stroke="#fff8ec" stroke-width="2" stroke-linecap="round" opacity=".72" />
+          <path d="M16.8 41.4c6.3 3.7 15.3 4.7 25.4 1.1" fill="none" stroke="#fff8ec" stroke-width="1.7" stroke-linecap="round" opacity=".5" />
+        </g>
+      </symbol>
+
+      <symbol id="whiteDonutFace" viewBox="0 0 64 64">
+        <g filter="url(#whiteSoftShadow)">
+          <g transform="rotate(-12 32 34)" mask="url(#whiteDonutHole)">
+            <path d="M8.8 35.2C7.8 25.5 18.6 16.9 31.5 15.6c14.2-1.4 24.2 5.8 25 15.2.8 9.7-9.4 17.2-22.8 18.5C20.4 50.7 9.7 45 8.8 35.2Z" fill="#fff8ec" />
+            <path d="M17.6 24.7c4.8-3.2 14.4-5.1 23.6-3.2" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".45" clip-path="url(#whiteDonutClip)" />
+            <path d="M15.2 40.6c5.2 3.7 15.8 5.5 26.6 1.1" fill="none" stroke="#e9d7bd" stroke-width="1.8" stroke-linecap="round" opacity=".5" clip-path="url(#whiteDonutClip)" />
+          </g>
+        </g>
+        <g transform="translate(28.8 38.2) rotate(-3)" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M-6.8-3.7h.01M5.6-4h.01" stroke-width="4" />
+          <path d="M-7.1 2.3c0 4.2 2.2 6.4 5.3 6.4 2.6 0 4.1-1.5 4.1-4.1 0 2.6 1.5 4.1 4.2 4.1 3.1 0 5.3-2.2 5.3-6.4" stroke-width="3.3" />
+        </g>
+      </symbol>
+
+      <symbol id="whiteDonutTiny" viewBox="0 0 64 64">
+        <g transform="rotate(-12 32 34)">
+          <path d="M9.5 35.1C8.6 25.9 18.8 17.6 31.5 16.4c13.8-1.3 23.1 5.7 23.9 14.8.8 9.2-8.9 16.4-22.1 17.7C20.2 50.1 10.4 44.4 9.5 35.1Z" fill="#fff8ec" />
+          <path d="M25.5 33.5c-.4-3.1 2.6-5.8 6.9-6.2 4.4-.4 7.8 1.6 8.2 4.7.4 3.2-2.7 5.8-7.1 6.2-4.3.5-7.6-1.5-8-4.7Z" fill="var(--accent-strong)" opacity=".98" />
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <main class="page">
+    <header>
+      <div class="eyebrow">White Donut Mark · No Orbit Ring</div>
+      <h1>纯白倾斜甜甜圈图标</h1>
+      <p class="lead">参考你给的倾斜泳圈姿态，但去掉黄白分段和外部星球轨道，只保留白色甜甜圈本体。通过填充、白描、内侧阴影和轻微高光来制造层次。</p>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">01 图标方向</h2>
+        <p class="section-note">A 最适合当前网站主 logo；B 更像白描；C 带一点参考图的可爱表情，但不建议默认使用。</p>
+      </div>
+      <div class="grid three">
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box" style="--size:80px; --corner:1.55rem">
+              <svg width="58" height="58" viewBox="0 0 64 64"><use href="#whiteDonutSolid" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">A · 纯白软糯版</h3>
+          <p class="spec-text">最推荐。整体是纯白甜甜圈，通过白色透明层和米色暗边表现体积，不再加外部轨道。</p>
+        </article>
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box blue" style="--size:80px; --corner:1.55rem">
+              <svg width="58" height="58" viewBox="0 0 64 64"><use href="#whiteDonutSketch" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">B · 白描线稿版</h3>
+          <p class="spec-text">更轻、更符号化，适合需要极简的 favicon 或深色主题，但在小尺寸下会比 A 弱一些。</p>
+        </article>
+        <article class="panel panel-pad">
+          <div class="icon-stage">
+            <span class="brand-box dark" style="--size:80px; --corner:1.55rem;color:#3f5057">
+              <svg width="58" height="58" viewBox="0 0 64 64"><use href="#whiteDonutFace" /></svg>
+            </span>
+          </div>
+          <h3 class="spec-title">C · 表情参考版</h3>
+          <p class="spec-text">借鉴参考图的颜文字气质，但会更萌。可以作为彩蛋，不建议作为站点主品牌。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">02 顶部导航示例</h2>
+        <p class="section-note">没有外部轨道圈，甜甜圈本身就是图标主体。</p>
+      </div>
+      <article class="panel">
+        <div class="nav-mock">
+          <div class="brand-lockup">
+            <span class="brand-box" style="--size:40px; --corner:.8rem">
+              <svg width="30" height="30" viewBox="0 0 64 64"><use href="#whiteDonutSolid" /></svg>
+            </span>
+            <span class="brand-name">我们的小星球</span>
+          </div>
+          <div class="nav-actions">
+            <span>设置</span>
+            <span class="button-pill">添加回忆</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">03 Hero 示例</h2>
+        <p class="section-note">大图标可以直接浮在渐变上，不加轨道，不加星环。</p>
+      </div>
+      <article class="panel">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="hero-pill"><span style="width:6px;height:6px;border-radius:99px;background:#fff8ec"></span> PRIVATE MEMORY PLANET</div>
+            <h2>一个更轻的<br />白色甜甜圈标志</h2>
+            <p>这个方向比巧克力甜甜圈更干净、更像 App 图标，也更适合你截图里那种“倾斜软圈”的姿态。</p>
+          </div>
+          <div class="hero-art">
+            <svg width="250" height="250" viewBox="0 0 64 64" style="filter: drop-shadow(0 26px 32px rgb(110 70 50 / 20%));">
+              <use href="#whiteDonutSolid" />
+            </svg>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">04 Favicon 尺寸</h2>
+        <p class="section-note">小尺寸建议使用更厚的极简版，不放白描细节。</p>
+      </div>
+      <article class="panel">
+        <div class="favicon-row">
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:16px; --corner:4px">
+              <svg width="13" height="13" viewBox="0 0 64 64"><use href="#whiteDonutTiny" /></svg>
+            </span>
+            16px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:24px; --corner:7px">
+              <svg width="18" height="18" viewBox="0 0 64 64"><use href="#whiteDonutTiny" /></svg>
+            </span>
+            24px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:32px; --corner:9px">
+              <svg width="24" height="24" viewBox="0 0 64 64"><use href="#whiteDonutTiny" /></svg>
+            </span>
+            32px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box" style="--size:64px; --corner:16px">
+              <svg width="46" height="46" viewBox="0 0 64 64"><use href="#whiteDonutSolid" /></svg>
+            </span>
+            64px
+          </div>
+          <div class="favicon-cell">
+            <span class="brand-box blue" style="--size:96px; --corner:23px">
+              <svg width="70" height="70" viewBox="0 0 64 64"><use href="#whiteDonutSolid" /></svg>
+            </span>
+            app icon
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">05 使用建议</h2>
+        <p class="section-note">这个方向比巧克力版更清爽，适合想要“白色符号感”的站点品牌。</p>
+      </div>
+      <div class="usage">
+        <div class="usage-item">
+          <h3>主 logo 用 A</h3>
+          <p>A 方案最像一个柔软白色甜甜圈，40px 下也有辨识度。</p>
+        </div>
+        <div class="usage-item">
+          <h3>白描只做辅助</h3>
+          <p>B 方案适合水印、空状态或深色背景，不建议当唯一 favicon。</p>
+        </div>
+        <div class="usage-item">
+          <h3>不再加外圈轨道</h3>
+          <p>这套图标只靠倾斜甜甜圈本体表达，不额外添加星球环绕线。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

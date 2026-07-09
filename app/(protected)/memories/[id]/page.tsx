@@ -2,6 +2,7 @@ import { ArrowLeft, CalendarDays, MapPin, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChatBubbleThread } from "@/components/chat-bubble-thread";
+import { PageFootprints } from "@/components/page-footprints";
 import { getMemoryDetail } from "@/lib/data/memories";
 import type { Media } from "@/lib/database.types";
 import { formatDate } from "@/lib/utils";
@@ -177,6 +178,10 @@ export default async function MemoryDetailPage({
             </div>
           </section>
         ) : null}
+
+        <div className="mt-8">
+          <PageFootprints pagePath={`/memories/${entry.id}`} title="这段回忆的足迹" />
+        </div>
       </article>
     </main>
   );

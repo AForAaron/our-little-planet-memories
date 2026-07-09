@@ -1,4 +1,4 @@
-import { LogOut, Plus, Settings2 } from "lucide-react";
+import { Footprints, LogOut, Plus, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
@@ -16,6 +16,9 @@ export function SiteHeader({ isDemo = false, title }: { isDemo?: boolean; title?
             </span>
           )}
           <ThemeToggle />
+          <Link href="/footprints" className="button-secondary size-10 !p-0" aria-label="足迹流" title="足迹流">
+            <Footprints size={18} />
+          </Link>
           <Link href="/setup" className="button-secondary size-10 !p-0" aria-label="网站设置" title="网站设置">
             <Settings2 size={18} />
           </Link>

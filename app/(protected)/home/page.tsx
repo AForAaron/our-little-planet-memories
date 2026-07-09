@@ -1,6 +1,6 @@
 import {
   Cake, Clapperboard, Infinity, ListChecks, Map, MapPin,
-  NotebookPen, Sparkles, Waypoints, Clock3,
+  NotebookPen, Sparkles, Waypoints, Clock3, Footprints,
 } from "lucide-react";
 import Link from "next/link";
 import { FeatureCard } from "@/components/feature-card";
@@ -96,6 +96,7 @@ export default async function HomePage() {
           <FeatureCard icon={NotebookPen} name="共同日记" stat={`${counts.diary ?? 0} 篇日记，平凡日子也值得写下。`} href="/daily/diary" tone="pink" />
           <FeatureCard icon={ListChecks} name="愿望清单" stat="等某天一起划掉它。" href="/daily/wishlist" tone="pink" />
           <FeatureCard icon={Clapperboard} name="观影记录" stat={`${counts.watch ?? 0} 部作品，散场后也留下感受。`} href="/daily/watch" tone="pink" />
+          <FeatureCard icon={Footprints} name="足迹流" stat="看看你们最近在小星球上留下了什么。" href="/footprints" tone="pink" />
         </div>
       </section>
     </main>
