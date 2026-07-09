@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChatBubbleThread } from "@/components/chat-bubble-thread";
 import { getMemoryDetail } from "@/lib/data/memories";
+import type { Media } from "@/lib/database.types";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,34 @@ function backTargetForCategory(category: string) {
     default:
       return { href: "/time/timeline", label: "返回时间轴" };
   }
+}
+
+function mediaElement(item: Media, className = "") {
+  if (item.type === "image") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={item.display_url ?? ""}
+        alt={item.caption ?? "回忆照片"}
+        className={`h-full w-full object-cover ${className}`}
+      />
+    );
+  }
+  if (item.type === "video") {
+    return (
+      <video
+        src={item.display_url ?? ""}
+        controls
+        preload="metadata"
+        className={`h-full w-full bg-black object-contain ${className}`}
+      />
+    );
+  }
+  return (
+    <div className={`flex h-full w-full items-center bg-[var(--color-surface-soft)] p-5 ${className}`}>
+      <audio src={item.display_url ?? ""} controls preload="metadata" className="w-full" />
+    </div>
+  );
 }
 
 export async function generateMetadata({
@@ -87,25 +116,29 @@ export default async function MemoryDetailPage({
         </div>
 
         {visibleMedia.length ? (
-          <div className="mb-8 grid h-auto gap-3 overflow-hidden sm:h-[380px] sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
-            {visibleMedia.slice(0, 3).map((item, index) =>
-              item.type === "image" ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+          <section className="mb-8">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="font-heading text-lg font-semibold text-text">全部媒体</h2>
+              <span className="text-xs text-muted">{visibleMedia.length} 个文件</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {visibleMedia.map((item, index) => (
+                <figure
                   key={item.id}
-                  src={item.display_url ?? ""}
-                  alt={item.caption ?? ""}
-                  className={`min-h-[13rem] w-full object-cover ${index === 0 ? "rounded-[22px] sm:row-span-2 sm:h-full" : "rounded-[18px] sm:h-full"}`}
-                />
-              ) : item.type === "video" ? (
-                <video key={item.id} src={item.display_url ?? ""} controls className={`min-h-[13rem] w-full bg-black object-contain ${index === 0 ? "rounded-[22px] sm:row-span-2 sm:h-full" : "rounded-[18px] sm:h-full"}`} />
-              ) : (
-                <div key={item.id} className={`surface flex items-center p-6 ${index === 0 ? "rounded-[22px] sm:row-span-2" : "rounded-[18px]"}`}>
-                  <audio src={item.display_url ?? ""} controls className="w-full" />
-                </div>
-              ),
-            )}
-          </div>
+                  className={`surface overflow-hidden rounded-[20px] ${index === 0 ? "sm:col-span-2" : ""}`}
+                >
+                  <div className={index === 0 ? "h-[18rem] sm:h-[420px]" : "h-[16rem]"}>
+                    {mediaElement(item)}
+                  </div>
+                  {item.caption && (
+                    <figcaption className="border-t border-line px-4 py-3 text-xs text-muted">
+                      {item.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          </section>
         ) : null}
 
         <section className="surface rounded-[24px] p-6 sm:p-[34px]">

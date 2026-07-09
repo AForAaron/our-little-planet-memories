@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -77,6 +77,7 @@ export function TimelineView({
             const canEdit = !isDemo;
             const date = dateParts(entry.happened_at);
             const firstMedia = entry.media?.find((media) => media.display_url);
+            const mediaCount = entry.media?.length ?? 0;
             return (
               <article key={entry.id} className="grid grid-cols-[4.8rem_2rem_minmax(0,1fr)] gap-0 sm:grid-cols-[7.25rem_2.75rem_minmax(0,1fr)]">
                 <time className="pt-5 text-right">
@@ -91,8 +92,10 @@ export function TimelineView({
                   <div className="surface overflow-hidden rounded-[22px] transition hover:-translate-y-1 hover:shadow-lift">
                     {firstMedia ? (
                       firstMedia.type === "image" ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={firstMedia.display_url ?? ""} alt={firstMedia.caption ?? entry.title ?? "回忆照片"} className="h-[190px] w-full object-cover" />
+                        <Link href={`/memories/${entry.id}`} className="block">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={firstMedia.display_url ?? ""} alt={firstMedia.caption ?? entry.title ?? "回忆照片"} className="h-[190px] w-full object-cover" />
+                        </Link>
                       ) : firstMedia.type === "video" ? (
                         <video src={firstMedia.display_url ?? ""} controls preload="metadata" className="h-[190px] w-full bg-black object-contain" />
                       ) : (
@@ -101,9 +104,9 @@ export function TimelineView({
                         </div>
                       )
                     ) : (
-                      <div className="photo-placeholder flex h-[118px] items-center justify-center text-muted">
+                      <Link href={`/memories/${entry.id}`} className="photo-placeholder flex h-[118px] items-center justify-center text-muted">
                         <ImageIcon size={26} />
-                      </div>
+                      </Link>
                     )}
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4">
@@ -134,6 +137,10 @@ export function TimelineView({
                               <span> · {entry.updated_by_profile.display_name} 编辑</span>
                             )}
                         </span>
+                        <Link href={`/memories/${entry.id}`} className="inline-flex items-center gap-1.5 font-semibold text-[var(--color-accent-strong)] hover:text-accent">
+                          查看详情{mediaCount > 1 ? ` · ${mediaCount} 个媒体` : ""}
+                          <ArrowRight size={14} />
+                        </Link>
                       </div>
                     </div>
                   </div>

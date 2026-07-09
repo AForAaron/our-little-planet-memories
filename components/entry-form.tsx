@@ -348,8 +348,11 @@ export function EntryForm({
         window.localStorage.removeItem(draftKey);
         setSelectedFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = "";
-        router.refresh();
         onClose();
+        if (!entry && result.id) {
+          router.push(`/memories/${result.id}`);
+        }
+        router.refresh();
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "保存失败，请稍后重试。");
       }
