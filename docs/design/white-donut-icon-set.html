@@ -314,7 +314,10 @@
   <svg width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
       <filter id="whiteSoftShadow" x="-25%" y="-25%" width="150%" height="155%">
-        <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#6e4632" flood-opacity=".16" />
+        <feDropShadow dx="0" dy="5" stdDeviation="4.5" flood-color="#7a4a34" flood-opacity=".3" />
+      </filter>
+      <filter id="whiteInnerLift" x="-20%" y="-20%" width="140%" height="150%">
+        <feDropShadow dx="0" dy="2" stdDeviation="1.1" flood-color="#8a5638" flood-opacity=".2" />
       </filter>
       <mask id="whiteDonutHole">
         <rect width="64" height="64" fill="#fff" />
@@ -326,11 +329,17 @@
 
       <symbol id="whiteDonutSolid" viewBox="0 0 64 64">
         <g filter="url(#whiteSoftShadow)">
+          <g transform="rotate(-12 32 34)">
+            <path d="M8.8 35.2C7.8 25.5 18.6 16.9 31.5 15.6c14.2-1.4 24.2 5.8 25 15.2.8 9.7-9.4 17.2-22.8 18.5C20.4 50.7 9.7 45 8.8 35.2Z" fill="#d8b98d" opacity=".48" transform="translate(0 1.25)" />
+          </g>
           <g transform="rotate(-12 32 34)" mask="url(#whiteDonutHole)">
-            <path d="M8.8 35.2C7.8 25.5 18.6 16.9 31.5 15.6c14.2-1.4 24.2 5.8 25 15.2.8 9.7-9.4 17.2-22.8 18.5C20.4 50.7 9.7 45 8.8 35.2Z" fill="#fff8ec" />
-            <path d="M13.6 25.3c5.2-5.2 13.3-8 22.1-6.9 7.4.9 13.2 4 16.1 8.3-4.9 2.8-8.5 2.3-11.8 5.4-4.6 4.3-7.2 7.4-12 3.9-4.9-3.6-7.8 3.8-12.7.6-2.1-1.4-2.6-6-1.7-11.3Z" fill="#ffffff" opacity=".7" clip-path="url(#whiteDonutClip)" />
-            <path d="M17.6 24.7c4.8-3.2 14.4-5.1 23.6-3.2" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".42" clip-path="url(#whiteDonutClip)" />
-            <path d="M15.2 40.6c5.2 3.7 15.8 5.5 26.6 1.1" fill="none" stroke="#e9d7bd" stroke-width="1.8" stroke-linecap="round" opacity=".52" clip-path="url(#whiteDonutClip)" />
+            <path d="M8.8 35.2C7.8 25.5 18.6 16.9 31.5 15.6c14.2-1.4 24.2 5.8 25 15.2.8 9.7-9.4 17.2-22.8 18.5C20.4 50.7 9.7 45 8.8 35.2Z" fill="#fffdf8" />
+            <path d="M13.6 25.3c5.2-5.2 13.3-8 22.1-6.9 7.4.9 13.2 4 16.1 8.3-4.9 2.8-8.5 2.3-11.8 5.4-4.6 4.3-7.2 7.4-12 3.9-4.9-3.6-7.8 3.8-12.7.6-2.1-1.4-2.6-6-1.7-11.3Z" fill="#ffffff" opacity=".86" clip-path="url(#whiteDonutClip)" />
+            <path d="M17.6 24.7c4.8-3.2 14.4-5.1 23.6-3.2" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" opacity=".62" clip-path="url(#whiteDonutClip)" />
+            <path d="M14.5 41.1c5.7 4.5 17.8 6.3 29.8.8" fill="none" stroke="#d9bd94" stroke-width="2.6" stroke-linecap="round" opacity=".78" clip-path="url(#whiteDonutClip)" />
+          </g>
+          <g transform="rotate(-12 32 34)" filter="url(#whiteInnerLift)">
+            <path d="M23.8 33.6c-.5-3.9 3.3-7.3 8.6-7.9 5.5-.5 9.9 2 10.4 5.9.5 4-3.4 7.3-8.9 7.8-5.4.6-9.6-1.8-10.1-5.8Z" fill="none" stroke="#d7b78a" stroke-width="2.6" opacity=".8" />
           </g>
         </g>
       </symbol>
@@ -371,7 +380,7 @@
     <header>
       <div class="eyebrow">White Donut Mark · No Orbit Ring</div>
       <h1>纯白倾斜甜甜圈图标</h1>
-      <p class="lead">参考你给的倾斜泳圈姿态，但去掉黄白分段和外部星球轨道，只保留白色甜甜圈本体。通过填充、白描、内侧阴影和轻微高光来制造层次。</p>
+      <p class="lead">参考你给的倾斜泳圈姿态，但去掉黄白分段和外部星球轨道，只保留白色甜甜圈本体。新版强化了暖灰外缘、内孔描边和底部暗边，解决白色图标在暖色背景上对比度不够的问题。</p>
     </header>
 
     <section class="section">
@@ -386,8 +395,8 @@
               <svg width="58" height="58" viewBox="0 0 64 64"><use href="#whiteDonutSolid" /></svg>
             </span>
           </div>
-          <h3 class="spec-title">A · 纯白软糯版</h3>
-          <p class="spec-text">最推荐。整体是纯白甜甜圈，通过白色透明层和米色暗边表现体积，不再加外部轨道。</p>
+          <h3 class="spec-title">A · 高对比纯白版</h3>
+          <p class="spec-text">最推荐。主体仍是白色甜甜圈，但增加暖灰外缘、内孔描边和底部暗边，小尺寸和暖色背景上更清楚。</p>
         </article>
         <article class="panel panel-pad">
           <div class="icon-stage">

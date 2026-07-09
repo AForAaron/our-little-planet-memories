@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "足迹流" };
 
 export default async function FootprintsPage() {
-  const events = await getFootprints({ limit: 60 });
+  const events = await getFootprints({ failSoft: true, limit: 60 });
 
   return (
     <main className="page-shell max-w-[980px] py-7">

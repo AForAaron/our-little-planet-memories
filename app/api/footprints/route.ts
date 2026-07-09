@@ -5,7 +5,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function errorResponse(error: unknown) {
-  const message = error instanceof Error ? error.message : "操作失败。";
+  const rawMessage = error instanceof Error ? error.message : "操作失败。";
+  const message = rawMessage.includes("footprint_events")
+    ? "足迹/追评数据表还没有创建，请先在生产数据库执行 drizzle migration。"
+    : rawMessage;
   const status = message.includes("登录") ? 401 : 400;
   return NextResponse.json({ error: message }, { status });
 }
