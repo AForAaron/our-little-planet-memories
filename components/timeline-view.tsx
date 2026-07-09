@@ -81,11 +81,11 @@ export function TimelineView({
               <article key={entry.id} className="grid grid-cols-[4.8rem_2rem_minmax(0,1fr)] gap-0 sm:grid-cols-[7.25rem_2.75rem_minmax(0,1fr)]">
                 <time className="pt-5 text-right">
                   <span className="block font-heading text-xl font-semibold text-text sm:text-[22px]">{date.monthDay}</span>
-                  <span className="mt-1 block font-mono text-[11px] text-[#b39c8d]">{date.year}</span>
+                  <span className="mt-1 block font-mono text-[11px] text-muted">{date.year}</span>
                 </time>
                 <div className="relative flex justify-center">
-                  <div className="h-full w-px bg-gradient-to-b from-[#f0b4a4] to-[#eed9c8]" />
-                  <span className="absolute top-6 size-4 rounded-full border-[3px] border-[var(--color-surface)] bg-[var(--color-accent)] shadow-[0_0_0_5px_rgb(236_124_104_/_14%)]" />
+                  <div className="h-full w-px bg-gradient-to-b from-[var(--color-accent-soft)] to-[var(--color-line)]" />
+                  <span className="absolute top-6 size-4 rounded-full border-[3px] border-[var(--color-surface)] bg-[var(--color-accent)] shadow-[0_0_0_5px_var(--color-accent-soft)]" />
                 </div>
                 <div className="pb-8 pl-2">
                   <div className="surface overflow-hidden rounded-[22px] transition hover:-translate-y-1 hover:shadow-lift">
@@ -101,7 +101,7 @@ export function TimelineView({
                         </div>
                       )
                     ) : (
-                      <div className="photo-placeholder flex h-[118px] items-center justify-center text-[#c69a82]">
+                      <div className="photo-placeholder flex h-[118px] items-center justify-center text-muted">
                         <ImageIcon size={26} />
                       </div>
                     )}
@@ -125,7 +125,7 @@ export function TimelineView({
                       {entry.body && <p className="mt-4 line-clamp-3 whitespace-pre-wrap text-[13.5px] leading-7 text-muted">{entry.body}</p>}
                       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4 text-xs text-muted">
                         <span className="inline-flex items-center gap-2">
-                          <span className="grid size-[22px] place-items-center rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-strong)] text-[11px] text-white">
+                          <span className="grid size-[22px] place-items-center rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-strong)] text-[11px] text-[var(--color-on-accent)]">
                             {entry.profiles?.display_name?.slice(0, 1) ?? "♡"}
                           </span>
                           由 {entry.profiles?.display_name ?? "我们"} 记录

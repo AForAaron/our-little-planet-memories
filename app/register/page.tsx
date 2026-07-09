@@ -13,13 +13,13 @@ export default async function RegisterPage({
   const { error } = await searchParams;
   return (
     <main className="cosmos-panel grid min-h-screen place-items-center overflow-hidden px-4 py-10">
-      <span className="tiny-star left-[18%] top-[18%] bg-[#f0b7a6]" />
-      <span className="tiny-star bottom-[18%] right-[16%] bg-[#ebc79a] [animation-delay:1s]" />
+      <span className="tiny-star left-[18%] top-[18%] bg-[var(--color-accent)]" />
+      <span className="tiny-star bottom-[18%] right-[16%] bg-[var(--color-amber)] [animation-delay:1s]" />
       <section className="surface relative w-full max-w-lg rounded-[28px] p-7 shadow-lift sm:p-10">
         <span className="brand-mark mx-auto" aria-hidden="true">
           <svg className="brand-orbit" viewBox="0 0 24 24" fill="none">
-            <circle cx="9.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
-            <circle cx="14.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+            <circle cx="9.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
+            <circle cx="14.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
           </svg>
         </span>
         <div className="mt-6 text-center">

@@ -16,38 +16,38 @@ export default async function LoginPage({
 
   return (
     <main className="grid min-h-screen overflow-hidden bg-[var(--color-bg)] md:grid-cols-[1.05fr_1fr]">
-      <section className="hero cosmos-panel relative hidden min-h-screen flex-col justify-between overflow-hidden p-16 text-[#fff6ec] md:flex lg:p-[72px]">
-        <div className="absolute left-[44%] top-[46%] size-[108px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_32%_28%,#fff6ec,#fbd8b8_55%,#f0a886)] shadow-[0_20px_50px_-12px_rgb(150_70_50_/_50%),inset_-10px_-12px_26px_rgb(196_110_80_/_40%)]" />
-        <div className="absolute left-[44%] top-[46%] size-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
-        <div className="absolute left-[44%] top-[46%] size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-white/35" />
+      <section className="hero cosmos-panel relative hidden min-h-screen flex-col justify-between overflow-hidden p-16 text-[var(--color-on-accent)] md:flex lg:p-[72px]">
+        <div className="absolute left-[44%] top-[46%] size-[108px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_32%_28%,var(--color-on-accent),var(--color-amber-soft)_55%,var(--color-accent)_100%)] shadow-[var(--shadow-accent)]" />
+        <div className="absolute left-[44%] top-[46%] size-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[color-mix(in_srgb,var(--color-on-accent)_20%,transparent)]" />
+        <div className="absolute left-[44%] top-[46%] size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-[color-mix(in_srgb,var(--color-on-accent)_35%,transparent)]" />
         <span className="tiny-star left-[22%] top-[18%]" />
         <span className="tiny-star left-[68%] top-[30%] [animation-delay:.8s]" />
         <span className="tiny-star left-[30%] top-[62%] [animation-delay:1.4s]" />
         <div className="relative flex items-center gap-3">
-          <span className="grid size-[42px] place-items-center rounded-[13px] border border-white/45 bg-white/25 backdrop-blur">
+          <span className="grid size-[42px] place-items-center rounded-[13px] border border-[color-mix(in_srgb,var(--color-on-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-on-accent)_22%,transparent)] backdrop-blur">
             <svg className="size-[22px]" viewBox="0 0 24 24" fill="none">
-              <circle cx="9.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
-              <circle cx="14.5" cy="12" r="5.5" stroke="#fff6ec" strokeWidth="1.6" />
+              <circle cx="9.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
+              <circle cx="14.5" cy="12" r="5.5" stroke="var(--color-on-accent)" strokeWidth="1.6" />
             </svg>
           </span>
           <span className="text-[15px] font-medium tracking-[.04em]">张张和沈沈</span>
         </div>
         <div className="relative max-w-[420px]">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/20 px-3.5 py-2 text-xs tracking-[.18em]">
-            <span className="size-1.5 rounded-full bg-[#fff6ec]" /> PRIVATE BY DESIGN
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-on-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-on-accent)_18%,transparent)] px-3.5 py-2 text-xs tracking-[.18em]">
+            <span className="size-1.5 rounded-full bg-[var(--color-on-accent)]" /> PRIVATE BY DESIGN
           </div>
-          <h1 className="font-heading text-[46px] font-semibold leading-[1.24] text-[#fff8f1] drop-shadow-sm">
+          <h1 className="font-heading text-[46px] font-semibold leading-[1.24] drop-shadow-sm">
             我们的
             <br />
             小星球
           </h1>
-          <p className="mt-5 text-base leading-8 text-[#fff6f0]/90">
+          <p className="mt-5 text-base leading-8 opacity-90">
             一个只属于两个人的私密宇宙。
             <br />
             把日子、脚步和心动，都轻轻收进来。
           </p>
         </div>
-        <p className="relative text-[13px] text-[#fff6f0]/80">© 2026 · 只对彼此可见</p>
+        <p className="relative text-[13px] opacity-80">© 2026 · 只对彼此可见</p>
       </section>
 
       <section className="relative flex min-h-screen items-center justify-center px-6 py-12">

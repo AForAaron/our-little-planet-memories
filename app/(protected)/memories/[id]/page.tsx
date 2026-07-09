@@ -70,7 +70,7 @@ export default async function MemoryDetailPage({
         <div className="mb-8">
           <div className="mb-4 flex flex-wrap items-center gap-2.5">
             <span className="rounded-full bg-[var(--color-accent-soft)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-accent-strong)]">{CATEGORY_LABELS[entry.category] ?? entry.category}</span>
-            {chapter && <span className="rounded-full bg-[#f5ede3] px-3.5 py-1.5 text-xs text-muted">{chapter.title}</span>}
+            {chapter && <span className="rounded-full bg-[var(--color-control)] px-3.5 py-1.5 text-xs text-muted">{chapter.title}</span>}
           </div>
           <h1 className="font-heading text-[34px] font-bold leading-[1.3] text-text sm:text-[38px]">
             {entry.title || "无题回忆"}
@@ -109,7 +109,7 @@ export default async function MemoryDetailPage({
         ) : null}
 
         <section className="surface rounded-[24px] p-6 sm:p-[34px]">
-          <p className="whitespace-pre-wrap text-[15.5px] leading-[2.05] text-[#5a4a42]">
+          <p className="whitespace-pre-wrap text-[15.5px] leading-[2.05] text-text">
             {entry.body || "这段回忆还没有写下说明。"}
           </p>
           {(entry.mood || entry.rating) && (
@@ -123,7 +123,7 @@ export default async function MemoryDetailPage({
               {entry.rating && (
                 <div>
                   <div className="mb-2 text-xs text-muted">这一天的评分</div>
-                  <div className="tracking-[2px] text-[#e0925a]">{"★".repeat(entry.rating)}</div>
+                  <div className="tracking-[2px] text-[var(--color-amber)]">{"★".repeat(entry.rating)}</div>
                 </div>
               )}
             </div>

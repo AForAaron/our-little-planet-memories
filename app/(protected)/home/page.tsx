@@ -20,9 +20,9 @@ export default async function HomePage() {
         <span className="tiny-star left-[30%] top-[22%]" />
         <span className="tiny-star left-[44%] top-[60%] [animation-delay:1s]" />
         <div className="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-[1.25fr_.9fr] lg:p-12">
-          <div className="flex min-h-[20rem] flex-col justify-center text-[#fff8f1]">
-            <span className="mb-6 flex w-fit items-center gap-2 rounded-full border border-white/40 bg-white/20 px-3.5 py-2 text-xs tracking-[.16em]">
-              <span className="size-1.5 rounded-full bg-[#fff6ec]" /> 从 {since} 一起看星星
+          <div className="flex min-h-[20rem] flex-col justify-center text-[var(--color-on-accent)]">
+            <span className="mb-6 flex w-fit items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-on-accent)_38%,transparent)] bg-[color-mix(in_srgb,var(--color-on-accent)_18%,transparent)] px-3.5 py-2 text-xs tracking-[.16em]">
+              <span className="size-1.5 rounded-full bg-[var(--color-on-accent)]" /> 从 {since} 一起看星星
             </span>
             <h1 className="font-heading text-[30px] font-semibold leading-[1.4] drop-shadow-sm">
               张张 &amp; 沈沈
@@ -34,15 +34,15 @@ export default async function HomePage() {
                 <div className="font-heading text-[62px] font-bold leading-none">{days || "—"}</div>
                 <div className="mt-2 text-[13.5px] tracking-[.04em] opacity-90">在一起的第 {days || "—"} 天</div>
               </div>
-              <div className="hidden h-14 w-px bg-white/40 sm:block" />
+              <div className="hidden h-14 w-px bg-[color-mix(in_srgb,var(--color-on-accent)_38%,transparent)] sm:block" />
               <div className="pb-1">
                 <div className="text-[22px] font-semibold">{milestone.remaining} 天</div>
                 <div className="mt-1.5 text-[13px] opacity-90">距离第 {milestone.next} 天</div>
               </div>
             </div>
             <div className="mt-8 max-w-[420px]">
-              <div className="h-2.5 overflow-hidden rounded-full bg-white/25">
-                <div className="h-full rounded-full bg-gradient-to-r from-[#fff3e6] to-[#ffe0ce]" style={{ width: `${milestone.progress}%` }} />
+              <div className="h-2.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-on-accent)_22%,transparent)]">
+                <div className="h-full rounded-full bg-[var(--color-on-accent)]" style={{ width: `${milestone.progress}%` }} />
               </div>
               <p className="mt-2 flex justify-between text-[11.5px] opacity-85">
                 <span>第 {milestone.next - 100} 天</span>
@@ -51,14 +51,14 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <Link href="/time/timeline" className="relative flex min-h-64 flex-col rounded-[1.5rem] bg-[rgb(255_253_251_/_96%)] p-[18px] text-text shadow-[0_24px_46px_-22px_rgb(140_60_45_/_50%)] transition-transform hover:-translate-y-1">
+          <Link href="/time/timeline" className="relative flex min-h-64 flex-col rounded-[1.5rem] bg-[var(--color-surface)] p-[18px] text-text shadow-lift transition-transform hover:-translate-y-1">
             {latest?.media?.[0]?.display_url ? (
               // R2 uses a short-lived signed private URL.
               // eslint-disable-next-line @next/next/no-img-element
               <img src={latest.media[0].display_url} alt="" className="h-[168px] w-full rounded-2xl object-cover" />
             ) : (
               <div className="photo-placeholder flex h-[168px] items-center justify-center rounded-2xl">
-                <span className="font-mono text-[11px] uppercase tracking-[.14em] text-[#b47c63]">封面照片 · 16:10</span>
+                <span className="font-mono text-[11px] uppercase tracking-[.14em] text-muted">封面照片 · 16:10</span>
               </div>
             )}
             <div className="px-2 pb-2 pt-4">

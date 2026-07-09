@@ -171,7 +171,7 @@ export default function LeafletWorldMap({
           <Polyline
             key={`route-${index}`}
             pathOptions={{
-              color: "#f58c7b",
+              color: "var(--color-accent)",
               dashArray: "6 10",
               lineCap: "round",
               opacity: 0.72,

@@ -2,17 +2,21 @@
 [data-theme="light"] {
   --color-bg: #f6ffea;
   --color-surface: #fffaf0;
-  --color-surface-soft: #fff3cf;
+  --color-surface-soft: #fff7df;
+  --color-field: color-mix(in srgb, var(--color-surface) 78%, #ffde96 22%);
+  --color-field-focus: color-mix(in srgb, var(--color-surface) 92%, #f6ffea 8%);
+  --color-control: color-mix(in srgb, var(--color-surface) 78%, var(--color-bg) 22%);
+  --color-control-hover: color-mix(in srgb, var(--color-surface) 72%, var(--color-amber-soft) 28%);
   --color-text: #3f5057;
   --color-text-muted: #6b8790;
   --color-accent: #fa855a;
   --color-accent-strong: #c93638;
-  --color-accent-soft: rgb(250 133 90 / 17%);
+  --color-accent-soft: rgb(250 133 90 / 14%);
   --color-amber: #d08e35;
-  --color-amber-soft: rgb(255 222 150 / 36%);
+  --color-amber-soft: rgb(255 222 150 / 24%);
   --color-pink: #4baec5;
-  --color-pink-soft: rgb(98 196 218 / 20%);
-  --color-line: rgb(93 115 126 / 18%);
+  --color-pink-soft: rgb(98 196 218 / 16%);
+  --color-line: rgb(93 115 126 / 14%);
   --color-on-accent: #fffaf0;
   --color-success: #5c9278;
   --color-danger: #c93638;
@@ -41,7 +45,11 @@
 [data-theme="dark"] {
   --color-bg: #500303;
   --color-surface: #5d737e;
-  --color-surface-soft: rgb(93 115 126 / 72%);
+  --color-surface-soft: color-mix(in srgb, #5d737e 82%, #500303 18%);
+  --color-field: color-mix(in srgb, #5d737e 86%, #d0e1cb 14%);
+  --color-field-focus: color-mix(in srgb, #5d737e 92%, #f1e379 8%);
+  --color-control: color-mix(in srgb, #5d737e 78%, #500303 22%);
+  --color-control-hover: color-mix(in srgb, #5d737e 76%, #87bba2 24%);
   --color-text: #d0e1cb;
   --color-text-muted: #a8c5b4;
   --color-accent: #f1e379;

@@ -11,7 +11,7 @@ export function SiteHeader({ isDemo = false, title }: { isDemo?: boolean; title?
         <Logo title={title} />
         <nav className="flex items-center gap-2" aria-label="主要操作">
           {isDemo && (
-            <span className="hidden rounded-full border border-[#eed3ac] bg-[var(--color-amber-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--color-amber)] sm:inline">
+            <span className="hidden rounded-full border border-line bg-[var(--color-amber-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--color-amber)] sm:inline">
               预览模式
             </span>
           )}

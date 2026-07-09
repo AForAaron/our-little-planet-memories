@@ -41,8 +41,8 @@ async function CounterPage() {
           距离 {milestone.next} 天里程碑还有 {milestone.remaining} 天
         </p>
         <div className="mx-auto mt-8 max-w-md">
-          <div className="h-2.5 overflow-hidden rounded-full bg-white/25">
-            <div className="h-full rounded-full bg-gradient-to-r from-[#fff3e6] to-[#ffe0ce]" style={{ width: `${milestone.progress}%` }} />
+          <div className="h-2.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-on-accent)_22%,transparent)]">
+            <div className="h-full rounded-full bg-[var(--color-on-accent)]" style={{ width: `${milestone.progress}%` }} />
           </div>
         </div>
         </div>
