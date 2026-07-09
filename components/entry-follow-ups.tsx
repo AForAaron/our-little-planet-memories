@@ -21,7 +21,13 @@ function readJson<T>(response: Response): Promise<T & { error?: string }> {
     try {
       return JSON.parse(text) as T & { error?: string };
     } catch {
-      return { error: "服务器返回了无法读取的内容。" } as T & { error?: string };
+      const contentType = response.headers.get("content-type") ?? "";
+      const looksLikeHtml = contentType.includes("text/html") || text.trimStart().startsWith("<");
+      return {
+        error: response.redirected || looksLikeHtml
+          ? "追评接口返回了网页内容，请刷新登录状态后重试；如果仍失败，请确认线上已部署最新代码。"
+          : `追评接口返回了无法读取的内容（${response.status}）。`,
+      } as T & { error?: string };
     }
   });
 }
