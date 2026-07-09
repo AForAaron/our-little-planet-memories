@@ -134,6 +134,58 @@ function categoryLabel(category: string) {
   return labels[category] ?? category;
 }
 
+function cleanChatContent(content: string) {
+  return content
+    .replace(/\[[^\]]+\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function includesAny(text: string, keywords: string[]) {
+  return keywords.some((keyword) => text.includes(keyword));
+}
+
+function generateChatSummary(
+  candidate: CandidateDetail["candidate"],
+  messages: NormalizedMessage[],
+) {
+  if (candidate.sourceType === "photo") return "";
+  const selectedIds = new Set(
+    candidate.selectedMessageIds.length
+      ? candidate.selectedMessageIds
+      : candidate.messageIds,
+  );
+  const chatMessages = messages.filter(
+    (message) =>
+      selectedIds.has(message.id) &&
+      (message.senderRole === "self" || message.senderRole === "partner") &&
+      !["system", "emoji"].includes(message.renderType) &&
+      cleanChatContent(message.content),
+  );
+  if (!chatMessages.length) return "";
+
+  const text = chatMessages.map((message) => cleanChatContent(message.content)).join(" ");
+  const speakers = new Set(chatMessages.map((message) => message.senderRole));
+  const together = speakers.size > 1 ? "彼此" : "当时";
+
+  if (includesAny(text, ["想你", "爱你", "抱抱", "亲亲", "宝贝", "宝宝"])) {
+    return `这段聊天留下了${together}惦记和回应的一小段温柔日常。`;
+  }
+  if (includesAny(text, ["哈哈", "笑死", "好笑", "开心", "嘿嘿", "嘻嘻"])) {
+    return "这段聊天里有轻松的笑意，像那天自然冒出来的一小段日常。";
+  }
+  if (includesAny(text, ["晚安", "睡觉", "困", "早点睡", "醒了", "早安"])) {
+    return "这段聊天像一天开始或收尾时的小声问候，普通但很真实。";
+  }
+  if (includesAny(text, ["吃", "饭", "奶茶", "咖啡", "外卖", "好喝", "好吃"])) {
+    return "围绕吃什么、喝什么的几句来回，留下了那天很生活的一小段。";
+  }
+  if (includesAny(text, ["去", "到", "路上", "回家", "出发", "学校", "地铁", "公交"])) {
+    return "这段聊天记录了那天行程里的几句确认和陪伴。";
+  }
+  return "这段聊天留下了那天的几句来回，是很日常也很真实的一小段。";
+}
+
 function CandidateBadge({ candidate }: { candidate: CandidateSummary }) {
   return (
     <div className="review-candidate-meta">
@@ -249,9 +301,15 @@ function DetailEditor({
 }) {
   const [candidate, setCandidate] = useState(detail.candidate);
   const [saving, startSaving] = useTransition();
+  const [generatingSummary, startGeneratingSummary] = useTransition();
   const [error, setError] = useState("");
 
-  useEffect(() => setCandidate(detail.candidate), [detail]);
+  useEffect(() => {
+    const summary = detail.candidate.summary.trim()
+      ? detail.candidate.summary
+      : generateChatSummary(detail.candidate, detail.messages);
+    setCandidate({ ...detail.candidate, summary });
+  }, [detail]);
 
   function patch<K extends keyof typeof candidate>(key: K, value: (typeof candidate)[K]) {
     setCandidate((current) => ({ ...current, [key]: value }));
@@ -287,6 +345,25 @@ function DetailEditor({
         await onSaved();
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "保存失败。");
+      }
+    });
+  }
+
+  function generateAiSummary() {
+    setError("");
+    startGeneratingSummary(async () => {
+      try {
+        const result = await api<{ summary: string }>(
+          `/api/import-review/candidate/${encodeURIComponent(candidate.id)}/summary`,
+          {
+            method: "POST",
+            headers: reviewHeaders(reviewer),
+            body: JSON.stringify({}),
+          },
+        );
+        patch("summary", result.summary);
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "AI 短评生成失败。");
       }
     });
   }
@@ -355,7 +432,20 @@ function DetailEditor({
               <input className="field" value={candidate.title} onChange={(event) => patch("title", event.target.value)} />
             </label>
             <label className="label">
-              记忆摘要
+              <span className="flex items-center justify-between gap-3">
+                记忆摘要
+                {candidate.sourceType !== "photo" && (
+                  <button
+                    className="review-text-button"
+                    type="button"
+                    onClick={generateAiSummary}
+                    disabled={generatingSummary}
+                  >
+                    {generatingSummary ? <LoaderCircle size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    AI 短评
+                  </button>
+                )}
+              </span>
               <textarea className="field min-h-28 resize-y" value={candidate.summary} onChange={(event) => patch("summary", event.target.value)} />
             </label>
           </div>
