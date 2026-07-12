@@ -99,7 +99,6 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
             }
             maxLength={120}
             required
-            emojis={["✨", "🌍", "✈️", "🍽️", "🎬", "🎡", "🏔️", "🌊", "🎂", "💕"]}
           />
         </label>
         <label className="label mt-4">

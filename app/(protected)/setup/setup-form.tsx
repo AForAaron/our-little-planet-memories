@@ -122,7 +122,6 @@ export function SetupForm({ relationship, profiles, isDemo }: SetupFormProps) {
             setDraft((current) => ({ ...current, title: value }))
           }
           required
-          emojis={["💕", "🌍", "🪐", "✨", "🌙", "🏠", "🐾", "🌸"]}
         />
       </label>
       <div className="grid gap-5 sm:grid-cols-2">
@@ -165,7 +164,6 @@ export function SetupForm({ relationship, profiles, isDemo }: SetupFormProps) {
             value={draft.profileNames[profile.id] ?? ""}
             onChange={(value) => updateProfileName(profile.id, value)}
             maxLength={40}
-            emojis={["💕", "✨", "🌙", "☀️", "🐱", "🐶", "🌸", "🫶"]}
           />
         </label>
       ))}

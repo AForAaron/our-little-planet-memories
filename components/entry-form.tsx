@@ -417,7 +417,6 @@ export function EntryForm({
                 placeholder="给这段回忆起个名字"
                 maxLength={100}
                 required
-                quickEmojis={["🌅", "🌊", "💕", "✨"]}
               />
             </label>
 
@@ -441,7 +440,6 @@ export function EntryForm({
                   onChange={(value) => updateDraft("mood", value)}
                   placeholder="🥰 幸福得冒泡"
                   maxLength={30}
-                  quickEmojis={["🥰", "✨", "😭", "🥺"]}
                 />
               </label>
             </div>
@@ -484,7 +482,6 @@ export function EntryForm({
                 onChange={(value) => updateDraft("body", value)}
                 placeholder="把当时的感受写下来…"
                 maxLength={5000}
-                quickEmojis={["😊", "🥰", "🌙", "💗"]}
               />
             </label>
 
@@ -498,7 +495,6 @@ export function EntryForm({
                 value={draft.place_name}
                 onChange={(value) => updateDraft("place_name", value)}
                 maxLength={120}
-                quickEmojis={["📍", "🏔️", "🌊", "🍽️"]}
               />
               </label>
               <div className="entry-location-actions">

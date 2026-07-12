@@ -22,6 +22,13 @@
       "when": 1783589952378,
       "tag": "0002_narrow_kate_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783861292533,
+      "tag": "0003_magical_xavin",
+      "breakpoints": true
     }
   ]
 }

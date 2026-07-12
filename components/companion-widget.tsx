@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { EmojiTextField } from "@/components/emoji-text-field";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { FootprintEvent, PresenceState } from "@/lib/database.types";
 
@@ -218,11 +219,12 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
               留在本页
             </label>
             <div className="companion-input-row">
-              <input
+              <EmojiTextField
                 value={message}
-                onChange={(event) => setMessage(event.target.value)}
+                onChange={setMessage}
                 placeholder="写一句即时小纸条"
                 maxLength={500}
+                className="companion-message-input"
               />
               <button type="submit" disabled={pending || !message.trim()} aria-label="发送">
                 <Send size={16} />

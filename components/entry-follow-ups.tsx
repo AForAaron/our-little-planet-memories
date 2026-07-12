@@ -2,6 +2,7 @@
 
 import { MessageSquarePlus, Send } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
+import { EmojiTextField } from "@/components/emoji-text-field";
 import type { FootprintEvent } from "@/lib/database.types";
 
 function formatRelative(value: string) {
@@ -96,12 +97,14 @@ export function EntryFollowUps({
 
       <form className="follow-up-form" onSubmit={submit}>
         <label className="sr-only" htmlFor="follow-up-body">追加追评</label>
-        <textarea
+        <EmojiTextField
+          as="textarea"
           id="follow-up-body"
           className="field follow-up-textarea"
           value={body}
-          onChange={(event) => setBody(event.target.value.slice(0, 500))}
+          onChange={(value) => setBody(value.slice(0, 500))}
           placeholder="比如：现在回头看，那天最想记住的是..."
+          maxLength={500}
         />
         <div className="follow-up-actions">
           <span className={remaining < 40 ? "is-low" : ""}>{remaining}</span>

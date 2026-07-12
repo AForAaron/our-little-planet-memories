@@ -29,6 +29,31 @@ export const profiles = pgTable("profiles", {
   createdAt,
 });
 
+export const profileEmojiUsage = pgTable(
+  "profile_emoji_usage",
+  {
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    emoji: text("emoji").notNull(),
+    useCount: integer("use_count").notNull().default(0),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.profileId, table.emoji],
+      name: "profile_emoji_usage_profile_id_emoji_pk",
+    }),
+    index("profile_emoji_usage_common_idx").on(
+      table.profileId,
+      table.useCount,
+      table.lastUsedAt,
+    ),
+  ],
+);
+
 export const relationship = pgTable(
   "relationship",
   {
