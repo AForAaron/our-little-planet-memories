@@ -86,48 +86,53 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .field:focus { border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-line)); outline: none; background: var(--color-field-focus); box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent-soft) 62%, transparent); }
 .field::placeholder { color: var(--color-text-muted); opacity: .68; }
 .label { display: grid; gap: .5rem; color: var(--color-text); font-size: .82rem; font-weight: 600; }
-.emoji-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .35rem;
+.emoji-field {
+  position: relative;
+  min-width: 0;
 }
-.emoji-bar button {
+.emoji-input {
+  padding-right: 3.4rem;
+}
+.emoji-trigger {
+  position: absolute;
+  top: 50%;
+  right: .65rem;
   display: grid;
   width: 2rem;
   height: 2rem;
   place-items: center;
+  transform: translateY(-50%);
   border: 1px solid var(--color-line);
   border-radius: .7rem;
   background: var(--color-control);
-  cursor: pointer;
-  font-size: 1rem;
-  transition: transform var(--transition), background var(--transition), border-color var(--transition);
-}
-.emoji-bar button:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-line));
-  background: var(--color-control-hover);
-}
-.emoji-field {
-  position: relative;
-  display: grid;
-  gap: .65rem;
-}
-.emoji-more-button {
-  width: 2rem !important;
-  min-width: 2rem;
-  padding: 0;
   color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--transition), background var(--transition), border-color var(--transition), color var(--transition);
 }
-.emoji-more-button svg {
-  flex: 0 0 auto;
+.emoji-trigger:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-line));
+  background: var(--color-control-hover);
+  color: var(--color-accent-strong);
+}
+.emoji-trigger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.emoji-trigger:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+.emoji-textarea-input + .emoji-trigger {
+  top: .7rem;
+  transform: none;
 }
 .emoji-picker {
   position: absolute;
-  left: 0;
+  right: 0;
   top: calc(100% + .5rem);
-  z-index: 60;
-  width: min(31rem, calc(100vw - 4rem));
+  z-index: 80;
+  width: min(31rem, calc(100vw - 2rem));
   border: 1px solid var(--color-line);
   border-radius: 1rem;
   background: var(--color-surface);
@@ -137,7 +142,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .emoji-picker-head {
   display: flex;
   align-items: center;
-  gap: .5rem;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.emoji-picker-head b {
+  color: var(--color-text);
+  font-size: .88rem;
 }
 .emoji-picker-head > button {
   display: grid;
@@ -149,28 +159,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   background: var(--color-control);
   color: var(--color-text-muted);
   cursor: pointer;
-}
-.emoji-search {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  align-items: center;
-  gap: .45rem;
-  border: 1px solid var(--color-line);
-  border-radius: .75rem;
-  background: var(--color-field);
-  color: var(--color-text-muted);
-  padding: 0 .65rem;
-}
-.emoji-search input {
-  min-width: 0;
-  width: 100%;
-  height: 2.1rem;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--color-text);
-  font-size: .8rem;
 }
 .emoji-tabs {
   display: flex;
@@ -400,10 +388,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
-}
-.entry-two-grid .emoji-picker {
-  right: 0;
-  left: auto;
 }
 .entry-rating-head {
   display: flex;
@@ -917,21 +901,25 @@ button, a { -webkit-tap-highlight-color: transparent; }
   grid-template-columns: minmax(0, 1fr) 2.55rem;
   gap: .5rem;
 }
-.companion-input-row input {
+.companion-input-row .emoji-field {
   min-width: 0;
+}
+.companion-input-row .companion-message-input {
+  min-width: 0;
+  min-height: 2.55rem;
   border: 1px solid var(--color-line);
   border-radius: .85rem;
   background: var(--color-field);
   color: var(--color-text);
-  padding: .72rem .85rem;
+  padding: .72rem 3rem .72rem .85rem;
   outline: 0;
   font-size: .86rem;
 }
-.companion-input-row input:focus {
+.companion-input-row .companion-message-input:focus {
   border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-line));
   box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
-.companion-input-row button {
+.companion-input-row > button {
   display: grid;
   width: 2.55rem;
   height: 2.55rem;
@@ -942,7 +930,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   color: var(--color-on-accent);
   cursor: pointer;
 }
-.companion-input-row button:disabled,
+.companion-input-row > button:disabled,
 .companion-reactions button:disabled {
   cursor: wait;
   opacity: .55;
@@ -1225,7 +1213,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .entry-location-actions {
     grid-template-columns: 1fr;
   }
-  .entry-two-grid .emoji-picker,
   .emoji-picker {
     right: auto;
     left: 0;

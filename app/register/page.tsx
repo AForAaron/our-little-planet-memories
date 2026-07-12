@@ -18,7 +18,7 @@ export default async function RegisterPage({
       <span className="tiny-star bottom-[18%] right-[16%] bg-[var(--color-amber)] [animation-delay:1s]" />
       <section className="surface relative w-full max-w-lg rounded-[28px] p-7 shadow-lift sm:p-10">
         <span className="brand-mark mx-auto" aria-hidden="true">
-          <BrandIcon className="brand-orbit" id="register-brand" />
+          <BrandIcon className="brand-orbit" id="reference-donut-register" />
         </span>
         <div className="mt-6 text-center">
           <span className="eyebrow"><UserPlus size={14} /> Two people only</span>

@@ -5,6 +5,59 @@ type BrandIconProps = {
 };
 
 export function BrandIcon({ className, id = "chocolate-donut-planet", title }: BrandIconProps) {
+  if (id.startsWith("reference-donut")) {
+    return (
+      <svg className={className} viewBox="0 0 64 64" role={title ? "img" : undefined} aria-hidden={title ? undefined : true}>
+        {title && <title>{title}</title>}
+        <defs>
+          <filter id={`${id}-soft-shadow`} x="-25%" y="-25%" width="150%" height="155%">
+            <feDropShadow dx="0" dy="2.5" stdDeviation="2.2" floodColor="#7a4a34" floodOpacity=".2" />
+          </filter>
+        </defs>
+        <g transform="rotate(10 32 35)" filter={`url(#${id}-soft-shadow)`}>
+          <path
+            d="M7.8 39.1C6.4 28.9 17.1 18.7 31.9 16.3c16.3-2.6 28.2 4.3 29.6 15.5 1.3 10.8-10.1 18.7-25.4 20.4C20.4 53.9 9.2 49.2 7.8 39.1Z"
+            fill="none"
+            opacity=".2"
+            stroke="#a96c4e"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="7.6"
+            transform="translate(0 1.5)"
+          />
+          <path
+            d="M24.4 32.4c-.4-4.1 3.7-7.4 9.3-7.8 6-.4 10.6 2.2 11 6.2.4 4.1-3.8 7.4-9.8 7.8-5.9.4-10.1-2.1-10.5-6.2Z"
+            fill="none"
+            opacity=".16"
+            stroke="#a96c4e"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="5.4"
+            transform="translate(0 .9)"
+          />
+          <path
+            d="M7.8 39.1C6.4 28.9 17.1 18.7 31.9 16.3c16.3-2.6 28.2 4.3 29.6 15.5 1.3 10.8-10.1 18.7-25.4 20.4C20.4 53.9 9.2 49.2 7.8 39.1Z"
+            fill="none"
+            stroke="#fffdf8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="6.3"
+          />
+          <path
+            d="M24.4 32.4c-.4-4.1 3.7-7.4 9.3-7.8 6-.4 10.6 2.2 11 6.2.4 4.1-3.8 7.4-9.8 7.8-5.9.4-10.1-2.1-10.5-6.2Z"
+            fill="none"
+            stroke="#fffdf8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="4.9"
+          />
+          <path d="M13.3 31.7c3.9-6.1 12.2-10.4 22.7-10.5 7.6-.1 14.2 2.2 18 6.3" fill="none" opacity=".7" stroke="#fffdf8" strokeLinecap="round" strokeWidth="2.1" />
+          <path d="M13.8 44.2c6.5 4.3 18.9 5.8 31.2 1.1" fill="none" opacity=".58" stroke="#fffdf8" strokeLinecap="round" strokeWidth="1.9" />
+        </g>
+      </svg>
+    );
+  }
+
   const doughId = `${id}-dough`;
   const chocoId = `${id}-choco`;
   const shadowId = `${id}-shadow`;
