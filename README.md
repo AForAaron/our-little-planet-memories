@@ -61,7 +61,7 @@ pnpm dev
 1. 创建私有 bucket `our-little-planet-memories`。
 2. 创建只允许该 bucket 的 Object Read & Write API Token。
 3. 填写 `R2_ACCOUNT_ID`、`R2_ACCESS_KEY_ID`、`R2_SECRET_ACCESS_KEY` 和 `R2_BUCKET`。
-4. 添加允许 `http://localhost:3000` 的 `GET`、`PUT`、`HEAD` CORS；部署后再加入正式 HTTPS 域名。
+4. 添加允许 `http://localhost:3000` 的 `GET`、`PUT`、`HEAD` CORS；部署后再加入稳定正式 HTTPS 域名 `https://our-little-planet-memories.vercel.app`。不要使用每次部署都会变化的 `...-<deployment>.vercel.app` 地址。
 5. 不开启公开访问或 `r2.dev`。
 
 应用只在数据库中保存 `r2_key`，读取使用短时效签名 GET URL。浏览器通过 `/api/uploads/presign` 获得短时效 PUT 地址并直接上传，支持图片、MP4/WebM 和常见音频。
