@@ -3,6 +3,7 @@ import "server-only";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -49,6 +50,7 @@ export async function createPrivateReadUrl(key: string, expiresIn = 3600) {
 export async function createPrivateUploadUrl(
   key: string,
   contentType: string,
+  contentLength: number,
   expiresIn = 600,
 ) {
   return getSignedUrl(
@@ -57,6 +59,7 @@ export async function createPrivateUploadUrl(
       Bucket: getR2Config().bucket,
       Key: key,
       ContentType: contentType,
+      ContentLength: contentLength,
     }),
     { expiresIn },
   );
@@ -75,6 +78,16 @@ export async function uploadPrivateObject(
       ContentType: contentType,
     }),
   );
+}
+
+export async function inspectPrivateObject(key: string) {
+  const result = await getR2Client().send(
+    new HeadObjectCommand({ Bucket: getR2Config().bucket, Key: key }),
+  );
+  return {
+    contentLength: result.ContentLength,
+    contentType: result.ContentType,
+  };
 }
 
 export async function deletePrivateObject(key: string) {

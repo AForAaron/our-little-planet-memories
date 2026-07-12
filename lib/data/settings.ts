@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { isLiveMode } from "@/lib/config/backend";
 import { DEMO_RELATIONSHIP } from "@/lib/data/demo";
 import { getDatabase } from "@/lib/db/client";
@@ -27,7 +27,8 @@ export async function getSiteSettings() {
         displayName: profiles.displayName,
         theme: profiles.theme,
       })
-      .from(profiles),
+      .from(profiles)
+      .orderBy(asc(profiles.createdAt)),
   ]);
   const item = relationshipRows[0];
   return {

@@ -36,6 +36,8 @@ export function getAllowlistEmails() {
 export function assertLiveBackendConfigured() {
   if (!isLiveMode()) return;
 
+  const allowlistEmails = getAllowlistEmails();
+
   const missing = [
     !process.env.DATABASE_URL && "DATABASE_URL",
     !process.env.NEON_AUTH_BASE_URL && "NEON_AUTH_BASE_URL",
@@ -46,7 +48,8 @@ export function assertLiveBackendConfigured() {
     !process.env.R2_ACCESS_KEY_ID && "R2_ACCESS_KEY_ID",
     !process.env.R2_SECRET_ACCESS_KEY && "R2_SECRET_ACCESS_KEY",
     !process.env.R2_BUCKET && "R2_BUCKET",
-    getAllowlistEmails().length !== 2 && "ALLOWLIST_EMAILS (必须恰好两个邮箱)",
+    (allowlistEmails.length !== 2 || new Set(allowlistEmails).size !== 2) &&
+      "ALLOWLIST_EMAILS (必须是两个不同邮箱)",
   ].filter(Boolean);
 
   if (missing.length) {

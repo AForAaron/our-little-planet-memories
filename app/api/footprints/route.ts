@@ -18,7 +18,8 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const pagePath = url.searchParams.get("pagePath") ?? undefined;
     const includeInstant = url.searchParams.get("includeInstant") === "1";
-    const limit = Number(url.searchParams.get("limit") ?? 40);
+    const requestedLimit = Number(url.searchParams.get("limit") ?? 40);
+    const limit = Number.isFinite(requestedLimit) ? requestedLimit : 40;
     return NextResponse.json({
       events: await getFootprints({ pagePath, includeInstant, limit }),
     });

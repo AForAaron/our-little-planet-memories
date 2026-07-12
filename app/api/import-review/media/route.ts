@@ -1,5 +1,7 @@
-import { readFile, stat } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
+import { Readable } from "node:stream";
 import { NextResponse } from "next/server";
 import { canUseReview } from "@/features/import-review/server/store";
 import { getImportRoots } from "@/features/import-review/server/paths";
@@ -18,13 +20,24 @@ const CONTENT_TYPES: Record<string, string> = {
   ".silk": "application/octet-stream",
 };
 
-function safePath(relative: string) {
+async function safePath(relative: string) {
   const { dataRoot } = getImportRoots();
   const resolved = path.resolve(dataRoot, relative);
   if (resolved !== dataRoot && !resolved.startsWith(`${dataRoot}${path.sep}`)) {
     throw new Error("非法媒体路径。");
   }
-  return resolved;
+  const [realRoot, realFile] = await Promise.all([
+    realpath(dataRoot),
+    realpath(resolved),
+  ]);
+  if (realFile !== realRoot && !realFile.startsWith(`${realRoot}${path.sep}`)) {
+    throw new Error("非法媒体路径。");
+  }
+  return realFile;
+}
+
+function streamFile(file: string, options?: { start: number; end: number }) {
+  return Readable.toWeb(createReadStream(file, options)) as ReadableStream;
 }
 
 export async function GET(request: Request) {
@@ -35,7 +48,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const relative = url.searchParams.get("path");
     if (!relative) throw new Error("缺少媒体路径。");
-    const file = safePath(relative);
+    const file = await safePath(relative);
     const info = await stat(file);
     const contentType =
       CONTENT_TYPES[path.extname(file).toLowerCase()] ?? "application/octet-stream";
@@ -44,19 +57,25 @@ export async function GET(request: Request) {
       const match = range.match(/bytes=(\d*)-(\d*)/);
       const start = match?.[1] ? Number(match[1]) : 0;
       const end = match?.[2] ? Number(match[2]) : info.size - 1;
-      const content = await readFile(file);
-      return new Response(content.subarray(start, end + 1), {
+      if (start < 0 || end < start || start >= info.size) {
+        return new Response(null, {
+          status: 416,
+          headers: { "Content-Range": `bytes */${info.size}` },
+        });
+      }
+      const boundedEnd = Math.min(end, info.size - 1);
+      return new Response(streamFile(file, { start, end: boundedEnd }), {
         status: 206,
         headers: {
           "Content-Type": contentType,
-          "Content-Length": String(end - start + 1),
-          "Content-Range": `bytes ${start}-${end}/${info.size}`,
+          "Content-Length": String(boundedEnd - start + 1),
+          "Content-Range": `bytes ${start}-${boundedEnd}/${info.size}`,
           "Accept-Ranges": "bytes",
           "Cache-Control": "private, max-age=3600",
         },
       });
     }
-    return new Response(await readFile(file), {
+    return new Response(streamFile(file), {
       headers: {
         "Content-Type": contentType,
         "Content-Length": String(info.size),

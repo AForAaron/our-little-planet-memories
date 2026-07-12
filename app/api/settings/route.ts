@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getCoupleUser } from "@/lib/auth/server";
@@ -37,7 +37,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const profileRows = await db.select({ id: profiles.id }).from(profiles);
+    const profileRows = await db
+      .select({ id: profiles.id })
+      .from(profiles)
+      .orderBy(asc(profiles.createdAt));
     for (const profile of profileRows) {
       const displayName = String(formData.get(`profile_${profile.id}`) ?? "").trim();
       if (displayName) {

@@ -21,9 +21,14 @@ async function requireUserJson() {
 
 function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "操作失败。";
+  const status = message.includes("登录")
+    ? 401
+    : message.includes("没有找到")
+      ? 404
+      : 400;
   return NextResponse.json(
     { error: message },
-    { status: message.includes("登录") ? 401 : 400 },
+    { status },
   );
 }
 
@@ -57,10 +62,12 @@ export async function PATCH(request: Request) {
     const body = (await request.json()) as { id?: string; done?: boolean };
     if (!body.id) throw new Error("缺少愿望 ID。");
     const done = Boolean(body.done);
-    await getDatabase()
+    const [updated] = await getDatabase()
       .update(wishlistItems)
       .set({ isDone: done, doneAt: done ? new Date() : null })
-      .where(eq(wishlistItems.id, body.id));
+      .where(eq(wishlistItems.id, body.id))
+      .returning({ id: wishlistItems.id });
+    if (!updated) throw new Error("没有找到这个愿望。");
     revalidatePath("/daily/wishlist");
     return NextResponse.json({ ok: true });
   } catch (error) {
@@ -74,7 +81,11 @@ export async function DELETE(request: Request) {
     await requireUserJson();
     const body = (await request.json()) as { id?: string };
     if (!body.id) throw new Error("缺少愿望 ID。");
-    await getDatabase().delete(wishlistItems).where(eq(wishlistItems.id, body.id));
+    const [deleted] = await getDatabase()
+      .delete(wishlistItems)
+      .where(eq(wishlistItems.id, body.id))
+      .returning({ id: wishlistItems.id });
+    if (!deleted) throw new Error("没有找到这个愿望。");
     revalidatePath("/daily/wishlist");
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
@@ -12,7 +12,7 @@ import {
   type MediaType,
 } from "@/lib/database.types";
 import { validateMediaUpload } from "@/lib/media/policy";
-import { deletePrivateObject } from "@/lib/r2/client";
+import { deletePrivateObject, inspectPrivateObject } from "@/lib/r2/client";
 
 type UploadedMedia = {
   r2Key: string;
@@ -107,9 +107,23 @@ function readUploadedMedia(formData: FormData, userId: string) {
   return uploaded;
 }
 
+async function verifyUploadedMedia(uploaded: UploadedMedia[]) {
+  await Promise.all(
+    uploaded.map(async (item) => {
+      const object = await inspectPrivateObject(item.r2Key);
+      if (
+        object.contentLength !== item.size ||
+        object.contentType !== item.mime
+      ) {
+        throw new Error("媒体对象与上传凭据不一致，请重新选择文件上传。");
+      }
+    }),
+  );
+}
+
 async function attachMedia(entryId: string, uploaded: UploadedMedia[]) {
-  if (!uploaded.length) return;
-  await getDatabase().insert(media).values(
+  if (!uploaded.length) return [];
+  return getDatabase().insert(media).values(
     uploaded.map((item, index) => ({
       entryId,
       r2Key: item.r2Key,
@@ -118,7 +132,20 @@ async function attachMedia(entryId: string, uploaded: UploadedMedia[]) {
       caption: item.originalName,
       sortOrder: index,
     })),
-  );
+  ).returning({ id: media.id });
+}
+
+async function deletePlaceIfUnused(placeId: string | null) {
+  if (!placeId) return;
+  const db = getDatabase();
+  const [reference] = await db
+    .select({ id: entries.id })
+    .from(entries)
+    .where(eq(entries.placeId, placeId))
+    .limit(1);
+  if (!reference) {
+    await db.delete(places).where(eq(places.id, placeId));
+  }
 }
 
 function refreshMemoryPages() {
@@ -137,6 +164,7 @@ export async function createEntryFromForm(formData: FormData) {
   let entryId: string | null = null;
   let createdPlaceId: string | null = null;
   try {
+    await verifyUploadedMedia(uploaded);
     const fields = readEntryFields(formData);
     const placeFields = readPlaceFields(formData, fields.category);
     const [place] = placeFields
@@ -155,8 +183,6 @@ export async function createEntryFromForm(formData: FormData) {
       .returning({ id: entries.id });
     entryId = entry.id;
     await attachMedia(entry.id, uploaded);
-    refreshMemoryPages();
-    return entry.id;
   } catch (error) {
     if (entryId) await db.delete(entries).where(eq(entries.id, entryId));
     if (createdPlaceId) {
@@ -167,6 +193,8 @@ export async function createEntryFromForm(formData: FormData) {
     );
     throw error;
   }
+  refreshMemoryPages();
+  return entryId;
 }
 
 export async function updateEntryFromForm(formData: FormData) {
@@ -175,28 +203,50 @@ export async function updateEntryFromForm(formData: FormData) {
   const uploaded = readUploadedMedia(formData, user.id);
   const db = getDatabase();
   const id = String(formData.get("id") ?? "");
-  const fields = readEntryFields(formData);
-  const placeFields = readPlaceFields(formData, fields.category);
-  const [place] = placeFields
-    ? await db.insert(places).values(placeFields).returning({ id: places.id })
-    : [];
-  const [updated] = await db
-    .update(entries)
-    .set({ ...fields, updatedBy: user.id, ...(place ? { placeId: place.id } : {}) })
-    .where(eq(entries.id, id))
-    .returning({ id: entries.id });
-  if (!updated) throw new Error("没有找到这条回忆。");
-
+  let createdPlaceId: string | null = null;
+  let attachedMediaIds: string[] = [];
   try {
-    await attachMedia(id, uploaded);
-    refreshMemoryPages();
-    return id;
+    if (!id) throw new Error("缺少要编辑的回忆 ID。");
+    await verifyUploadedMedia(uploaded);
+    const [existing] = await db
+      .select({ id: entries.id, placeId: entries.placeId })
+      .from(entries)
+      .where(eq(entries.id, id))
+      .limit(1);
+    if (!existing) throw new Error("没有找到这条回忆。");
+
+    const fields = readEntryFields(formData);
+    const placeFields = readPlaceFields(formData, fields.category);
+    const [place] = placeFields
+      ? await db.insert(places).values(placeFields).returning({ id: places.id })
+      : [];
+    createdPlaceId = place?.id ?? null;
+
+    attachedMediaIds = (await attachMedia(id, uploaded)).map(({ id: mediaId }) => mediaId);
+    const [updated] = await db
+      .update(entries)
+      .set({ ...fields, updatedBy: user.id, placeId: place?.id ?? null })
+      .where(eq(entries.id, id))
+      .returning({ id: entries.id });
+    if (!updated) throw new Error("没有找到这条回忆。");
+
+    if (existing.placeId !== (place?.id ?? null)) {
+      await deletePlaceIfUnused(existing.placeId).catch(() => undefined);
+    }
   } catch (error) {
+    if (attachedMediaIds.length) {
+      await db.delete(media).where(inArray(media.id, attachedMediaIds));
+    }
+    if (createdPlaceId) {
+      await db.delete(places).where(eq(places.id, createdPlaceId));
+    }
     await Promise.allSettled(
       uploaded.map((item) => deletePrivateObject(item.r2Key)),
     );
     throw error;
   }
+  refreshMemoryPages();
+  return id;
 }
 
 export async function deleteEntryById(id: string) {

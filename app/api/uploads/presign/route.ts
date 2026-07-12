@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const extension = extensionForMime(mime);
     if (!extension) throw new Error("无法识别文件扩展名。");
     const r2Key = `uploads/${user.id}/${crypto.randomUUID()}.${extension}`;
-    const uploadUrl = await createPrivateUploadUrl(r2Key, mime, 600);
+    const uploadUrl = await createPrivateUploadUrl(r2Key, mime, size, 600);
     return NextResponse.json({
       r2Key,
       uploadUrl,
