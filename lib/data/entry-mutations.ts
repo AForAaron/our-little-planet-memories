@@ -6,6 +6,8 @@ import { requireCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
 import { getDatabase } from "@/lib/db/client";
 import { entries, media, places } from "@/lib/db/schema";
+import { createActivityEvent } from "@/lib/data/activity-stream";
+import { createPartnerNotification } from "@/lib/data/notifications";
 import {
   ENTRY_CATEGORIES,
   type EntryCategory,
@@ -154,6 +156,8 @@ function refreshMemoryPages() {
   revalidatePath("/time");
   revalidatePath("/daily");
   revalidatePath("/places");
+  revalidatePath("/footprints");
+  revalidatePath("/notifications");
 }
 
 export async function createEntryFromForm(formData: FormData) {
@@ -183,6 +187,26 @@ export async function createEntryFromForm(formData: FormData) {
       .returning({ id: entries.id });
     entryId = entry.id;
     await attachMedia(entry.id, uploaded);
+    const actorName = user.name?.trim() || user.email.split("@")[0];
+    await createActivityEvent({
+      actorId: user.id,
+      kind: "entry_created",
+      sourceType: "entry",
+      sourceId: entry.id,
+      entryId: entry.id,
+      pagePath: `/memories/${entry.id}`,
+      pageTitle: fields.title,
+      body: fields.body,
+      createdAt: fields.updatedAt,
+    }).catch(() => undefined);
+    await createPartnerNotification({
+      actorId: user.id,
+      type: "entry_created",
+      entryId: entry.id,
+      title: `${actorName} 发布了新回忆《${fields.title}》`,
+      body: fields.body,
+      href: `/memories/${entry.id}`,
+    }).catch(() => undefined);
   } catch (error) {
     if (entryId) await db.delete(entries).where(eq(entries.id, entryId));
     if (createdPlaceId) {
@@ -229,6 +253,26 @@ export async function updateEntryFromForm(formData: FormData) {
       .where(eq(entries.id, id))
       .returning({ id: entries.id });
     if (!updated) throw new Error("没有找到这条回忆。");
+    const actorName = user.name?.trim() || user.email.split("@")[0];
+    await createActivityEvent({
+      actorId: user.id,
+      kind: "entry_updated",
+      sourceType: "entry_update",
+      sourceId: `${id}:${fields.updatedAt.toISOString()}`,
+      entryId: id,
+      pagePath: `/memories/${id}`,
+      pageTitle: fields.title,
+      body: fields.body,
+      createdAt: fields.updatedAt,
+    }).catch(() => undefined);
+    await createPartnerNotification({
+      actorId: user.id,
+      type: "entry_updated",
+      entryId: id,
+      title: `${actorName} 修改了《${fields.title}》`,
+      body: fields.body,
+      href: `/memories/${id}`,
+    }).catch(() => undefined);
 
     if (existing.placeId !== (place?.id ?? null)) {
       await deletePlaceIfUnused(existing.placeId).catch(() => undefined);

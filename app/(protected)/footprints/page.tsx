@@ -1,13 +1,22 @@
 import { ArrowLeft, Footprints, MessageCircleHeart } from "lucide-react";
 import Link from "next/link";
-import { FootprintEventList } from "@/components/footprint-event-list";
-import { getFootprints } from "@/lib/data/footprints";
+import { ActivityStreamList } from "@/components/activity-stream-list";
+import { PendingEntryInbox } from "@/components/pending-entry-inbox";
+import { getActivityStream, getPendingEntryAttention } from "@/lib/data/activity-stream";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "足迹流" };
 
-export default async function FootprintsPage() {
-  const events = await getFootprints({ failSoft: true, limit: 60 });
+export default async function FootprintsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
+  const { filter } = await searchParams;
+  const [stream, inbox] = await Promise.all([
+    getActivityStream({ filter, limit: 50 }),
+    getPendingEntryAttention(),
+  ]);
 
   return (
     <main className="page-shell max-w-[980px] py-7">
@@ -21,21 +30,35 @@ export default async function FootprintsPage() {
           <div>
             <h1>足迹流</h1>
             <p>
-              这里收集你们在小星球上留下的小纸条、反应和同一刻的停留。
+              这里收集悄悄话、互动、追评，还有每一次被重新写下的回忆。
             </p>
           </div>
           <div className="footprints-hero-stat">
             <MessageCircleHeart size={20} />
-            <b>{events.length}</b>
-            <span>条最近足迹</span>
+            <b>{stream.items.length}</b>
+            <span>条最近动态</span>
           </div>
         </div>
       </section>
 
-      <section className="surface mt-8 rounded-[24px] p-4 sm:p-6">
-        <FootprintEventList
-          events={events}
-          emptyText="足迹流还很安静。打开右下角小窗，给某一页留第一句话。"
+      <div className="mt-8">
+        <PendingEntryInbox items={inbox.items} />
+      </div>
+
+      <section id="stream" className="activity-stream-panel mt-8 scroll-mt-6">
+        <div className="activity-stream-head">
+          <div>
+            <span className="eyebrow"><Footprints size={14} /> All activity</span>
+            <h2>所有足迹</h2>
+            <p>每一条内容都有来处，也都有它该停留的位置。</p>
+          </div>
+          <MessageCircleHeart size={21} />
+        </div>
+        <ActivityStreamList
+          key={stream.filter}
+          initialItems={stream.items}
+          initialNextCursor={stream.nextCursor}
+          filter={stream.filter}
         />
       </section>
     </main>

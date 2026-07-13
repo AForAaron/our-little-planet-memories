@@ -1,6 +1,7 @@
 import { Footprints, LogOut, Plus, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "./logo";
+import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "./theme-toggle";
 import { signOut } from "@/app/login/actions";
 
@@ -16,6 +17,7 @@ export function SiteHeader({ isDemo = false, title }: { isDemo?: boolean; title?
             </span>
           )}
           <ThemeToggle />
+          {!isDemo && <NotificationBell />}
           <Link href="/footprints" className="button-secondary size-10 !p-0" aria-label="足迹流" title="足迹流">
             <Footprints size={18} />
           </Link>
