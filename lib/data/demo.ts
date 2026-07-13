@@ -1,4 +1,14 @@
-import type { Entry, FootprintEvent, PresenceState, Relationship } from "@/lib/database.types";
+import type {
+  ActivityStreamItem,
+  ActivityNotification,
+  CompanionMessage,
+  Entry,
+  EntryFollowUp,
+  FootprintEvent,
+  PendingEntryAttention,
+  PresenceState,
+  Relationship,
+} from "@/lib/database.types";
 
 const now = Date.now();
 
@@ -215,5 +225,143 @@ export const DEMO_FOOTPRINTS: FootprintEvent[] = [
     reaction: null,
     created_at: new Date(now - 5 * 60 * 60 * 1000).toISOString(),
     profile: { display_name: "小星球", avatar_url: null, color: null },
+  },
+];
+
+export const DEMO_COMPANION_MESSAGES: CompanionMessage[] = [
+  {
+    id: "demo-companion-1",
+    author_id: "demo-partner",
+    body: "我刚刚翻到这页，还是好喜欢这张照片。",
+    page_path: "/memories/demo-1",
+    page_title: "周末的海边日落",
+    created_at: new Date(now - 9 * 60 * 1000).toISOString(),
+    profile: { display_name: "沈沈", avatar_url: null, color: null },
+  },
+];
+
+export const DEMO_ENTRY_FOLLOW_UPS: EntryFollowUp[] = [
+  {
+    id: "demo-follow-up-1",
+    entry_id: "demo-1",
+    author_id: "demo-partner",
+    parent_id: null,
+    body: "现在再看，最记得的是那天风很大，但心里很安静。",
+    created_at: new Date(now - 46 * 60 * 1000).toISOString(),
+    updated_at: new Date(now - 46 * 60 * 1000).toISOString(),
+    profile: { display_name: "沈沈", avatar_url: null, color: null },
+    replies: [
+      {
+        id: "demo-follow-up-reply-1",
+        entry_id: "demo-1",
+        author_id: "demo-self",
+        parent_id: "demo-follow-up-1",
+        body: "我也是，那个傍晚像被单独存起来了。",
+        created_at: new Date(now - 38 * 60 * 1000).toISOString(),
+        updated_at: new Date(now - 38 * 60 * 1000).toISOString(),
+        profile: { display_name: "张张", avatar_url: null, color: null },
+      },
+    ],
+  },
+];
+
+export const DEMO_NOTIFICATIONS: ActivityNotification[] = [
+  {
+    id: "demo-notification-1",
+    recipient_id: "demo-self",
+    actor_id: "demo-partner",
+    type: "follow_up_created",
+    entry_id: "demo-1",
+    follow_up_id: "demo-follow-up-1",
+    title: "沈沈追评了《周末的海边日落》",
+    body: "现在再看，最记得的是那天风很大，但心里很安静。",
+    href: "/memories/demo-1#follow-ups",
+    read_at: null,
+    created_at: new Date(now - 46 * 60 * 1000).toISOString(),
+    actor: { display_name: "沈沈", avatar_url: null, color: null },
+  },
+];
+
+export const DEMO_ACTIVITY_STREAM: ActivityStreamItem[] = [
+  {
+    id: "demo-activity-companion-1",
+    kind: "companion_message",
+    source_type: "companion_message",
+    source_id: "demo-companion-1",
+    actor_id: "demo-partner",
+    entry_id: "demo-1",
+    page_path: "/memories/demo-1",
+    page_title: "周末的海边日落",
+    entry_title: "周末的海边日落 🌅",
+    body: "我刚刚翻到这页，还是好喜欢这张照片。",
+    reaction: null,
+    created_at: new Date(now - 9 * 60 * 1000).toISOString(),
+    profile: { display_name: "沈沈", avatar_url: null, color: null },
+  },
+  {
+    id: "demo-activity-follow-up-1",
+    kind: "follow_up_created",
+    source_type: "entry_follow_up",
+    source_id: "demo-follow-up-1",
+    actor_id: "demo-partner",
+    entry_id: "demo-1",
+    page_path: "/memories/demo-1",
+    page_title: "周末的海边日落",
+    entry_title: "周末的海边日落 🌅",
+    body: "现在再看，最记得的是那天风很大，但心里很安静。",
+    reaction: null,
+    created_at: new Date(now - 46 * 60 * 1000).toISOString(),
+    profile: { display_name: "沈沈", avatar_url: null, color: null },
+  },
+  {
+    id: "demo-activity-reply-1",
+    kind: "follow_up_replied",
+    source_type: "entry_follow_up",
+    source_id: "demo-follow-up-reply-1",
+    actor_id: "demo-self",
+    entry_id: "demo-1",
+    page_path: "/memories/demo-1",
+    page_title: "周末的海边日落",
+    entry_title: "周末的海边日落 🌅",
+    body: "我也是，那个傍晚像被单独存起来了。",
+    reaction: null,
+    created_at: new Date(now - 38 * 60 * 1000).toISOString(),
+    profile: { display_name: "张张", avatar_url: null, color: null },
+  },
+  {
+    id: "demo-activity-reaction-1",
+    kind: "reaction",
+    source_type: "footprint_event",
+    source_id: "demo-footprint-2",
+    actor_id: "demo-self",
+    entry_id: null,
+    page_path: "/daily/wishlist",
+    page_title: "愿望清单",
+    entry_title: null,
+    body: null,
+    reaction: "想去",
+    created_at: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+    profile: { display_name: "张张", avatar_url: null, color: null },
+  },
+];
+
+export const DEMO_PENDING_ENTRY_ATTENTION: PendingEntryAttention[] = [
+  {
+    entry_id: "demo-1",
+    entry_title: "周末的海边日落 🌅",
+    href: "/memories/demo-1",
+    latest_at: new Date(now - 46 * 60 * 1000).toISOString(),
+    items: [
+      {
+        id: "demo-notification-1",
+        type: "follow_up_created",
+        actor_id: "demo-partner",
+        title: "沈沈追评了《周末的海边日落》",
+        body: "现在再看，最记得的是那天风很大，但心里很安静。",
+        href: "/memories/demo-1#follow-ups",
+        created_at: new Date(now - 46 * 60 * 1000).toISOString(),
+        actor: { display_name: "沈沈", avatar_url: null, color: null },
+      },
+    ],
   },
 ];

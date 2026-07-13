@@ -4,7 +4,6 @@ import {
   Bell,
   Footprints,
   Heart,
-  MessageCircle,
   Navigation,
   Send,
   X,
@@ -13,7 +12,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { EmojiTextField } from "@/components/emoji-text-field";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import type { FootprintEvent, PresenceState } from "@/lib/database.types";
+import type { CompanionMessage, PresenceState } from "@/lib/database.types";
 
 type PresenceResponse = {
   currentUserId: string | null;
@@ -22,8 +21,8 @@ type PresenceResponse = {
   others: PresenceState[];
 };
 
-type FootprintsResponse = {
-  events: FootprintEvent[];
+type MessagesResponse = {
+  messages: CompanionMessage[];
 };
 
 const REACTIONS = ["想再去", "记得", "抱抱", "笑死"];
@@ -37,6 +36,16 @@ function relative(value: string) {
   if (minutes < 1) return "刚刚";
   if (minutes < 60) return `${minutes} 分钟前`;
   return `${Math.round(minutes / 60)} 小时前`;
+}
+
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(value));
 }
 
 function presenceLine(other: PresenceState | undefined, onlineAfter: string, recentAfter: string) {
@@ -56,9 +65,8 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [presence, setPresence] = useState<PresenceResponse | null>(null);
-  const [events, setEvents] = useState<FootprintEvent[]>([]);
+  const [messages, setMessages] = useState<CompanionMessage[]>([]);
   const [message, setMessage] = useState("");
-  const [leaveOnPage, setLeaveOnPage] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -84,24 +92,24 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
     setPresence((await response.json()) as PresenceResponse);
   }
 
-  async function refreshEvents(signal?: AbortSignal) {
-    const response = await fetch("/api/footprints?includeInstant=1&limit=12", {
+  async function refreshMessages(signal?: AbortSignal) {
+    const response = await fetch("/api/companion/messages?limit=16", {
       signal,
     });
     if (!response.ok) return;
-    const result = (await response.json()) as FootprintsResponse;
-    setEvents(result.events.filter((event) => event.event_type === "message").slice(0, 8));
+    const result = (await response.json()) as MessagesResponse;
+    setMessages(result.messages.slice(0, 12));
   }
 
   useEffect(() => {
     const controller = new AbortController();
     void refreshPresence(controller.signal);
-    void refreshEvents(controller.signal);
+    void refreshMessages(controller.signal);
     const presenceTimer = window.setInterval(() => {
       void refreshPresence();
     }, 4_000);
     const eventTimer = window.setInterval(() => {
-      void refreshEvents();
+      void refreshMessages();
     }, 5_000);
     return () => {
       controller.abort();
@@ -110,11 +118,10 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
     };
   }, [pathname]);
 
-  async function createEvent(input: {
-    eventType: "message" | "reaction" | "summon";
+  async function createFootprintAction(input: {
+    eventType: "reaction" | "summon";
     body?: string;
     reaction?: string;
-    scope?: "site" | "page";
   }) {
     setError("");
     setPending(true);
@@ -124,7 +131,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           eventType: input.eventType,
-          scope: input.scope ?? "page",
+          scope: "page",
           pagePath: pathname,
           pageTitle: pageTitle(),
           body: input.body,
@@ -133,8 +140,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
       });
       const result = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(result.error ?? "发送失败。");
-      await refreshEvents();
-      if ((input.scope ?? "page") === "page") router.refresh();
+      router.refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "发送失败。");
     } finally {
@@ -147,11 +153,28 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
     const text = message.trim();
     if (!text) return;
     setMessage("");
-    await createEvent({
-      eventType: "message",
-      body: text,
-      scope: leaveOnPage ? "page" : "site",
-    });
+    setError("");
+    setPending(true);
+    try {
+      const response = await fetch("/api/companion/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          body: text,
+          pagePath: pathname,
+          pageTitle: pageTitle(),
+        }),
+      });
+      const result = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      if (!response.ok) throw new Error(result.error ?? "发送失败。");
+      await refreshMessages();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "发送失败。");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -161,7 +184,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
           <div className="companion-head">
             <div>
               <span className="companion-kicker">一起在小星球</span>
-              <h2>{status}</h2>
+              <h2>悄悄话 · {status}</h2>
             </div>
             <button type="button" onClick={() => setOpen(false)} aria-label="收起共处窗口">
               <X size={17} />
@@ -177,11 +200,17 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
           )}
 
           <div className="companion-messages">
-            {events.length ? (
-              events.map((event) => (
-                <div key={event.id} className="companion-message">
-                  <span>{event.profile?.display_name?.slice(0, 1) ?? "我"}</span>
-                  <p>{event.body}</p>
+            {messages.length ? (
+              messages.map((item) => (
+                <div key={item.id} className="companion-message">
+                  <span>{item.profile?.display_name?.slice(0, 1) ?? "我"}</span>
+                  <div>
+                    <p>{item.body}</p>
+                    <small>
+                      {item.profile?.display_name ?? "我们"} · {formatTime(item.created_at)}
+                      {item.page_path === pathname ? " · 来自此页" : ""}
+                    </small>
+                  </div>
                 </div>
               ))
             ) : (
@@ -195,7 +224,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
                 key={reaction}
                 type="button"
                 disabled={pending}
-                onClick={() => createEvent({ eventType: "reaction", reaction })}
+                onClick={() => createFootprintAction({ eventType: "reaction", reaction })}
               >
                 <Heart size={13} /> {reaction}
               </button>
@@ -203,26 +232,18 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
             <button
               type="button"
               disabled={pending}
-              onClick={() => createEvent({ eventType: "summon", body: "来看看这里" })}
+              onClick={() => createFootprintAction({ eventType: "summon", body: "来看看这里" })}
             >
               <Bell size={13} /> 叫她来看
             </button>
           </div>
 
           <form onSubmit={submit} className="companion-form">
-            <label className="companion-toggle">
-              <input
-                type="checkbox"
-                checked={leaveOnPage}
-                onChange={(event) => setLeaveOnPage(event.target.checked)}
-              />
-              留在本页
-            </label>
             <div className="companion-input-row">
               <EmojiTextField
                 value={message}
                 onChange={setMessage}
-                placeholder="写一句即时小纸条"
+                placeholder="写一句只属于小窗的悄悄话"
                 maxLength={500}
                 className="companion-message-input"
               />

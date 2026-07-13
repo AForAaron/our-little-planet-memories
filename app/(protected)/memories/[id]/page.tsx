@@ -2,9 +2,10 @@ import { ArrowLeft, CalendarDays, MapPin, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChatBubbleThread } from "@/components/chat-bubble-thread";
+import { EntryAttentionMarker } from "@/components/entry-attention-marker";
 import { EntryFollowUps } from "@/components/entry-follow-ups";
 import { PageFootprints } from "@/components/page-footprints";
-import { getEntryFollowUps } from "@/lib/data/footprints";
+import { getEntryFollowUps } from "@/lib/data/entry-follow-ups";
 import { getMemoryDetail } from "@/lib/data/memories";
 import type { Media } from "@/lib/database.types";
 import { formatDate } from "@/lib/utils";
@@ -93,10 +94,11 @@ export default async function MemoryDetailPage({
   const backTarget = backTargetForCategory(entry.category);
   const visibleMedia = entry.media?.filter((item) => item.display_url) ?? [];
   const pagePath = `/memories/${entry.id}`;
-  const followUps = await getEntryFollowUps(entry.id, pagePath);
+  const followUps = await getEntryFollowUps(entry.id);
 
   return (
     <main className="page-shell max-w-[960px] py-7">
+      <EntryAttentionMarker entryId={entry.id} />
       <Link href={backTarget.href} className="mb-6 inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-[var(--color-accent-strong)]">
         <ArrowLeft size={17} /> {backTarget.label}
       </Link>

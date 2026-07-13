@@ -15,6 +15,7 @@ import {
   presenceState,
   profiles,
 } from "@/lib/db/schema";
+import { createActivityEvent } from "./activity-stream";
 import { DEMO_FOOTPRINTS, DEMO_PRESENCE } from "./demo";
 
 const ONLINE_MS = 20_000;
@@ -198,14 +199,27 @@ export async function updatePresence(input: {
       .limit(1);
 
     if (!existing) {
-      await db.insert(footprintEvents).values({
-        authorId: user.id,
-        eventType: "co_presence",
-        scope: "page",
+      const [created] = await db
+        .insert(footprintEvents)
+        .values({
+          authorId: user.id,
+          eventType: "co_presence",
+          scope: "page",
+          pagePath: currentPath,
+          pageTitle,
+          body: "你们刚才一起停在这里。",
+        })
+        .returning();
+      await createActivityEvent({
+        actorId: user.id,
+        kind: "co_presence",
+        sourceType: "footprint_event",
+        sourceId: created.id,
         pagePath: currentPath,
         pageTitle,
-        body: "你们刚才一起停在这里。",
-      });
+        body: created.body,
+        createdAt: created.createdAt,
+      }).catch(() => undefined);
     }
   }
 
@@ -245,6 +259,9 @@ export async function getFootprints({
   if (normalizedPath) clauses.push(eq(footprintEvents.pagePath, normalizedPath));
   if (targetType) clauses.push(eq(footprintEvents.targetType, targetType));
   if (targetId) clauses.push(eq(footprintEvents.targetId, targetId));
+  if (!targetType) {
+    clauses.push(or(isNull(footprintEvents.targetType), ne(footprintEvents.targetType, "follow_up"))!);
+  }
   if (excludeTargetType) {
     clauses.push(or(isNull(footprintEvents.targetType), ne(footprintEvents.targetType, excludeTargetType))!);
   }
@@ -267,16 +284,6 @@ export async function getFootprints({
   }
 
   return rows.map((row) => mapFootprint(row.event, row.profile));
-}
-
-export async function getEntryFollowUps(entryId: string, pagePath: string) {
-  return getFootprints({
-    pagePath,
-    targetType: "follow_up",
-    targetId: entryId,
-    failSoft: true,
-    limit: 80,
-  });
 }
 
 export async function createFootprint(input: {
@@ -307,6 +314,9 @@ export async function createFootprint(input: {
 
   if (eventType === "message" && !body) throw new Error("先写一句想留下的话。");
   if (eventType === "reaction" && !reaction) throw new Error("请选择一个反应。");
+  if (targetType === "follow_up") {
+    throw new Error("追评已经迁移到独立接口，请刷新页面后重试。");
+  }
 
   const db = getDatabase();
   const [created] = await db
@@ -323,6 +333,19 @@ export async function createFootprint(input: {
       reaction,
     })
     .returning();
+
+  await createActivityEvent({
+    actorId: user.id,
+    kind: eventType === "message" ? "page_message" : eventType,
+    sourceType: "footprint_event",
+    sourceId: created.id,
+    entryId: targetType === "entry" ? targetId : null,
+    pagePath,
+    pageTitle,
+    body,
+    reaction,
+    createdAt: created.createdAt,
+  }).catch(() => undefined);
 
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
   return mapFootprint(created, profile ?? null);

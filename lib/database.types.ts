@@ -107,3 +107,100 @@ export type FootprintEvent = {
   created_at: string;
   profile?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
 };
+
+export type CompanionMessage = {
+  id: string;
+  author_id: string;
+  body: string;
+  page_path: string | null;
+  page_title: string | null;
+  created_at: string;
+  profile?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
+};
+
+export type EntryFollowUp = {
+  id: string;
+  entry_id: string;
+  author_id: string;
+  parent_id: string | null;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  profile?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
+  replies?: EntryFollowUp[];
+};
+
+export type ActivityNotificationType =
+  | "entry_created"
+  | "entry_updated"
+  | "follow_up_created"
+  | "follow_up_replied";
+
+export type ActivityNotification = {
+  id: string;
+  recipient_id: string;
+  actor_id: string;
+  type: ActivityNotificationType;
+  entry_id: string | null;
+  follow_up_id: string | null;
+  title: string;
+  body: string | null;
+  href: string;
+  read_at: string | null;
+  created_at: string;
+  actor?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
+};
+
+export type ActivityEventKind =
+  | "companion_message"
+  | "page_message"
+  | "reaction"
+  | "summon"
+  | "co_presence"
+  | "visit"
+  | "follow_up_created"
+  | "follow_up_replied"
+  | "entry_created"
+  | "entry_updated";
+
+export type ActivityStreamFilter =
+  | "all"
+  | "message"
+  | "interaction"
+  | "follow_up"
+  | "entry";
+
+export type ActivityStreamItem = {
+  id: string;
+  kind: ActivityEventKind;
+  source_type: string;
+  source_id: string;
+  actor_id: string;
+  entry_id: string | null;
+  page_path: string | null;
+  page_title: string | null;
+  entry_title: string | null;
+  body: string | null;
+  reaction: string | null;
+  created_at: string;
+  profile?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
+};
+
+export type PendingEntryAttentionItem = {
+  id: string;
+  type: ActivityNotificationType;
+  actor_id: string;
+  title: string;
+  body: string | null;
+  href: string;
+  created_at: string;
+  actor?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
+};
+
+export type PendingEntryAttention = {
+  entry_id: string;
+  entry_title: string;
+  href: string;
+  latest_at: string;
+  items: PendingEntryAttentionItem[];
+};

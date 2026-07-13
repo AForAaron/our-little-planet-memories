@@ -3,7 +3,7 @@
 import { MessageSquarePlus, Send } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { EmojiTextField } from "@/components/emoji-text-field";
-import type { FootprintEvent } from "@/lib/database.types";
+import type { EntryFollowUp } from "@/lib/database.types";
 
 function formatRelative(value: string) {
   const diff = Date.now() - new Date(value).getTime();
@@ -14,6 +14,17 @@ function formatRelative(value: string) {
   if (hours < 24) return `${hours} 小时前`;
   const days = Math.round(hours / 24);
   return `${days} 天前`;
+}
+
+function formatFullTime(value: string) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(value));
 }
 
 function readJson<T>(response: Response): Promise<T & { error?: string }> {
@@ -42,43 +53,61 @@ export function EntryFollowUps({
   entryId: string;
   pagePath: string;
   pageTitle: string;
-  initialEvents: FootprintEvent[];
+  initialEvents: EntryFollowUp[];
 }) {
   const [events, setEvents] = useState(initialEvents);
   const [body, setBody] = useState("");
+  const [replyTargetId, setReplyTargetId] = useState<string | null>(null);
+  const [replyBody, setReplyBody] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const trimmedBody = body.trim();
+  const trimmedReply = replyBody.trim();
   const remaining = useMemo(() => 500 - body.length, [body]);
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
+  function insertCreated(item: EntryFollowUp) {
+    if (item.parent_id) {
+      setEvents((current) =>
+        current.map((event) =>
+          event.id === item.parent_id
+            ? { ...event, replies: [...(event.replies ?? []), item] }
+            : event,
+        ),
+      );
+    } else {
+      setEvents((current) => [{ ...item, replies: [] }, ...current]);
+    }
+  }
+
+  function submit(event: React.FormEvent<HTMLFormElement>, parentId?: string) {
     event.preventDefault();
-    if (!trimmedBody) {
+    const content = parentId ? trimmedReply : trimmedBody;
+    if (!content) {
       setError("先写一点想追加的感受。");
       return;
     }
     setError("");
     startTransition(async () => {
       try {
-        const response = await fetch("/api/footprints", {
+        const response = await fetch(`/api/entries/${entryId}/follow-ups`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            eventType: "message",
-            scope: "entry",
-            pagePath,
-            pageTitle,
-            targetType: "follow_up",
-            targetId: entryId,
-            body: trimmedBody,
+            parentId,
+            body: content,
           }),
         });
-        const result = await readJson<{ event?: FootprintEvent }>(response);
-        if (!response.ok || !result.event) {
+        const result = await readJson<{ item?: EntryFollowUp }>(response);
+        if (!response.ok || !result.item) {
           throw new Error(result.error || "追评保存失败。");
         }
-        setEvents((current) => [result.event!, ...current]);
-        setBody("");
+        insertCreated(result.item);
+        if (parentId) {
+          setReplyBody("");
+          setReplyTargetId(null);
+        } else {
+          setBody("");
+        }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "追评保存失败。");
       }
@@ -95,7 +124,7 @@ export function EntryFollowUps({
         <span>{events.length} 条</span>
       </div>
 
-      <form className="follow-up-form" onSubmit={submit}>
+      <form className="follow-up-form" onSubmit={(event) => submit(event)}>
         <label className="sr-only" htmlFor="follow-up-body">追加追评</label>
         <EmojiTextField
           as="textarea"
@@ -126,9 +155,74 @@ export function EntryFollowUps({
               <div>
                 <div className="follow-up-meta">
                   <b>{item.profile?.display_name ?? "我们"}</b>
-                  <time>{formatRelative(item.created_at)}</time>
+                  <time title={formatFullTime(item.created_at)}>
+                    {formatRelative(item.created_at)} · {formatFullTime(item.created_at)}
+                  </time>
                 </div>
                 <p>{item.body}</p>
+                <div className="follow-up-reply-tools">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setReplyTargetId((current) =>
+                        current === item.id ? null : item.id,
+                      )
+                    }
+                  >
+                    回复这条追评
+                  </button>
+                </div>
+                {item.replies?.length ? (
+                  <div className="follow-up-replies">
+                    {item.replies.map((reply) => (
+                      <article key={reply.id} className="follow-up-reply">
+                        <span aria-hidden="true">
+                          {reply.profile?.display_name?.slice(0, 1) ?? "♡"}
+                        </span>
+                        <div>
+                          <div className="follow-up-meta">
+                            <b>{reply.profile?.display_name ?? "我们"}</b>
+                            <time title={formatFullTime(reply.created_at)}>
+                              {formatRelative(reply.created_at)} · {formatFullTime(reply.created_at)}
+                            </time>
+                          </div>
+                          <p>{reply.body}</p>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+                {replyTargetId === item.id && (
+                  <form
+                    className="follow-up-reply-form"
+                    onSubmit={(event) => submit(event, item.id)}
+                  >
+                    <EmojiTextField
+                      as="textarea"
+                      className="field follow-up-textarea"
+                      value={replyBody}
+                      onChange={(value) => setReplyBody(value.slice(0, 500))}
+                      placeholder="回复这条追评..."
+                      maxLength={500}
+                    />
+                    <div className="follow-up-actions">
+                      <button
+                        className="button-secondary"
+                        type="button"
+                        onClick={() => {
+                          setReplyTargetId(null);
+                          setReplyBody("");
+                        }}
+                      >
+                        取消
+                      </button>
+                      <button className="button-primary" type="submit" disabled={pending || !trimmedReply}>
+                        {pending ? <MessageSquarePlus className="animate-spin" size={16} /> : <Send size={16} />}
+                        回复
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </article>
           ))

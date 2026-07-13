@@ -277,3 +277,121 @@ export const footprintEvents = pgTable(
     ),
   ],
 );
+
+export const companionMessages = pgTable(
+  "companion_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    pagePath: text("page_path"),
+    pageTitle: text("page_title"),
+    createdAt,
+  },
+  (table) => [
+    index("companion_messages_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const entryFollowUps = pgTable(
+  "entry_follow_ups",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    parentId: uuid("parent_id"),
+    body: text("body").notNull(),
+    createdAt,
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("entry_follow_ups_entry_created_at_idx").on(
+      table.entryId,
+      table.createdAt,
+    ),
+    index("entry_follow_ups_parent_idx").on(table.parentId),
+  ],
+);
+
+export const activityNotifications = pgTable(
+  "activity_notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    recipientId: uuid("recipient_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    entryId: uuid("entry_id").references(() => entries.id, {
+      onDelete: "cascade",
+    }),
+    followUpId: uuid("follow_up_id").references(() => entryFollowUps.id, {
+      onDelete: "cascade",
+    }),
+    title: text("title").notNull(),
+    body: text("body"),
+    href: text("href").notNull(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt,
+  },
+  (table) => [
+    index("activity_notifications_recipient_created_at_idx").on(
+      table.recipientId,
+      table.createdAt,
+    ),
+    index("activity_notifications_unread_idx").on(
+      table.recipientId,
+      table.readAt,
+    ),
+    check(
+      "activity_notifications_type_check",
+      sql`${table.type} in ('entry_created', 'entry_updated', 'follow_up_created', 'follow_up_replied')`,
+    ),
+  ],
+);
+
+export const activityEvents = pgTable(
+  "activity_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    sourceType: text("source_type").notNull(),
+    sourceId: text("source_id").notNull(),
+    entryId: uuid("entry_id").references(() => entries.id, {
+      onDelete: "set null",
+    }),
+    pagePath: text("page_path"),
+    pageTitle: text("page_title"),
+    body: text("body"),
+    reaction: text("reaction"),
+    createdAt,
+  },
+  (table) => [
+    index("activity_events_created_at_idx").on(table.createdAt),
+    index("activity_events_entry_created_at_idx").on(
+      table.entryId,
+      table.createdAt,
+    ),
+    uniqueIndex("activity_events_source_unique").on(
+      table.sourceType,
+      table.sourceId,
+    ),
+    check(
+      "activity_events_kind_check",
+      sql`${table.kind} in ('companion_message', 'page_message', 'reaction', 'summon', 'co_presence', 'visit', 'follow_up_created', 'follow_up_replied', 'entry_created', 'entry_updated')`,
+    ),
+  ],
+);

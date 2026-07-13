@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createFootprint, getFootprints } from "@/lib/data/footprints";
+import { getActivityStream } from "@/lib/data/activity-stream";
+import { createFootprint } from "@/lib/data/footprints";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,13 +17,15 @@ function errorResponse(error: unknown) {
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const pagePath = url.searchParams.get("pagePath") ?? undefined;
-    const includeInstant = url.searchParams.get("includeInstant") === "1";
     const requestedLimit = Number(url.searchParams.get("limit") ?? 40);
     const limit = Number.isFinite(requestedLimit) ? requestedLimit : 40;
-    return NextResponse.json({
-      events: await getFootprints({ pagePath, includeInstant, limit }),
-    });
+    return NextResponse.json(
+      await getActivityStream({
+        filter: url.searchParams.get("filter") ?? undefined,
+        before: url.searchParams.get("before") ?? undefined,
+        limit,
+      }),
+    );
   } catch (error) {
     return errorResponse(error);
   }
