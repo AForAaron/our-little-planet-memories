@@ -7,11 +7,18 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const NO_STORE_HEADERS = {
+  "Cache-Control": "no-store, max-age=0",
+};
+
 function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "悄悄话操作失败。";
   return NextResponse.json(
     { error: message },
-    { status: message.includes("登录") ? 401 : 400 },
+    {
+      status: message.includes("登录") ? 401 : 400,
+      headers: NO_STORE_HEADERS,
+    },
   );
 }
 
@@ -19,7 +26,10 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const limit = Number(url.searchParams.get("limit") ?? 30);
-    return NextResponse.json({ messages: await getCompanionMessages(limit) });
+    return NextResponse.json(
+      { messages: await getCompanionMessages(limit) },
+      { headers: NO_STORE_HEADERS },
+    );
   } catch (error) {
     return errorResponse(error);
   }

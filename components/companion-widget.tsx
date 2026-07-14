@@ -24,6 +24,38 @@ type CreateMessageResponse = {
   message?: CompanionMessage | null;
 };
 
+const MAX_VISIBLE_MESSAGES = 12;
+
+function compareMessages(left: CompanionMessage, right: CompanionMessage) {
+  const byCreatedAt = new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+  if (Number.isFinite(byCreatedAt) && byCreatedAt !== 0) return byCreatedAt;
+  return right.id.localeCompare(left.id);
+}
+
+function mergeMessages(
+  serverMessages: CompanionMessage[],
+  confirmedMessages: Iterable<CompanionMessage> = [],
+) {
+  const messagesById = new Map<string, CompanionMessage>();
+  for (const item of serverMessages) messagesById.set(item.id, item);
+  for (const item of confirmedMessages) {
+    if (!messagesById.has(item.id)) messagesById.set(item.id, item);
+  }
+  return [...messagesById.values()].sort(compareMessages).slice(0, MAX_VISIBLE_MESSAGES);
+}
+
+function isCompanionMessage(
+  value: CompanionMessage | null | undefined,
+): value is CompanionMessage {
+  return Boolean(
+    value
+      && typeof value.id === "string"
+      && value.id
+      && typeof value.body === "string"
+      && typeof value.created_at === "string",
+  );
+}
+
 const loadCompanionPanel = () => import("@/components/companion-panel");
 
 const CompanionPanel = dynamic(
@@ -77,6 +109,9 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
   const [error, setError] = useState("");
   const pathnameRef = useRef(pathname);
   const openRef = useRef(open);
+  const messageRevisionRef = useRef(0);
+  const confirmedMessagesRef = useRef(new Map<string, CompanionMessage>());
+  const submittingMessageRef = useRef(false);
 
   pathnameRef.current = pathname;
   openRef.current = open;
@@ -111,11 +146,24 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
 
   const refreshMessages = useCallback(async (signal: AbortSignal) => {
     if (!openRef.current) return;
+    const requestRevision = messageRevisionRef.current;
     try {
-      const response = await fetch("/api/companion/messages?limit=16", { signal });
+      const response = await fetch("/api/companion/messages?limit=16", {
+        cache: "no-store",
+        signal,
+      });
       if (!response.ok || signal.aborted || !openRef.current) return;
       const result = (await response.json()) as MessagesResponse;
-      if (!signal.aborted && openRef.current) setMessages(result.messages.slice(0, 12));
+      if (
+        signal.aborted
+        || !openRef.current
+        || requestRevision !== messageRevisionRef.current
+        || !Array.isArray(result.messages)
+      ) return;
+
+      const serverMessages = result.messages.slice(0, 16);
+      for (const item of serverMessages) confirmedMessagesRef.current.delete(item.id);
+      setMessages(mergeMessages(serverMessages, confirmedMessagesRef.current.values()));
     } catch {
       // Message refreshes are best-effort and must not surface AbortError.
     }
@@ -127,7 +175,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
     refreshKey: pathname,
     task: refreshPresence,
   });
-  useVisibilityAwarePolling({
+  const refreshMessagesNow = useVisibilityAwarePolling({
     enabled: open,
     intervalMs: 15_000,
     refreshKey: pathname,
@@ -166,8 +214,8 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = message.trim();
-    if (!text) return;
-    setMessage("");
+    if (!text || submittingMessageRef.current) return;
+    submittingMessageRef.current = true;
     setError("");
     setPending(true);
     try {
@@ -183,15 +231,21 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
       const result = (await response.json().catch(() => ({}))) as CreateMessageResponse;
       if (!response.ok) throw new Error(result.error ?? "发送失败。");
       const createdMessage = result.message;
-      if (createdMessage) {
-        setMessages((current) => [
-          createdMessage,
-          ...current.filter((item) => item.id !== createdMessage.id),
-        ].slice(0, 12));
+      if (!isCompanionMessage(createdMessage)) {
+        messageRevisionRef.current += 1;
+        refreshMessagesNow();
+        throw new Error("消息已发送，但同步结果异常，请稍后确认。");
       }
+
+      messageRevisionRef.current += 1;
+      confirmedMessagesRef.current.set(createdMessage.id, createdMessage);
+      setMessages((current) => mergeMessages(current, confirmedMessagesRef.current.values()));
+      setMessage("");
+      refreshMessagesNow();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "发送失败。");
     } finally {
+      submittingMessageRef.current = false;
       setPending(false);
     }
   }
