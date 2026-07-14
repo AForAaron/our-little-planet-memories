@@ -18,7 +18,7 @@ export default async function LoginPage({
   return (
     <main className="grid min-h-screen overflow-hidden bg-[var(--color-bg)] md:grid-cols-[1.05fr_1fr]">
       <section className="hero cosmos-panel relative hidden min-h-screen flex-col justify-between overflow-hidden p-16 text-[var(--color-on-accent)] md:flex lg:p-[72px]">
-        <BrandIcon className="absolute left-[61%] top-[25%] h-[300px] w-[420px] -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_26px_32px_rgb(110_70_50_/_24%)]" variant="hero" />
+        <BrandIcon className="absolute left-[61%] top-[48%] h-[300px] w-[420px] -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_26px_32px_rgb(110_70_50_/_24%)]" variant="hero" />
         <div className="relative flex items-center gap-3">
           <BrandIcon className="h-8 w-11 object-contain" variant="logo" />
           <span className="text-[15px] font-medium tracking-[.04em]">张张和沈沈</span>
