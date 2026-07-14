@@ -1,17 +1,11 @@
 "use client";
 
-import {
-  Bell,
-  Footprints,
-  Heart,
-  Navigation,
-  Send,
-  X,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { EmojiTextField } from "@/components/emoji-text-field";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Footprints } from "lucide-react";
+import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
+import { useCallback, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
+import { useVisibilityAwarePolling } from "@/components/use-visibility-aware-polling";
 import type { CompanionMessage, PresenceState } from "@/lib/database.types";
 
 type PresenceResponse = {
@@ -25,9 +19,27 @@ type MessagesResponse = {
   messages: CompanionMessage[];
 };
 
-const REACTIONS = ["想再去", "记得", "抱抱", "笑死"];
+type CreateMessageResponse = {
+  error?: string;
+  message?: CompanionMessage | null;
+};
+
+const loadCompanionPanel = () => import("@/components/companion-panel");
+
+const CompanionPanel = dynamic(
+  () => loadCompanionPanel().then((module) => module.CompanionPanel),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="companion-card" aria-busy="true" aria-live="polite">
+        <p className="companion-empty">正在打开悄悄话…</p>
+      </div>
+    ),
+  },
+);
 
 function pageTitle() {
+  if (typeof document === "undefined") return "小星球";
   return document.title.replace(" · 我们的小星球", "").trim() || "小星球";
 }
 
@@ -38,21 +50,16 @@ function relative(value: string) {
   return `${Math.round(minutes / 60)} 小时前`;
 }
 
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(new Date(value));
-}
-
-function presenceLine(other: PresenceState | undefined, onlineAfter: string, recentAfter: string) {
+function presenceLine(
+  other: PresenceState | undefined,
+  onlineAfter: string,
+  recentAfter: string,
+  pathname: string,
+) {
   if (!other) return "等对方来小星球";
   const seenAt = new Date(other.last_seen_at).getTime();
   if (seenAt >= new Date(onlineAfter).getTime()) {
-    return other.current_path === window.location.pathname
+    return other.current_path === pathname
       ? "你们正在一起看这里"
       : `正在看 ${other.page_title || "另一页"}`;
   }
@@ -62,61 +69,70 @@ function presenceLine(other: PresenceState | undefined, onlineAfter: string, rec
 
 export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [presence, setPresence] = useState<PresenceResponse | null>(null);
   const [messages, setMessages] = useState<CompanionMessage[]>([]);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const pathnameRef = useRef(pathname);
+  const openRef = useRef(open);
+
+  pathnameRef.current = pathname;
+  openRef.current = open;
 
   const other = presence?.others[0];
   const status = useMemo(
     () =>
       presence
-        ? presenceLine(other, presence.onlineAfter, presence.recentAfter)
+        ? presenceLine(other, presence.onlineAfter, presence.recentAfter, pathname)
         : isDemo
           ? "预览小星球足迹"
           : "正在同步",
-    [isDemo, other, presence],
+    [isDemo, other, pathname, presence],
   );
 
-  async function refreshPresence(signal?: AbortSignal) {
-    const response = await fetch("/api/presence", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ currentPath: pathname, pageTitle: pageTitle() }),
-      signal,
-    });
-    if (!response.ok) return;
-    setPresence((await response.json()) as PresenceResponse);
-  }
+  const refreshPresence = useCallback(async (signal: AbortSignal) => {
+    const currentPath = pathnameRef.current;
+    try {
+      const response = await fetch("/api/presence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPath, pageTitle: pageTitle() }),
+        signal,
+      });
+      if (!response.ok || signal.aborted) return;
+      const result = (await response.json()) as PresenceResponse;
+      if (!signal.aborted && pathnameRef.current === currentPath) setPresence(result);
+    } catch {
+      // Presence is best-effort and is retried by the visibility-aware poller.
+    }
+  }, []);
 
-  async function refreshMessages(signal?: AbortSignal) {
-    const response = await fetch("/api/companion/messages?limit=16", {
-      signal,
-    });
-    if (!response.ok) return;
-    const result = (await response.json()) as MessagesResponse;
-    setMessages(result.messages.slice(0, 12));
-  }
+  const refreshMessages = useCallback(async (signal: AbortSignal) => {
+    if (!openRef.current) return;
+    try {
+      const response = await fetch("/api/companion/messages?limit=16", { signal });
+      if (!response.ok || signal.aborted || !openRef.current) return;
+      const result = (await response.json()) as MessagesResponse;
+      if (!signal.aborted && openRef.current) setMessages(result.messages.slice(0, 12));
+    } catch {
+      // Message refreshes are best-effort and must not surface AbortError.
+    }
+  }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    void refreshPresence(controller.signal);
-    void refreshMessages(controller.signal);
-    const presenceTimer = window.setInterval(() => {
-      void refreshPresence();
-    }, 4_000);
-    const eventTimer = window.setInterval(() => {
-      void refreshMessages();
-    }, 5_000);
-    return () => {
-      controller.abort();
-      window.clearInterval(presenceTimer);
-      window.clearInterval(eventTimer);
-    };
-  }, [pathname]);
+  useVisibilityAwarePolling({
+    enabled: true,
+    intervalMs: open ? 15_000 : 30_000,
+    refreshKey: pathname,
+    task: refreshPresence,
+  });
+  useVisibilityAwarePolling({
+    enabled: open,
+    intervalMs: 15_000,
+    refreshKey: pathname,
+    task: refreshMessages,
+  });
 
   async function createFootprintAction(input: {
     eventType: "reaction" | "summon";
@@ -140,7 +156,6 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
       });
       const result = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(result.error ?? "发送失败。");
-      router.refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "发送失败。");
     } finally {
@@ -165,11 +180,15 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
           pageTitle: pageTitle(),
         }),
       });
-      const result = (await response.json().catch(() => ({}))) as {
-        error?: string;
-      };
+      const result = (await response.json().catch(() => ({}))) as CreateMessageResponse;
       if (!response.ok) throw new Error(result.error ?? "发送失败。");
-      await refreshMessages();
+      const createdMessage = result.message;
+      if (createdMessage) {
+        setMessages((current) => [
+          createdMessage,
+          ...current.filter((item) => item.id !== createdMessage.id),
+        ].slice(0, 12));
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "发送失败。");
     } finally {
@@ -177,85 +196,39 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
     }
   }
 
+  const preloadPanel = useCallback(() => {
+    void loadCompanionPanel().catch(() => undefined);
+  }, []);
+
   return (
     <aside className={open ? "companion is-open" : "companion"} aria-label="实时共处">
       {open ? (
-        <div className="companion-card">
-          <div className="companion-head">
-            <div>
-              <span className="companion-kicker">一起在小星球</span>
-              <h2>悄悄话 · {status}</h2>
-            </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="收起共处窗口">
-              <X size={17} />
-            </button>
-          </div>
-
-          {other && (
-            <Link href={other.current_path} className="companion-presence">
-              <Navigation size={15} />
-              <span>{other.profile?.display_name ?? "对方"}</span>
-              <b>{other.page_title || other.current_path}</b>
-            </Link>
-          )}
-
-          <div className="companion-messages">
-            {messages.length ? (
-              messages.map((item) => (
-                <div key={item.id} className="companion-message">
-                  <span>{item.profile?.display_name?.slice(0, 1) ?? "我"}</span>
-                  <div>
-                    <p>{item.body}</p>
-                    <small>
-                      {item.profile?.display_name ?? "我们"} · {formatTime(item.created_at)}
-                      {item.page_path === pathname ? " · 来自此页" : ""}
-                    </small>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="companion-empty">发一句话，对方打开网页时就能看见。</p>
-            )}
-          </div>
-
-          <div className="companion-reactions" aria-label="快捷反应">
-            {REACTIONS.map((reaction) => (
-              <button
-                key={reaction}
-                type="button"
-                disabled={pending}
-                onClick={() => createFootprintAction({ eventType: "reaction", reaction })}
-              >
-                <Heart size={13} /> {reaction}
-              </button>
-            ))}
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => createFootprintAction({ eventType: "summon", body: "来看看这里" })}
-            >
-              <Bell size={13} /> 叫她来看
-            </button>
-          </div>
-
-          <form onSubmit={submit} className="companion-form">
-            <div className="companion-input-row">
-              <EmojiTextField
-                value={message}
-                onChange={setMessage}
-                placeholder="写一句只属于小窗的悄悄话"
-                maxLength={500}
-                className="companion-message-input"
-              />
-              <button type="submit" disabled={pending || !message.trim()} aria-label="发送">
-                <Send size={16} />
-              </button>
-            </div>
-            {error && <p className="companion-error">{error}</p>}
-          </form>
-        </div>
+        <CompanionPanel
+          error={error}
+          isDemo={isDemo}
+          message={message}
+          messages={messages}
+          onClose={() => setOpen(false)}
+          onMessageChange={setMessage}
+          onReaction={(reaction) => createFootprintAction({ eventType: "reaction", reaction })}
+          onSubmit={submit}
+          onSummon={() => createFootprintAction({ eventType: "summon", body: "来看看这里" })}
+          other={other}
+          pathname={pathname}
+          pending={pending}
+          status={status}
+        />
       ) : (
-        <button className="companion-bubble" type="button" onClick={() => setOpen(true)}>
+        <button
+          className="companion-bubble"
+          type="button"
+          onPointerEnter={preloadPanel}
+          onFocus={preloadPanel}
+          onClick={() => {
+            preloadPanel();
+            setOpen(true);
+          }}
+        >
           <span className="companion-dot" />
           <Footprints size={18} />
           <span>{status}</span>

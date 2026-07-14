@@ -10,6 +10,9 @@ import { daysTogether, formatDate, nextMilestone } from "@/lib/utils";
 
 export default async function HomePage() {
   const { relationship, latest, count, counts } = await getHomeData();
+  const latestCover = latest?.media?.find(
+    (media) => media.type === "image" && Boolean(media.thumbnail_url ?? media.display_url),
+  );
   const days = daysTogether(relationship.together_since);
   const milestone = nextMilestone(days);
   const since = relationship.together_since ? relationship.together_since.replaceAll("-", ".") : "还未设定";
@@ -52,10 +55,18 @@ export default async function HomePage() {
           </div>
 
           <Link href="/time/timeline" className="relative flex min-h-64 flex-col rounded-[1.5rem] bg-[var(--color-surface)] p-[18px] text-text shadow-lift transition-transform hover:-translate-y-1">
-            {latest?.media?.[0]?.display_url ? (
+            {latestCover ? (
               // R2 uses a short-lived signed private URL.
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={latest.media[0].display_url} alt="" className="h-[168px] w-full rounded-2xl object-cover" />
+              <img
+                src={latestCover.thumbnail_url ?? latestCover.display_url}
+                alt=""
+                className="h-[168px] w-full rounded-2xl object-cover"
+                decoding="async"
+                fetchPriority="high"
+                height={latestCover.height ?? 420}
+                width={latestCover.width ?? 672}
+              />
             ) : (
               <div className="photo-placeholder flex h-[168px] items-center justify-center rounded-2xl">
                 <span className="font-mono text-[11px] uppercase tracking-[.14em] text-muted">封面照片 · 16:10</span>

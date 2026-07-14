@@ -12,7 +12,7 @@ export function BrandIcon({ className, title, variant = "logo" }: BrandIconProps
       className={className}
       decoding="async"
       height={variant === "hero" ? 760 : 88}
-      src="/brand/donut-planet.png"
+      src={variant === "hero" ? "/brand/donut-planet.png" : "/brand/donut-planet-192.png"}
       width={variant === "hero" ? 1100 : 128}
     />
   );

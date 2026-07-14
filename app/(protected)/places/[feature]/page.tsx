@@ -16,7 +16,7 @@ export async function generateMetadata({
 }
 
 async function MapDataPage({ foodOnly = false }: { foodOnly?: boolean }) {
-  const [points, foodEntries] = await Promise.all([
+  const [mapData, foodEntries] = await Promise.all([
     getMapPoints(foodOnly),
     foodOnly ? getEntriesData(["food"]) : Promise.resolve(null),
   ]);
@@ -35,10 +35,19 @@ async function MapDataPage({ foodOnly = false }: { foodOnly?: boolean }) {
         </p>
       </div>
       <section className="surface mt-8 min-h-96 overflow-hidden rounded-[24px] p-4 sm:p-6">
-        <WorldMap points={points} />
+        <WorldMap
+          points={mapData.points}
+          enableViewportLoading={mapData.hasMore}
+          category={foodOnly ? "food" : undefined}
+        />
       </section>
+      {mapData.hasMore && (
+        <p className="mt-5 text-sm text-muted">
+          下方先展示最新一批地点；地图会在拖动或缩放时按当前视野加载更多标记。
+        </p>
+      )}
       <div className="mt-7 grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
-        {points.map((point) => (
+        {mapData.points.map((point) => (
           <Link key={point.id} href={`/memories/${point.id}`} className="surface rounded-[20px] p-5 transition-transform hover:-translate-y-1 hover:shadow-lift">
             <span className="grid size-[42px] place-items-center rounded-[13px] bg-[var(--color-amber-soft)] text-[var(--color-amber)]">
               <MapPin size={20} />
@@ -63,6 +72,9 @@ async function MapDataPage({ foodOnly = false }: { foodOnly?: boolean }) {
             currentUserId={foodEntries.userId}
             isDemo={foodEntries.isDemo}
             defaultCategory="food"
+            categories={["food"]}
+            nextCursor={foodEntries.nextCursor}
+            total={foodEntries.total}
           />
         </section>
       )}

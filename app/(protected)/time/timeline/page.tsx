@@ -10,7 +10,7 @@ export default async function TimelinePage({
 }: {
   searchParams: Promise<{ new?: string }>;
 }) {
-  const [{ entries, userId, isDemo }, query] = await Promise.all([
+  const [{ entries, userId, isDemo, nextCursor, total }, query] = await Promise.all([
     getTimelineData(),
     searchParams,
   ]);
@@ -24,7 +24,14 @@ export default async function TimelinePage({
         <h1 className="mt-3 font-heading text-[32px] font-semibold text-text">恋爱时间轴</h1>
         <p className="mt-3 text-[15px] leading-7 text-muted">新故事在最上面，旧故事也不会走丢。慢慢往下翻，就是我们一路走来的样子。</p>
       </div>
-      <TimelineView entries={entries} currentUserId={userId} openNew={query.new === "1"} isDemo={isDemo} />
+      <TimelineView
+        entries={entries}
+        currentUserId={userId}
+        openNew={query.new === "1"}
+        isDemo={isDemo}
+        nextCursor={nextCursor}
+        total={total}
+      />
     </main>
   );
 }

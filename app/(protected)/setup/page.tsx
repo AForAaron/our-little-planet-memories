@@ -1,4 +1,5 @@
 import { Settings2 } from "lucide-react";
+import { EmojiUsageProvider } from "@/components/emoji-usage-provider";
 import { getSiteSettings } from "@/lib/data/settings";
 import { SetupForm } from "./setup-form";
 
@@ -15,11 +16,13 @@ export default async function SetupPage() {
           这里决定首页标题、相识日期和两个人在网站中的名字。
         </p>
 
-        <SetupForm
-          relationship={settings.relationship}
-          profiles={settings.profiles}
-          isDemo={settings.isDemo}
-        />
+        <EmojiUsageProvider isDemo={settings.isDemo}>
+          <SetupForm
+            relationship={settings.relationship}
+            profiles={settings.profiles}
+            isDemo={settings.isDemo}
+          />
+        </EmojiUsageProvider>
       </div>
     </main>
   );

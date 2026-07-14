@@ -18,6 +18,9 @@ type WorldMapProps = {
   points: WorldMapPoint[];
   height?: string;
   routeLabel?: string;
+  /** Initial server query was capped; load the current viewport after movement. */
+  enableViewportLoading?: boolean;
+  category?: "food";
 };
 
 const LeafletWorldMap = dynamic(() => import("./world-map-leaflet"), {

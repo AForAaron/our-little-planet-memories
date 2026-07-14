@@ -92,7 +92,7 @@ export function ActivityStreamList({
     if (!nextCursor || loading) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ filter, before: nextCursor, limit: "50" });
+      const params = new URLSearchParams({ filter, before: nextCursor, limit: "24" });
       const response = await fetch(`/api/footprints?${params.toString()}`);
       if (!response.ok) return;
       const result = (await response.json()) as StreamResponse;
@@ -130,12 +130,16 @@ export function ActivityStreamList({
       </nav>
 
       <div className="activity-list">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const { Icon, label, text } = presentation(item.kind);
           const name = item.profile?.display_name ?? "我们";
           const href = destination(item);
           return (
-            <article key={item.id} className={`activity-item is-${item.kind}`}>
+            <article
+              key={item.id}
+              className={`activity-item is-${item.kind}`}
+              style={index > 5 ? { contentVisibility: "auto", containIntrinsicSize: "112px" } : undefined}
+            >
               <span className="activity-icon" aria-hidden="true"><Icon size={16} /></span>
               <div className="min-w-0">
                 <div className="activity-heading">

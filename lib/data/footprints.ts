@@ -18,7 +18,10 @@ import {
 import { createActivityEvent } from "./activity-stream";
 import { DEMO_FOOTPRINTS, DEMO_PRESENCE } from "./demo";
 
-const ONLINE_MS = 20_000;
+// Collapsed pages refresh presence every 30 seconds. Keep a small tolerance
+// above that cadence so a healthy visible page never flickers offline between
+// two heartbeats.
+const ONLINE_MS = 45_000;
 const RECENT_MS = 2 * 60 * 1000;
 
 export type PresenceSummary = {

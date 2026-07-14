@@ -1,6 +1,7 @@
 "use client";
 
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type { LocationValue } from "./location-picker";

@@ -16,7 +16,9 @@
     "data:verify": "node --env-file-if-exists=.env.local scripts/import/verify.mjs",
     "data:compare-zips": "node --env-file-if-exists=.env.local scripts/import/compare-zips.mjs",
     "data:dry-run": "node --env-file-if-exists=.env.local scripts/import/publish.mjs --dry-run",
-    "data:publish": "node --env-file-if-exists=.env.local scripts/import/publish.mjs --apply"
+    "data:publish": "node --env-file-if-exists=.env.local scripts/import/publish.mjs --apply",
+    "data:thumbnails:dry-run": "node --env-file-if-exists=.env.local scripts/media/backfill-thumbnails.mjs",
+    "data:thumbnails:backfill": "node --env-file-if-exists=.env.local scripts/media/backfill-thumbnails.mjs --apply"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1079.0",

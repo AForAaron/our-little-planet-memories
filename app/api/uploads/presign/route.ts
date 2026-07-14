@@ -26,13 +26,20 @@ export async function POST(request: Request) {
       fileName?: string;
       mime?: string;
       size?: number;
+      variant?: string;
     };
     const mime = String(body.mime ?? "");
     const size = Number(body.size);
+    const variant = body.variant === "thumbnail" ? "thumbnail" : "original";
     const type = validateMediaUpload(mime, size);
+    if (variant === "thumbnail" && (type !== "image" || mime !== "image/webp" || size > 2 * 1024 * 1024)) {
+      throw new Error("缩略图必须是 2MB 以内的 WebP 图片。");
+    }
     const extension = extensionForMime(mime);
     if (!extension) throw new Error("无法识别文件扩展名。");
-    const r2Key = `uploads/${user.id}/${crypto.randomUUID()}.${extension}`;
+    const r2Key = variant === "thumbnail"
+      ? `uploads/${user.id}/thumbnails/${crypto.randomUUID()}.${extension}`
+      : `uploads/${user.id}/${crypto.randomUUID()}.${extension}`;
     const uploadUrl = await createPrivateUploadUrl(r2Key, mime, size, 600);
     return NextResponse.json({
       r2Key,
@@ -41,6 +48,7 @@ export async function POST(request: Request) {
       mime,
       type,
       originalName: String(body.fileName ?? "media").slice(0, 200),
+      variant,
     });
   } catch (error) {
     return NextResponse.json(
