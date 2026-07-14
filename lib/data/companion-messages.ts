@@ -55,7 +55,7 @@ export async function getCompanionMessages(limit = 30) {
     .select({ message: companionMessages, profile: profiles })
     .from(companionMessages)
     .leftJoin(profiles, eq(companionMessages.authorId, profiles.id))
-    .orderBy(desc(companionMessages.createdAt))
+    .orderBy(desc(companionMessages.createdAt), desc(companionMessages.id))
     .limit(Math.max(1, Math.min(limit, 80)));
 
   return rows.map((row) => mapMessage(row.message, row.profile));

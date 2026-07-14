@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type VisibilityAwarePollingOptions = {
   enabled: boolean;
@@ -28,6 +28,10 @@ export function useVisibilityAwarePolling({
   enabledRef.current = enabled;
   intervalRef.current = intervalMs;
   taskRef.current = task;
+
+  const refreshNow = useCallback(() => {
+    triggerRef.current?.();
+  }, []);
 
   useEffect(() => {
     let disposed = false;
@@ -147,4 +151,6 @@ export function useVisibilityAwarePolling({
   useEffect(() => {
     triggerRef.current?.();
   }, [enabled, intervalMs, refreshKey]);
+
+  return refreshNow;
 }
