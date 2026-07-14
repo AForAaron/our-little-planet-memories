@@ -4,6 +4,7 @@ import sharp from "sharp";
 
 const root = process.cwd();
 const sourcePath = join(root, "docs/design/assets/donut-planet-source.png");
+const whiteHeroSourcePath = join(root, "docs/design/assets/donut-planet-white-hero-source.png");
 const brandDir = join(root, "public/brand");
 const appDir = join(root, "app");
 const canvasColor = [253, 249, 240];
@@ -26,6 +27,40 @@ async function createTransparentMaster() {
       output[index + 1] = 0;
       output[index + 2] = 0;
     }
+  }
+
+  return sharp(output, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: 4,
+    },
+  })
+    .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 0 })
+    .extend({
+      top: padding,
+      bottom: padding,
+      left: padding,
+      right: padding,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toBuffer();
+}
+
+async function createWhiteHero() {
+  const { data, info } = await sharp(whiteHeroSourcePath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const output = Buffer.alloc(data.length);
+
+  for (let index = 0; index < data.length; index += info.channels) {
+    const whiteChannel = Math.min(data[index], data[index + 1], data[index + 2]);
+    // The supplied artwork uses near-white pixels exclusively for its logo.
+    const alpha = whiteChannel >= 235 ? 255 : 0;
+
+    output[index] = 255;
+    output[index + 1] = 255;
+    output[index + 2] = 255;
+    output[index + 3] = alpha;
   }
 
   return sharp(output, {
@@ -92,6 +127,7 @@ async function createIco(master) {
 await Promise.all([mkdir(brandDir, { recursive: true }), mkdir(appDir, { recursive: true })]);
 
 const master = await createTransparentMaster();
+const whiteHero = await createWhiteHero();
 const icon512 = await renderSquare(master, 512);
 const icon192 = await renderSquare(master, 192);
 const appleIcon = await renderSquare(master, 180);
@@ -99,6 +135,7 @@ const favicon = await createIco(master);
 
 await Promise.all([
   writeFile(join(brandDir, "donut-planet.png"), master),
+  writeFile(join(brandDir, "donut-planet-white-hero.png"), whiteHero),
   writeFile(join(brandDir, "donut-planet-512.png"), icon512),
   writeFile(join(brandDir, "donut-planet-192.png"), icon192),
   writeFile(join(appDir, "icon.png"), icon512),
