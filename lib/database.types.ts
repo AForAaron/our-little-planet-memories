@@ -39,6 +39,8 @@ export type Media = {
   lng: number | null;
   created_at: string;
   display_url?: string;
+  /** A signed 640px (when available) private thumbnail URL for list/map UI. */
+  thumbnail_url?: string;
 };
 
 export type Entry = {
@@ -61,6 +63,8 @@ export type Entry = {
   created_at: string;
   updated_at: string;
   media?: Media[];
+  /** Total media attached to a list item when only its cover was queried. */
+  media_count?: number;
   profiles?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
   updated_by_profile?: Pick<Profile, "display_name" | "avatar_url" | "color"> | null;
 };

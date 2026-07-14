@@ -2,7 +2,7 @@ import { ArrowLeft, CalendarHeart, Infinity } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EntryCategoryPage } from "@/components/entry-category-page";
-import { getEntriesData } from "@/lib/data/memories";
+import { getAnniversaryProjection } from "@/lib/data/anniversary-projection";
 import { getSiteSettings } from "@/lib/data/settings";
 import { daysTogether, nextMilestone } from "@/lib/utils";
 
@@ -52,8 +52,8 @@ async function CounterPage() {
 }
 
 async function AnniversariesPage() {
-  const data = await getEntriesData(["anniversary"]);
-  const next = data.entries
+  const anniversaries = await getAnniversaryProjection();
+  const next = anniversaries
     .map((entry) => ({ entry, ...nextAnnualOccurrence(entry.happened_at) }))
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
   return (
@@ -66,7 +66,7 @@ async function AnniversariesPage() {
             </span>
             <div>
               <p className="text-xs font-semibold text-muted">下一个纪念日</p>
-              <p className="font-heading text-lg font-semibold text-text">{next.entry.title} · 还有 {next.days} 天</p>
+              <p className="font-heading text-lg font-semibold text-text">{next.entry.title ?? "特别的日子"} · 还有 {next.days} 天</p>
             </div>
           </div>
         </div>

@@ -44,7 +44,7 @@ function backTargetForCategory(category: string) {
   }
 }
 
-function mediaElement(item: Media, className = "") {
+function mediaElement(item: Media, className = "", eager = false) {
   if (item.type === "image") {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -52,6 +52,11 @@ function mediaElement(item: Media, className = "") {
         src={item.display_url ?? ""}
         alt={item.caption ?? "回忆照片"}
         className={`h-full w-full object-cover ${className}`}
+        decoding="async"
+        fetchPriority={eager ? "high" : "auto"}
+        height={item.height ?? undefined}
+        loading={eager ? "eager" : "lazy"}
+        width={item.width ?? undefined}
       />
     );
   }
@@ -60,7 +65,7 @@ function mediaElement(item: Media, className = "") {
       <video
         src={item.display_url ?? ""}
         controls
-        preload="metadata"
+        preload={eager ? "metadata" : "none"}
         className={`h-full w-full bg-black object-contain ${className}`}
       />
     );
@@ -88,13 +93,15 @@ export default async function MemoryDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const detail = await getMemoryDetail(id);
+  const [detail, followUps] = await Promise.all([
+    getMemoryDetail(id),
+    getEntryFollowUps(id),
+  ]);
   if (!detail?.entry) notFound();
   const { entry, chapter, place, messages } = detail;
   const backTarget = backTargetForCategory(entry.category);
   const visibleMedia = entry.media?.filter((item) => item.display_url) ?? [];
   const pagePath = `/memories/${entry.id}`;
-  const followUps = await getEntryFollowUps(entry.id);
 
   return (
     <main className="page-shell max-w-[960px] py-7">
@@ -135,7 +142,7 @@ export default async function MemoryDetailPage({
                   className={`surface overflow-hidden rounded-[20px] ${index === 0 ? "sm:col-span-2" : ""}`}
                 >
                   <div className={index === 0 ? "h-[18rem] sm:h-[420px]" : "h-[16rem]"}>
-                    {mediaElement(item)}
+                    {mediaElement(item, "", index === 0)}
                   </div>
                   {item.caption && (
                     <figcaption className="border-t border-line px-4 py-3 text-xs text-muted">
@@ -173,6 +180,7 @@ export default async function MemoryDetailPage({
         <div className="mt-8">
           <EntryFollowUps
             entryId={entry.id}
+            isDemo={detail.isDemo}
             pagePath={pagePath}
             pageTitle={entry.title || "无题回忆"}
             initialEvents={followUps}

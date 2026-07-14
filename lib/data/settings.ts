@@ -1,12 +1,13 @@
 import "server-only";
 
 import { asc, eq } from "drizzle-orm";
+import { cache } from "react";
 import { isLiveMode } from "@/lib/config/backend";
 import { DEMO_RELATIONSHIP } from "@/lib/data/demo";
 import { getDatabase } from "@/lib/db/client";
 import { profiles, relationship } from "@/lib/db/schema";
 
-export async function getSiteSettings() {
+export const getSiteSettings = cache(async function getSiteSettings() {
   if (!isLiveMode()) {
     return {
       relationship: DEMO_RELATIONSHIP,
@@ -50,4 +51,4 @@ export async function getSiteSettings() {
     profiles: profileRows,
     isDemo: false,
   };
-}
+});

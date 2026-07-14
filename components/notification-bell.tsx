@@ -2,7 +2,8 @@
 
 import { Bell } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useVisibilityAwarePolling } from "@/components/use-visibility-aware-polling";
 
 type NotificationsResponse = {
   unreadCount: number;
@@ -11,21 +12,22 @@ type NotificationsResponse = {
 export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const response = await fetch("/api/footprints/inbox").catch(() => null);
+  const load = useCallback(async (signal: AbortSignal) => {
+    try {
+      const response = await fetch("/api/footprints/inbox", { signal });
       if (!response?.ok) return;
       const result = (await response.json()) as NotificationsResponse;
-      if (!cancelled) setUnreadCount(result.unreadCount);
+      if (!signal.aborted) setUnreadCount(result.unreadCount);
+    } catch {
+      // The next visible, online polling cycle retries failed inbox reads.
     }
-    void load();
-    const timer = window.setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
   }, []);
+
+  useVisibilityAwarePolling({
+    enabled: true,
+    intervalMs: 60_000,
+    task: load,
+  });
 
   return (
     <Link href="/footprints#inbox" className="notification-bell button-secondary size-10 !p-0" aria-label="待你看看" title="待你看看">

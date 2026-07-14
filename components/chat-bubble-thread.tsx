@@ -92,9 +92,9 @@ function MediaPreview({
       {isImage(path) ? (
         // Review assets and signed URLs are already access-controlled by their routes.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" />
+        <img src={src} alt="" loading="lazy" decoding="async" />
       ) : isVideo(path) ? (
-        <video src={src} controls preload="metadata" />
+        <video src={src} controls preload="none" />
       ) : isAudio(path) ? (
         <audio src={src} controls preload="none" />
       ) : (

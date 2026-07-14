@@ -170,6 +170,7 @@ export const media = pgTable(
     createdAt,
   },
   (table) => [
+    index("media_entry_sort_order_idx").on(table.entryId, table.sortOrder),
     check(
       "media_type_check",
       sql`${table.type} in ('image', 'video', 'audio')`,

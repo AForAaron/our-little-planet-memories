@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { ensureProfile } from "@/lib/auth/profile";
 import { getAuth } from "@/lib/auth/server";
 import {
   getAllowlistEmails,
@@ -31,8 +32,13 @@ export async function signIn(formData: FormData) {
     loginError("Neon Auth 尚未完成配置");
   }
 
-  const { error } = await getAuth().signIn.email({ email, password });
+  const { data, error } = await getAuth().signIn.email({ email, password });
   if (error) loginError("登录失败，请检查邮箱或密码");
+  // Neon Auth writes the new session cookie during this action. Reading the
+  // session again here would still see the incoming request's old cookies,
+  // so initialize the one-time profile from the sign-in response directly.
+  if (!data?.user) loginError("登录状态未能完成初始化，请重试。");
+  await ensureProfile(data.user);
   redirect("/home");
 }
 

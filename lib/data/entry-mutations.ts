@@ -18,6 +18,7 @@ import { deletePrivateObject, inspectPrivateObject } from "@/lib/r2/client";
 
 type UploadedMedia = {
   r2Key: string;
+  thumbnailR2Key?: string;
   mime: string;
   type: MediaType;
   size: number;
@@ -105,6 +106,14 @@ function readUploadedMedia(formData: FormData, userId: string) {
     if (type !== item.type || !item.r2Key.startsWith(`uploads/${userId}/`)) {
       throw new Error("媒体上传凭据无效。");
     }
+    if (
+      item.thumbnailR2Key != null &&
+      ((type !== "image" && type !== "video") ||
+        typeof item.thumbnailR2Key !== "string" ||
+        !item.thumbnailR2Key.startsWith(`uploads/${userId}/thumbnails/`))
+    ) {
+      throw new Error("缩略图上传凭据无效。");
+    }
   }
   return uploaded;
 }
@@ -112,12 +121,23 @@ function readUploadedMedia(formData: FormData, userId: string) {
 async function verifyUploadedMedia(uploaded: UploadedMedia[]) {
   await Promise.all(
     uploaded.map(async (item) => {
-      const object = await inspectPrivateObject(item.r2Key);
+      const [object, thumbnail] = await Promise.all([
+        inspectPrivateObject(item.r2Key),
+        item.thumbnailR2Key ? inspectPrivateObject(item.thumbnailR2Key) : Promise.resolve(null),
+      ]);
       if (
         object.contentLength !== item.size ||
         object.contentType !== item.mime
       ) {
         throw new Error("媒体对象与上传凭据不一致，请重新选择文件上传。");
+      }
+      if (
+        thumbnail &&
+        (thumbnail.contentType !== "image/webp" ||
+          !thumbnail.contentLength ||
+          thumbnail.contentLength > 2 * 1024 * 1024)
+      ) {
+        throw new Error("缩略图对象与上传凭据不一致，请重新选择文件上传。");
       }
     }),
   );
@@ -129,6 +149,7 @@ async function attachMedia(entryId: string, uploaded: UploadedMedia[]) {
     uploaded.map((item, index) => ({
       entryId,
       r2Key: item.r2Key,
+      thumbnailR2Key: item.thumbnailR2Key ?? null,
       mime: item.mime,
       type: item.type,
       caption: item.originalName,
@@ -213,7 +234,7 @@ export async function createEntryFromForm(formData: FormData) {
       await db.delete(places).where(eq(places.id, createdPlaceId));
     }
     await Promise.allSettled(
-      uploaded.map((item) => deletePrivateObject(item.r2Key)),
+      uploaded.flatMap((item) => [item.r2Key, ...(item.thumbnailR2Key ? [item.thumbnailR2Key] : [])]).map((key) => deletePrivateObject(key)),
     );
     throw error;
   }
@@ -285,7 +306,7 @@ export async function updateEntryFromForm(formData: FormData) {
       await db.delete(places).where(eq(places.id, createdPlaceId));
     }
     await Promise.allSettled(
-      uploaded.map((item) => deletePrivateObject(item.r2Key)),
+      uploaded.flatMap((item) => [item.r2Key, ...(item.thumbnailR2Key ? [item.thumbnailR2Key] : [])]).map((key) => deletePrivateObject(key)),
     );
     throw error;
   }
@@ -298,7 +319,7 @@ export async function deleteEntryById(id: string) {
   await requireCoupleUser();
   const db = getDatabase();
   const linkedMedia = await db
-    .select({ key: media.r2Key })
+    .select({ key: media.r2Key, thumbnailKey: media.thumbnailR2Key })
     .from(media)
     .where(eq(media.entryId, id));
   const [deleted] = await db
@@ -307,7 +328,9 @@ export async function deleteEntryById(id: string) {
     .returning({ id: entries.id });
   if (!deleted) throw new Error("没有找到这条回忆。");
   await Promise.allSettled(
-    linkedMedia.map(({ key }) => deletePrivateObject(key)),
+    linkedMedia
+      .flatMap(({ key, thumbnailKey }) => [key, ...(thumbnailKey ? [thumbnailKey] : [])])
+      .map((key) => deletePrivateObject(key)),
   );
   refreshMemoryPages();
 }

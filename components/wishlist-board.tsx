@@ -2,7 +2,6 @@
 
 import { Check, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { EmojiTextField } from "@/components/emoji-text-field";
 
 type Wish = {
@@ -13,9 +12,9 @@ type Wish = {
 };
 
 export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolean }) {
-  const router = useRouter();
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [visibleItems, setVisibleItems] = useState(items);
   const [draft, setDraft] = useState({ title: "", description: "" });
   const draftKey = "little-planet-wishlist-draft";
 
@@ -36,6 +35,10 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
     }
   }, [draft]);
 
+  useEffect(() => {
+    setVisibleItems(items);
+  }, [items]);
+
   function run(action: () => Promise<void>) {
     setError("");
     startTransition(async () => {
@@ -47,11 +50,12 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
     });
   }
 
-  async function readResult(response: Response) {
-    const result = (await response.json().catch(() => ({}))) as {
+  async function readResult<T>(response: Response): Promise<T> {
+    const result = (await response.json().catch(() => ({}))) as T & {
       error?: string;
     };
     if (!response.ok) throw new Error(result.error ?? `操作失败：${response.status}`);
+    return result;
   }
 
   async function createWishFromForm(formData: FormData) {
@@ -59,10 +63,11 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
       method: "POST",
       body: formData,
     });
-    await readResult(response);
+    const result = await readResult<{ item?: Wish }>(response);
+    if (!result.item) throw new Error("服务器没有返回新愿望。");
     window.localStorage.removeItem(draftKey);
     setDraft({ title: "", description: "" });
-    router.refresh();
+    setVisibleItems((current) => [...current, result.item!]);
   }
 
   async function toggleWish(id: string, done: boolean) {
@@ -71,8 +76,9 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, done }),
     });
-    await readResult(response);
-    router.refresh();
+    const result = await readResult<{ item?: Wish }>(response);
+    if (!result.item) throw new Error("服务器没有返回更新后的愿望。");
+    setVisibleItems((current) => current.map((item) => item.id === id ? result.item! : item));
   }
 
   async function deleteWish(id: string) {
@@ -82,7 +88,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
       body: JSON.stringify({ id }),
     });
     await readResult(response);
-    router.refresh();
+    setVisibleItems((current) => current.filter((item) => item.id !== id));
   }
 
   return (
@@ -126,7 +132,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
 
       <section className="grid gap-3">
         {error && <p className="rounded-soft bg-[var(--color-accent-soft)] p-4 text-sm text-[var(--color-danger)]">{error}</p>}
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <article key={item.id} className={`surface flex items-start gap-4 rounded-[20px] p-5 transition hover:-translate-y-0.5 ${item.isDone ? "opacity-65" : ""}`}>
             <button
               className="button-secondary size-10 shrink-0 !rounded-[13px] !p-0"

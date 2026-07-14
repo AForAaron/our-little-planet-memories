@@ -14,7 +14,7 @@ export default async function FootprintsPage({
 }) {
   const { filter } = await searchParams;
   const [stream, inbox] = await Promise.all([
-    getActivityStream({ filter, limit: 50 }),
+    getActivityStream({ filter, limit: 24 }),
     getPendingEntryAttention(),
   ]);
 

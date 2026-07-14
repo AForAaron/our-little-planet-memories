@@ -36,6 +36,7 @@ const FORM_CATEGORY_LABELS: Record<EntryCategory, string> = {
 
 type UploadedMedia = {
   r2Key: string;
+  thumbnailR2Key?: string;
   mime: string;
   type: MediaType;
   size: number;
@@ -54,6 +55,9 @@ type EntryDraft = {
   longitude: string;
   privacy_level: "exact" | "approximate" | "private";
 };
+
+/** The server returns the current lightweight timeline-card projection. */
+export type EntrySavePayload = Entry;
 
 type GeocodeResult = {
   name: string;
@@ -87,48 +91,195 @@ function formatFileSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
 }
 
+async function createImageThumbnail(file: File): Promise<File | null> {
+  if (!new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]).has(file.type)) {
+    return null;
+  }
+
+  let bitmap: ImageBitmap | null = null;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const longestSide = Math.max(bitmap.width, bitmap.height);
+    const scale = Math.min(1, 640 / longestSide);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) return null;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/webp", 0.78);
+    });
+    if (!blob) return null;
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
+    return new File([blob], `${baseName}.thumb.webp`, { type: "image/webp" });
+  } catch {
+    // A missing browser codec should not prevent uploading the original image.
+    return null;
+  } finally {
+    bitmap?.close();
+  }
+}
+
+/**
+ * A video card must not preload its original media. Capture a local first
+ * frame while the user is already submitting instead, then upload that tiny
+ * WebP as its poster. Unsupported codecs simply fall back to the branded
+ * poster in the timeline.
+ */
+async function createVideoThumbnail(file: File): Promise<File | null> {
+  if (!new Set(["video/mp4", "video/webm"]).has(file.type)) return null;
+
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    const objectUrl = URL.createObjectURL(file);
+    let settled = false;
+    const timeout = window.setTimeout(() => finish(null), 7_000);
+
+    function finish(thumbnail: File | null) {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      video.removeAttribute("src");
+      video.load();
+      URL.revokeObjectURL(objectUrl);
+      resolve(thumbnail);
+    }
+
+    async function capture() {
+      try {
+        if (!video.videoWidth || !video.videoHeight) {
+          finish(null);
+          return;
+        }
+        const longestSide = Math.max(video.videoWidth, video.videoHeight);
+        const scale = Math.min(1, 640 / longestSide);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+        const context = canvas.getContext("2d", { alpha: false });
+        if (!context) {
+          finish(null);
+          return;
+        }
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise<Blob | null>((resolveBlob) => {
+          canvas.toBlob(resolveBlob, "image/webp", 0.78);
+        });
+        if (!blob) {
+          finish(null);
+          return;
+        }
+        const baseName = file.name.replace(/\.[^.]+$/, "") || "video";
+        finish(new File([blob], `${baseName}.poster.webp`, { type: "image/webp" }));
+      } catch {
+        finish(null);
+      }
+    }
+
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.addEventListener("loadeddata", capture, { once: true });
+    video.addEventListener("error", () => finish(null), { once: true });
+    video.src = objectUrl;
+  });
+}
+
+function createMediaThumbnail(file: File) {
+  return file.type.startsWith("image/")
+    ? createImageThumbnail(file)
+    : createVideoThumbnail(file);
+}
+
+type UploadedObject = {
+  r2Key: string;
+  mime: string;
+  type: MediaType;
+};
+
+async function uploadObject(
+  file: File,
+  variant: "original" | "thumbnail",
+  onKey: (key: string) => void,
+): Promise<UploadedObject> {
+  const response = await fetch("/api/uploads/presign", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fileName: file.name,
+      mime: file.type,
+      size: file.size,
+      variant,
+    }),
+  });
+  const signed = await readJsonResponse<{
+    error?: string;
+    uploadUrl: string;
+    r2Key: string;
+    mime: string;
+    type: MediaType;
+  }>(response, "无法创建上传地址。");
+  if (!response.ok) throw new Error(signed.error || "无法创建上传地址。");
+  onKey(signed.r2Key);
+  const result = await fetch(signed.uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!result.ok) {
+    throw new Error(`上传 ${file.name} 失败（${result.status}）。请检查 R2 CORS 和 bucket 权限。`);
+  }
+  return {
+    r2Key: signed.r2Key,
+    mime: signed.mime,
+    type: signed.type,
+  };
+}
+
 async function uploadFiles(files: File[]) {
   const uploaded: UploadedMedia[] = [];
+  const uploadedKeys = new Set<string>();
   try {
     for (const file of files) {
-      const response = await fetch("/api/uploads/presign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileName: file.name,
-          mime: file.type,
-          size: file.size,
-        }),
-      });
-      const signed = await readJsonResponse<{
-        error?: string;
-        uploadUrl: string;
-        r2Key: string;
-        mime: string;
-        type: MediaType;
-      }>(response, "无法创建上传地址。");
-      if (!response.ok) throw new Error(signed.error || "无法创建上传地址。");
-      const result = await fetch(signed.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!result.ok) throw new Error(`上传 ${file.name} 失败（${result.status}）。请检查 R2 CORS 和 bucket 权限。`);
+      // Start the original upload immediately. Generating a local video frame
+      // can take a moment, and it should not delay the large-file transfer.
+      const originalTask = uploadObject(
+        file,
+        "original",
+        (key) => uploadedKeys.add(key),
+      );
+      const previewTask = createMediaThumbnail(file).then((thumbnail) =>
+        thumbnail
+          ? uploadObject(thumbnail, "thumbnail", (key) => uploadedKeys.add(key))
+          : null,
+      );
+      const [originalResult, previewResult] = await Promise.allSettled([
+        originalTask,
+        previewTask,
+      ]);
+      // Wait for both tasks before cleaning up so a late thumbnail cannot be
+      // uploaded after the failure handler has already removed its key.
+      if (originalResult.status === "rejected") throw originalResult.reason;
+      if (previewResult.status === "rejected") throw previewResult.reason;
+      const original = originalResult.value;
+      const preview = previewResult.value;
       uploaded.push({
-        r2Key: signed.r2Key,
-        mime: signed.mime,
-        type: signed.type,
+        r2Key: original.r2Key,
+        thumbnailR2Key: preview?.r2Key,
+        mime: original.mime,
+        type: original.type,
         size: file.size,
         originalName: file.name,
       });
     }
     return uploaded;
   } catch (error) {
-    if (uploaded.length) {
+    if (uploadedKeys.size) {
       await fetch("/api/uploads/presign", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keys: uploaded.map((item) => item.r2Key) }),
+        body: JSON.stringify({ keys: [...uploadedKeys] }),
       }).catch(() => undefined);
     }
     throw error;
@@ -173,10 +324,12 @@ function looksLikeNullIsland(latitude: string, longitude: string) {
 export function EntryForm({
   entry,
   onClose,
+  onSaved,
   defaultCategory = "moment",
 }: {
   entry?: Entry | null;
   onClose: () => void;
+  onSaved?: (entry: EntrySavePayload) => void;
   defaultCategory?: EntryCategory;
 }) {
   const router = useRouter();
@@ -343,16 +496,22 @@ export function EntryForm({
             body: formData,
           });
         }
-        const result = await readJsonResponse<{ id?: string }>(response, "保存回忆失败。");
+        const result = await readJsonResponse<{ id?: string; item?: Entry }>(response, "保存回忆失败。");
         if (!response.ok) throw new Error(result.error || "保存回忆失败。");
         window.localStorage.removeItem(draftKey);
         setSelectedFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = "";
-        onClose();
-        if (!entry && result.id) {
-          router.push(`/memories/${result.id}`);
+        const savedId = result.id ?? entry?.id;
+        if (entry && savedId) {
+          if (!result.item || result.item.id !== savedId) {
+            throw new Error("回忆已保存，但未收到更新后的卡片数据。请刷新页面确认。");
+          }
+          onSaved?.(result.item);
         }
-        router.refresh();
+        onClose();
+        if (!entry && savedId) {
+          router.push(`/memories/${savedId}`);
+        }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "保存失败，请稍后重试。");
       }

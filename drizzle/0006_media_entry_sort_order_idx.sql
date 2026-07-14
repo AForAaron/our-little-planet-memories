@@ -1,0 +1,1 @@
+CREATE INDEX "media_entry_sort_order_idx" ON "media" USING btree ("entry_id","sort_order");

@@ -19,7 +19,7 @@ export async function EntryCategoryPage({
   backHref: string;
   backLabel?: string;
 }) {
-  const { entries, userId, isDemo } = await getEntriesData(categories);
+  const { entries, userId, isDemo, nextCursor, total } = await getEntriesData(categories);
   return (
     <main className="page-shell max-w-[1100px] py-7">
       <Link href={backHref} className="mb-6 inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-[var(--color-accent-strong)]">
@@ -37,6 +37,9 @@ export async function EntryCategoryPage({
         currentUserId={userId}
         isDemo={isDemo}
         defaultCategory={categories[0]}
+        categories={categories}
+        nextCursor={nextCursor}
+        total={total}
       />
     </main>
   );

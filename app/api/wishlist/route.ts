@@ -47,9 +47,14 @@ export async function POST(request: Request) {
         description: description || null,
         createdBy: user.id,
       })
-      .returning({ id: wishlistItems.id });
+      .returning({
+        id: wishlistItems.id,
+        title: wishlistItems.title,
+        description: wishlistItems.description,
+        isDone: wishlistItems.isDone,
+      });
     revalidatePath("/daily/wishlist");
-    return NextResponse.json({ id: wish.id });
+    return NextResponse.json({ item: wish });
   } catch (error) {
     return errorResponse(error);
   }
@@ -66,10 +71,15 @@ export async function PATCH(request: Request) {
       .update(wishlistItems)
       .set({ isDone: done, doneAt: done ? new Date() : null })
       .where(eq(wishlistItems.id, body.id))
-      .returning({ id: wishlistItems.id });
+      .returning({
+        id: wishlistItems.id,
+        title: wishlistItems.title,
+        description: wishlistItems.description,
+        isDone: wishlistItems.isDone,
+      });
     if (!updated) throw new Error("没有找到这个愿望。");
     revalidatePath("/daily/wishlist");
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ item: updated });
   } catch (error) {
     return errorResponse(error);
   }

@@ -1,9 +1,16 @@
 "use client";
 
-import { MessageSquarePlus, Send } from "lucide-react";
-import { useMemo, useState, useTransition } from "react";
-import { EmojiTextField } from "@/components/emoji-text-field";
+import { MessageSquarePlus } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useState, useTransition } from "react";
 import type { EntryFollowUp } from "@/lib/database.types";
+
+const loadFollowUpComposer = () => import("@/components/follow-up-composer");
+
+const FollowUpComposer = dynamic(loadFollowUpComposer, {
+  ssr: false,
+  loading: () => <div className="follow-up-form text-sm text-muted">正在打开输入框…</div>,
+});
 
 function formatRelative(value: string) {
   const diff = Date.now() - new Date(value).getTime();
@@ -46,24 +53,53 @@ function readJson<T>(response: Response): Promise<T & { error?: string }> {
 
 export function EntryFollowUps({
   entryId,
+  isDemo = false,
   pagePath,
   pageTitle,
   initialEvents,
 }: {
   entryId: string;
+  isDemo?: boolean;
   pagePath: string;
   pageTitle: string;
   initialEvents: EntryFollowUp[];
 }) {
   const [events, setEvents] = useState(initialEvents);
   const [body, setBody] = useState("");
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [replyTargetId, setReplyTargetId] = useState<string | null>(null);
   const [replyBody, setReplyBody] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
-  const trimmedBody = body.trim();
-  const trimmedReply = replyBody.trim();
-  const remaining = useMemo(() => 500 - body.length, [body]);
+
+  function preloadComposer() {
+    void loadFollowUpComposer();
+  }
+
+  function openComposer() {
+    preloadComposer();
+    setError("");
+    setIsComposerOpen(true);
+  }
+
+  function closeComposer() {
+    setBody("");
+    setError("");
+    setIsComposerOpen(false);
+  }
+
+  function openReplyComposer(id: string) {
+    preloadComposer();
+    setError("");
+    setReplyBody("");
+    setReplyTargetId((current) => current === id ? null : id);
+  }
+
+  function closeReplyComposer() {
+    setReplyBody("");
+    setError("");
+    setReplyTargetId(null);
+  }
 
   function insertCreated(item: EntryFollowUp) {
     if (item.parent_id) {
@@ -81,7 +117,7 @@ export function EntryFollowUps({
 
   function submit(event: React.FormEvent<HTMLFormElement>, parentId?: string) {
     event.preventDefault();
-    const content = parentId ? trimmedReply : trimmedBody;
+    const content = (parentId ? replyBody : body).trim();
     if (!content) {
       setError("先写一点想追加的感受。");
       return;
@@ -103,8 +139,7 @@ export function EntryFollowUps({
         }
         insertCreated(result.item);
         if (parentId) {
-          setReplyBody("");
-          setReplyTargetId(null);
+          closeReplyComposer();
         } else {
           setBody("");
         }
@@ -124,26 +159,30 @@ export function EntryFollowUps({
         <span>{events.length} 条</span>
       </div>
 
-      <form className="follow-up-form" onSubmit={(event) => submit(event)}>
-        <label className="sr-only" htmlFor="follow-up-body">追加追评</label>
-        <EmojiTextField
-          as="textarea"
+      {isComposerOpen ? (
+        <FollowUpComposer
           id="follow-up-body"
-          className="field follow-up-textarea"
+          mode="create"
+          isDemo={isDemo}
+          pending={pending}
           value={body}
-          onChange={(value) => setBody(value.slice(0, 500))}
-          placeholder="比如：现在回头看，那天最想记住的是..."
-          maxLength={500}
+          error={error}
+          onChange={setBody}
+          onCancel={closeComposer}
+          onSubmit={(event) => submit(event)}
         />
-        <div className="follow-up-actions">
-          <span className={remaining < 40 ? "is-low" : ""}>{remaining}</span>
-          <button className="button-primary" type="submit" disabled={pending || !trimmedBody}>
-            {pending ? <MessageSquarePlus className="animate-spin" size={16} /> : <Send size={16} />}
-            追加
-          </button>
-        </div>
-        {error && <p className="follow-up-error">{error}</p>}
-      </form>
+      ) : (
+        <button
+          className="button-secondary w-fit"
+          type="button"
+          onClick={openComposer}
+          onPointerEnter={preloadComposer}
+          onFocus={preloadComposer}
+        >
+          <MessageSquarePlus size={16} />
+          写追评
+        </button>
+      )}
 
       <div className="follow-up-list">
         {events.length ? (
@@ -163,11 +202,9 @@ export function EntryFollowUps({
                 <div className="follow-up-reply-tools">
                   <button
                     type="button"
-                    onClick={() =>
-                      setReplyTargetId((current) =>
-                        current === item.id ? null : item.id,
-                      )
-                    }
+                    onClick={() => openReplyComposer(item.id)}
+                    onPointerEnter={preloadComposer}
+                    onFocus={preloadComposer}
                   >
                     回复这条追评
                   </button>
@@ -193,35 +230,16 @@ export function EntryFollowUps({
                   </div>
                 ) : null}
                 {replyTargetId === item.id && (
-                  <form
-                    className="follow-up-reply-form"
+                  <FollowUpComposer
+                    mode="reply"
+                    isDemo={isDemo}
+                    pending={pending}
+                    value={replyBody}
+                    error={error}
+                    onChange={setReplyBody}
+                    onCancel={closeReplyComposer}
                     onSubmit={(event) => submit(event, item.id)}
-                  >
-                    <EmojiTextField
-                      as="textarea"
-                      className="field follow-up-textarea"
-                      value={replyBody}
-                      onChange={(value) => setReplyBody(value.slice(0, 500))}
-                      placeholder="回复这条追评..."
-                      maxLength={500}
-                    />
-                    <div className="follow-up-actions">
-                      <button
-                        className="button-secondary"
-                        type="button"
-                        onClick={() => {
-                          setReplyTargetId(null);
-                          setReplyBody("");
-                        }}
-                      >
-                        取消
-                      </button>
-                      <button className="button-primary" type="submit" disabled={pending || !trimmedReply}>
-                        {pending ? <MessageSquarePlus className="animate-spin" size={16} /> : <Send size={16} />}
-                        回复
-                      </button>
-                    </div>
-                  </form>
+                  />
                 )}
               </div>
             </article>
