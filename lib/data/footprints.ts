@@ -123,14 +123,7 @@ export async function getPresenceSummary(): Promise<PresenceSummary> {
   }
 
   const user = await getCoupleUser();
-  if (!user) {
-    return {
-      currentUserId: null,
-      onlineAfter: onlineThreshold().toISOString(),
-      recentAfter: recentThreshold().toISOString(),
-      others: [],
-    };
-  }
+  if (!user) throw new Error("登录已失效，请重新登录。");
 
   const db = getDatabase();
   const rows = await db
@@ -254,7 +247,7 @@ export async function getFootprints({
   }
 
   const user = await getCoupleUser();
-  if (!user) return [];
+  if (!user) throw new Error("登录已失效，请重新登录。");
 
   const db = getDatabase();
   const normalizedPath = pagePath ? normalizePath(pagePath) : undefined;

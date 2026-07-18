@@ -15,6 +15,7 @@ import {
   ENTRY_CATEGORIES,
   type EntryCategory,
 } from "@/lib/database.types";
+import { rejectCrossOriginRequest } from "@/lib/security/request-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,12 +49,15 @@ function readLimit(value: string | null) {
   return parsed;
 }
 
+async function requireApiUser() {
+  if (!isLiveMode()) return;
+  const user = await getCoupleUser();
+  if (!user) throw new Error("登录已失效，请重新登录。");
+}
+
 export async function GET(request: Request) {
   try {
-    if (isLiveMode()) {
-      const user = await getCoupleUser();
-      if (!user) throw new Error("登录已失效，请重新登录。");
-    }
+    await requireApiUser();
     const url = new URL(request.url);
     const page = await getEntriesPage({
       categories: readCategories(url.searchParams.get("categories")),
@@ -78,7 +82,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
+    await requireApiUser();
     const id = await createEntryFromForm(await request.formData());
     return NextResponse.json({ id });
   } catch (error) {
@@ -87,7 +95,11 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
+    await requireApiUser();
     const id = await updateEntryFromForm(await request.formData());
     const item = await getEntryListItem(id);
     if (!item) throw new Error("回忆已保存，但无法读取更新后的卡片数据。请刷新后重试。");
@@ -98,7 +110,11 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
+    await requireApiUser();
     const body = (await request.json()) as { id?: string };
     if (!body.id) throw new Error("缺少要删除的回忆 ID。");
     await deleteEntryById(body.id);

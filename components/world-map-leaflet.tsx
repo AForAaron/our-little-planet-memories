@@ -14,6 +14,7 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
+import { readApiJson } from "@/lib/http/read-api-json";
 import type { WorldMapPoint } from "./world-map";
 
 type LeafletWorldMapProps = {
@@ -211,13 +212,8 @@ function ViewportPointLoader({
       signal: controller.signal,
       headers: { Accept: "application/json" },
     })
-      .then(async (response) => {
-        if (!response.ok) {
-          const body = (await response.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(body?.error ?? "地点加载失败。");
-        }
-        return response.json() as Promise<{ points?: unknown }>;
-      })
+      .then((response) =>
+        readApiJson<{ points?: unknown }>(response, "地点加载失败。"))
       .then((payload) => {
         if (
           controller.signal.aborted ||

@@ -4,6 +4,7 @@ import { MessageSquarePlus } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState, useTransition } from "react";
 import type { EntryFollowUp } from "@/lib/database.types";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 const loadFollowUpComposer = () => import("@/components/follow-up-composer");
 
@@ -32,23 +33,6 @@ function formatFullTime(value: string) {
     minute: "2-digit",
     hour12: false,
   }).format(new Date(value));
-}
-
-function readJson<T>(response: Response): Promise<T & { error?: string }> {
-  return response.text().then((text) => {
-    if (!text) return {} as T & { error?: string };
-    try {
-      return JSON.parse(text) as T & { error?: string };
-    } catch {
-      const contentType = response.headers.get("content-type") ?? "";
-      const looksLikeHtml = contentType.includes("text/html") || text.trimStart().startsWith("<");
-      return {
-        error: response.redirected || looksLikeHtml
-          ? "追评接口返回了网页内容，请刷新登录状态后重试；如果仍失败，请确认线上已部署最新代码。"
-          : `追评接口返回了无法读取的内容（${response.status}）。`,
-      } as T & { error?: string };
-    }
-  });
 }
 
 export function EntryFollowUps({
@@ -133,10 +117,11 @@ export function EntryFollowUps({
             body: content,
           }),
         });
-        const result = await readJson<{ item?: EntryFollowUp }>(response);
-        if (!response.ok || !result.item) {
-          throw new Error(result.error || "追评保存失败。");
-        }
+        const result = await readApiJson<{ item?: EntryFollowUp }>(
+          response,
+          "追评保存失败。",
+        );
+        if (!result.item) throw new Error("追评保存失败：服务器没有返回新追评。");
         insertCreated(result.item);
         if (parentId) {
           closeReplyComposer();

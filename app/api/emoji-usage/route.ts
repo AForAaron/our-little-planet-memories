@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isSupportedEmoji } from "@/lib/emoji/catalog";
 import { getEmojiUsage, recordEmojiUsage } from "@/lib/data/emoji-usage";
+import { rejectCrossOriginRequest } from "@/lib/security/request-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
     const body = (await request.json().catch(() => ({}))) as { emoji?: unknown };
     if (!isSupportedEmoji(body.emoji)) {

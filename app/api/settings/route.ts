@@ -5,11 +5,15 @@ import { getCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
 import { getDatabase } from "@/lib/db/client";
 import { profiles, relationship } from "@/lib/db/schema";
+import { rejectCrossOriginRequest } from "@/lib/security/request-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
     if (!isLiveMode()) {
       return NextResponse.json(

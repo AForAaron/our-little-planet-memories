@@ -72,7 +72,7 @@ export async function getEntryFollowUps(entryId: string) {
     return DEMO_ENTRY_FOLLOW_UPS.filter((item) => item.entry_id === entryId);
   }
   const user = await getCoupleUser();
-  if (!user) return [];
+  if (!user) throw new Error("登录已失效，请重新登录。");
 
   const rows = await getDatabase()
     .select({ followUp: entryFollowUps, profile: profiles })

@@ -11,6 +11,7 @@ import {
   type EntryCategory,
   type MediaType,
 } from "@/lib/database.types";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 const CATEGORY_LABELS: Record<EntryCategory, string> = {
   moment: "日常回忆",
@@ -213,14 +214,12 @@ async function uploadObject(
       variant,
     }),
   });
-  const signed = await readJsonResponse<{
-    error?: string;
+  const signed = await readApiJson<{
     uploadUrl: string;
     r2Key: string;
     mime: string;
     type: MediaType;
   }>(response, "无法创建上传地址。");
-  if (!response.ok) throw new Error(signed.error || "无法创建上传地址。");
   onKey(signed.r2Key);
   const result = await fetch(signed.uploadUrl, {
     method: "PUT",
@@ -283,20 +282,6 @@ async function uploadFiles(files: File[]) {
       }).catch(() => undefined);
     }
     throw error;
-  }
-}
-
-async function readJsonResponse<T>(response: Response, fallback: string): Promise<T & { error?: string }> {
-  const text = await response.text();
-  if (!text) return {} as T & { error?: string };
-  try {
-    return JSON.parse(text) as T & { error?: string };
-  } catch {
-    return {
-      error: response.redirected
-        ? "登录状态异常，请刷新页面或重新登录后再保存。"
-        : `${fallback}服务器返回了 ${response.status}，但不是 JSON 响应。`,
-    } as T & { error?: string };
   }
 }
 
@@ -445,8 +430,10 @@ export function EntryForm({
     setGeocodePending(true);
     try {
       const response = await fetch(`/api/geocode/search?q=${encodeURIComponent(query)}`);
-      const result = await readJsonResponse<{ results?: GeocodeResult[] }>(response, "地点搜索失败。");
-      if (!response.ok) throw new Error(result.error || "地点搜索失败。");
+      const result = await readApiJson<{ results?: GeocodeResult[] }>(
+        response,
+        "地点搜索失败。",
+      );
       const results = result.results ?? [];
       if (!results.length) {
         setLocationError("没有找到匹配地点。可以换一个更完整的名称，例如加城市、区县或省份。");
@@ -496,8 +483,10 @@ export function EntryForm({
             body: formData,
           });
         }
-        const result = await readJsonResponse<{ id?: string; item?: Entry }>(response, "保存回忆失败。");
-        if (!response.ok) throw new Error(result.error || "保存回忆失败。");
+        const result = await readApiJson<{ id?: string; item?: Entry }>(
+          response,
+          "保存回忆失败。",
+        );
         window.localStorage.removeItem(draftKey);
         setSelectedFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = "";

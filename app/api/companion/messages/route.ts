@@ -3,6 +3,7 @@ import {
   createCompanionMessage,
   getCompanionMessages,
 } from "@/lib/data/companion-messages";
+import { rejectCrossOriginRequest } from "@/lib/security/request-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +37,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
     const body = (await request.json().catch(() => ({}))) as {
       body?: unknown;

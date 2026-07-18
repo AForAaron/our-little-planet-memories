@@ -3,6 +3,7 @@ import {
   getNotifications,
   markNotificationsRead,
 } from "@/lib/data/notifications";
+import { rejectCrossOriginRequest } from "@/lib/security/request-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +27,9 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
     const body = (await request.json().catch(() => ({}))) as {
       id?: unknown;

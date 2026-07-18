@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActivityStream } from "@/lib/data/activity-stream";
 import { createFootprint } from "@/lib/data/footprints";
+import { rejectCrossOriginRequest } from "@/lib/security/request-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,6 +33,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
     const body = (await request.json().catch(() => ({}))) as {
       eventType?: unknown;

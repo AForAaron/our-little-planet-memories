@@ -4,6 +4,7 @@ import { CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import type { ActivityNotification } from "@/lib/database.types";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 function formatTime(value: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -22,21 +23,28 @@ export function NotificationList({
   initialItems: ActivityNotification[];
 }) {
   const [items, setItems] = useState(initialItems);
+  const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
 
   function markRead(id?: string) {
+    setError("");
     startTransition(async () => {
-      await fetch("/api/notifications", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(id ? { id } : { all: true }),
-      }).catch(() => undefined);
-      const now = new Date().toISOString();
-      setItems((current) =>
-        current.map((item) =>
-          !id || item.id === id ? { ...item, read_at: item.read_at ?? now } : item,
-        ),
-      );
+      try {
+        const response = await fetch("/api/notifications", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(id ? { id } : { all: true }),
+        });
+        await readApiJson<{ ok?: boolean }>(response, "标记通知失败。");
+        const now = new Date().toISOString();
+        setItems((current) =>
+          current.map((item) =>
+            !id || item.id === id ? { ...item, read_at: item.read_at ?? now } : item,
+          ),
+        );
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "标记通知失败。");
+      }
     });
   }
 
@@ -48,6 +56,11 @@ export function NotificationList({
           <CheckCheck size={15} /> 全部已读
         </button>
       </div>
+      {error && (
+        <p className="rounded-soft bg-[var(--color-accent-soft)] px-4 py-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </p>
+      )}
 
       {items.length ? (
         <div className="notification-list">

@@ -141,7 +141,7 @@ export async function getActivityStream({
   }
 
   const user = await getCoupleUser();
-  if (!user) return { items: [], nextCursor: null, filter: resolvedFilter };
+  if (!user) throw new Error("登录已失效，请重新登录。");
 
   const clauses: SQL[] = [];
   const kinds = FILTER_KINDS[resolvedFilter];
@@ -178,7 +178,7 @@ export async function getPendingEntryAttention() {
   }
 
   const user = await getCoupleUser();
-  if (!user) return { unreadCount: 0, items: [] as PendingEntryAttention[] };
+  if (!user) throw new Error("登录已失效，请重新登录。");
 
   const rows = await getDatabase()
     .select({ notification: activityNotifications, actor: profiles, entry: entries })

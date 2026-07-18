@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { Entry, EntryCategory } from "@/lib/database.types";
+import { readApiJson } from "@/lib/http/read-api-json";
 import { formatDate } from "@/lib/utils";
 import type { EntrySavedPayload, LazyEntryFormProps } from "./lazy-entry-form";
 
@@ -118,10 +119,7 @@ export function TimelineView({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: entry.id }),
         });
-        const result = (await response.json().catch(() => ({}))) as {
-          error?: string;
-        };
-        if (!response.ok) throw new Error(result.error ?? "删除失败，请稍后重试。");
+        await readApiJson<{ ok?: boolean }>(response, "删除失败，请稍后重试。");
         setTimelineEntries((current) => current.filter((item) => item.id !== entry.id));
         setEntryTotal((current) => Math.max(0, current - 1));
       } catch (caught) {
@@ -145,13 +143,11 @@ export function TimelineView({
       const response = await fetch(`/api/entries?${params.toString()}`, {
         cache: "no-store",
       });
-      const payload = (await response.json().catch(() => ({}))) as {
+      const payload = await readApiJson<{
         items?: Entry[];
         nextCursor?: string | null;
         total?: number;
-        error?: string;
-      };
-      if (!response.ok) throw new Error(payload.error ?? "加载更多回忆失败，请稍后重试。");
+      }>(response, "加载更多回忆失败，请稍后重试。");
 
       const nextItems = Array.isArray(payload.items) ? payload.items : [];
       setTimelineEntries((current) => {

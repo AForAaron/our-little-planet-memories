@@ -2,6 +2,7 @@
 
 import { LockKeyhole, LoaderCircle } from "lucide-react";
 import { useState, useTransition } from "react";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 export function ReviewAccessGate() {
   const [token, setToken] = useState("");
@@ -12,17 +13,17 @@ export function ReviewAccessGate() {
     event.preventDefault();
     setError("");
     startTransition(async () => {
-      const response = await fetch("/api/import-review/access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      const result = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        setError(result.error ?? "访问码不正确。");
-        return;
+      try {
+        const response = await fetch("/api/import-review/access", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        await readApiJson<{ ok?: boolean }>(response, "验证访问码失败。");
+        window.location.reload();
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "访问码不正确。");
       }
-      window.location.reload();
     });
   }
 

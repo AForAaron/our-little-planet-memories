@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { ChatBubbleThread } from "@/components/chat-bubble-thread";
+import { readApiJson } from "@/lib/http/read-api-json";
 import type {
   CandidateDetail,
   CandidatePatch,
@@ -58,9 +59,7 @@ function mediaUrl(sourcePath: string) {
 
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
-  const result = (await response.json()) as T & { error?: string };
-  if (!response.ok) throw new Error(result.error ?? "请求失败。");
-  return result;
+  return readApiJson<T>(response, "审核台请求失败。");
 }
 
 function reviewHeaders(reviewer: string): HeadersInit {
