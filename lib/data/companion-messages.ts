@@ -49,7 +49,7 @@ function mapMessage(
 export async function getCompanionMessages(limit = 30) {
   if (!isLiveMode()) return DEMO_COMPANION_MESSAGES.slice(0, limit);
   const user = await getCoupleUser();
-  if (!user) return [];
+  if (!user) throw new Error("登录已失效，请重新登录。");
 
   const rows = await getDatabase()
     .select({ message: companionMessages, profile: profiles })

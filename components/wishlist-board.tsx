@@ -3,6 +3,7 @@
 import { Check, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { EmojiTextField } from "@/components/emoji-text-field";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 type Wish = {
   id: string;
@@ -50,20 +51,12 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
     });
   }
 
-  async function readResult<T>(response: Response): Promise<T> {
-    const result = (await response.json().catch(() => ({}))) as T & {
-      error?: string;
-    };
-    if (!response.ok) throw new Error(result.error ?? `操作失败：${response.status}`);
-    return result;
-  }
-
   async function createWishFromForm(formData: FormData) {
     const response = await fetch("/api/wishlist", {
       method: "POST",
       body: formData,
     });
-    const result = await readResult<{ item?: Wish }>(response);
+    const result = await readApiJson<{ item?: Wish }>(response, "新增愿望失败。");
     if (!result.item) throw new Error("服务器没有返回新愿望。");
     window.localStorage.removeItem(draftKey);
     setDraft({ title: "", description: "" });
@@ -76,7 +69,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, done }),
     });
-    const result = await readResult<{ item?: Wish }>(response);
+    const result = await readApiJson<{ item?: Wish }>(response, "更新愿望失败。");
     if (!result.item) throw new Error("服务器没有返回更新后的愿望。");
     setVisibleItems((current) => current.map((item) => item.id === id ? result.item! : item));
   }
@@ -87,7 +80,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    await readResult(response);
+    await readApiJson<{ ok?: boolean }>(response, "删除愿望失败。");
     setVisibleItems((current) => current.filter((item) => item.id !== id));
   }
 

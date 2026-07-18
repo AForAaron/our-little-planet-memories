@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_COMMON_EMOJIS, isSupportedEmoji, MAX_COMMON_EMOJIS } from "@/lib/emoji/catalog";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 export type EmojiUsageItem = {
   emoji: string;
@@ -94,10 +95,11 @@ export function EmojiUsageProvider({
     }
 
     void fetch("/api/emoji-usage", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("无法读取常用 Emoji。");
-        return response.json() as Promise<{ items?: EmojiUsageItem[] }>;
-      })
+      .then((response) =>
+        readApiJson<{ items?: EmojiUsageItem[] }>(
+          response,
+          "无法读取常用 Emoji。",
+        ))
       .then((payload) => {
         if (active) setItems(Array.isArray(payload.items) ? payload.items : []);
       })
@@ -134,8 +136,11 @@ export function EmojiUsageProvider({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ emoji }),
         });
-        const payload = (await response.json().catch(() => ({}))) as { item?: EmojiUsageItem };
-        if (!response.ok || !payload.item) throw new Error("无法同步常用 Emoji。");
+        const payload = await readApiJson<{ item?: EmojiUsageItem }>(
+          response,
+          "无法同步常用 Emoji。",
+        );
+        if (!payload.item) throw new Error("无法同步常用 Emoji：服务器没有返回记录。");
         setItems((current) => {
           const known = current.find((candidate) => candidate.emoji === emoji);
           if (known && known.useCount > payload.item!.useCount) return current;

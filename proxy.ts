@@ -23,9 +23,15 @@ export default function proxy(request: NextRequest) {
   }
 
   const apiHandlesOwnAuth =
+    pathname === "/api/companion/messages" ||
+    pathname === "/api/emoji-usage" ||
     pathname === "/api/entries" ||
+    pathname.startsWith("/api/entries/") ||
     pathname === "/api/footprints" ||
+    pathname.startsWith("/api/footprints/") ||
     pathname.startsWith("/api/geocode/") ||
+    pathname === "/api/map-points" ||
+    pathname === "/api/notifications" ||
     pathname === "/api/presence" ||
     pathname === "/api/settings" ||
     pathname === "/api/wishlist" ||

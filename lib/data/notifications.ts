@@ -95,7 +95,7 @@ export async function getNotifications(limit = 30) {
   }
 
   const user = await getCoupleUser();
-  if (!user) return { unreadCount: 0, items: [] };
+  if (!user) throw new Error("登录已失效，请重新登录。");
 
   const db = getDatabase();
   const [unread] = await db

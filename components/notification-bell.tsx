@@ -4,6 +4,7 @@ import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useVisibilityAwarePolling } from "@/components/use-visibility-aware-polling";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 type NotificationsResponse = {
   unreadCount: number;
@@ -16,7 +17,10 @@ export function NotificationBell() {
     try {
       const response = await fetch("/api/footprints/inbox", { signal });
       if (!response?.ok) return;
-      const result = (await response.json()) as NotificationsResponse;
+      const result = await readApiJson<NotificationsResponse>(
+        response,
+        "通知同步失败。",
+      );
       if (!signal.aborted) setUnreadCount(result.unreadCount);
     } catch {
       // The next visible, online polling cycle retries failed inbox reads.

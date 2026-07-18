@@ -1,6 +1,9 @@
+import { inArray, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getCoupleUser } from "@/lib/auth/server";
 import { isLiveMode, isR2Configured } from "@/lib/config/backend";
+import { getDatabase } from "@/lib/db/client";
+import { media } from "@/lib/db/schema";
 import {
   extensionForMime,
   validateMediaUpload,
@@ -9,10 +12,14 @@ import {
   createPrivateUploadUrl,
   deletePrivateObject,
 } from "@/lib/r2/client";
+import { rejectCrossOriginRequest } from "@/lib/security/request-origin";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   if (!isLiveMode() || !isR2Configured()) {
     return NextResponse.json({ error: "媒体后端尚未启用。" }, { status: 503 });
   }
@@ -59,14 +66,49 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   const user = await getCoupleUser();
   if (!user) {
     return NextResponse.json({ error: "未登录。" }, { status: 401 });
   }
-  const body = (await request.json()) as { keys?: string[] };
-  const keys = (body.keys ?? []).filter((key) =>
-    key.startsWith(`uploads/${user.id}/`),
+
+  const body = (await request.json().catch(() => ({}))) as { keys?: unknown };
+  const requestedKeys = Array.isArray(body.keys) ? body.keys : [];
+  const keys = Array.from(
+    new Set(
+      requestedKeys.filter(
+        (key): key is string =>
+          typeof key === "string" &&
+          key.length <= 1_024 &&
+          key.startsWith(`uploads/${user.id}/`),
+      ),
+    ),
+  ).slice(0, 40);
+  const references = keys.length
+    ? await getDatabase()
+        .select({ r2Key: media.r2Key, thumbnailR2Key: media.thumbnailR2Key })
+        .from(media)
+        .where(
+          or(
+            inArray(media.r2Key, keys),
+            inArray(media.thumbnailR2Key, keys),
+          ),
+        )
+    : [];
+  const referencedKeys = new Set(
+    references
+      .flatMap((item) => [item.r2Key, item.thumbnailR2Key])
+      .filter(Boolean),
   );
-  await Promise.allSettled(keys.map((key) => deletePrivateObject(key)));
-  return NextResponse.json({ deleted: keys.length });
+  const temporaryKeys = keys.filter((key) => !referencedKeys.has(key));
+  const results = await Promise.allSettled(
+    temporaryKeys.map((key) => deletePrivateObject(key)),
+  );
+  return NextResponse.json({
+    deleted: results.filter((result) => result.status === "fulfilled").length,
+    skippedReferenced: keys.length - temporaryKeys.length,
+    failed: results.filter((result) => result.status === "rejected").length,
+  });
 }

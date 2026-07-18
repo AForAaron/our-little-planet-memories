@@ -5,6 +5,7 @@ import { getCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
 import { getDatabase } from "@/lib/db/client";
 import { wishlistItems } from "@/lib/db/schema";
+import { rejectCrossOriginRequest } from "@/lib/security/request-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +34,9 @@ function errorResponse(error: unknown) {
 }
 
 export async function POST(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
     assertLive();
     const user = await requireUserJson();
@@ -61,6 +65,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
     assertLive();
     await requireUserJson();
@@ -86,6 +93,9 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const originRejection = rejectCrossOriginRequest(request);
+  if (originRejection) return originRejection;
+
   try {
     assertLive();
     await requireUserJson();

@@ -18,6 +18,7 @@ import type {
   ActivityStreamFilter,
   ActivityStreamItem,
 } from "@/lib/database.types";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 const FILTERS: { value: ActivityStreamFilter; label: string }[] = [
   { value: "all", label: "全部" },
@@ -94,13 +95,17 @@ export function ActivityStreamList({
     try {
       const params = new URLSearchParams({ filter, before: nextCursor, limit: "24" });
       const response = await fetch(`/api/footprints?${params.toString()}`);
-      if (!response.ok) return;
-      const result = (await response.json()) as StreamResponse;
+      const result = await readApiJson<StreamResponse>(
+        response,
+        "加载足迹失败。",
+      );
       setItems((current) => {
         const known = new Set(current.map((item) => item.id));
         return [...current, ...result.items.filter((item) => !known.has(item.id))];
       });
       setNextCursor(result.nextCursor);
+    } catch {
+      // Keep the current list; a later user retry can load the same cursor.
     } finally {
       setLoading(false);
     }

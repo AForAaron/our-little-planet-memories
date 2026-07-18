@@ -7,6 +7,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useVisibilityAwarePolling } from "@/components/use-visibility-aware-polling";
 import type { CompanionMessage, PresenceState } from "@/lib/database.types";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 type PresenceResponse = {
   currentUserId: string | null;
@@ -137,7 +138,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
         signal,
       });
       if (!response.ok || signal.aborted) return;
-      const result = (await response.json()) as PresenceResponse;
+      const result = await readApiJson<PresenceResponse>(response, "在线状态同步失败。");
       if (!signal.aborted && pathnameRef.current === currentPath) setPresence(result);
     } catch {
       // Presence is best-effort and is retried by the visibility-aware poller.
@@ -153,7 +154,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
         signal,
       });
       if (!response.ok || signal.aborted || !openRef.current) return;
-      const result = (await response.json()) as MessagesResponse;
+      const result = await readApiJson<MessagesResponse>(response, "悄悄话同步失败。");
       if (
         signal.aborted
         || !openRef.current
@@ -202,8 +203,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
           reaction: input.reaction,
         }),
       });
-      const result = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) throw new Error(result.error ?? "发送失败。");
+      await readApiJson<{ ok?: boolean }>(response, "发送失败。");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "发送失败。");
     } finally {
@@ -228,13 +228,12 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
           pageTitle: pageTitle(),
         }),
       });
-      const result = (await response.json().catch(() => ({}))) as CreateMessageResponse;
-      if (!response.ok) throw new Error(result.error ?? "发送失败。");
+      const result = await readApiJson<CreateMessageResponse>(response, "发送失败。");
       const createdMessage = result.message;
       if (!isCompanionMessage(createdMessage)) {
         messageRevisionRef.current += 1;
         refreshMessagesNow();
-        throw new Error("消息已发送，但同步结果异常，请稍后确认。");
+        throw new Error("无法确认消息是否发送成功，已重新同步，请稍后确认。");
       }
 
       messageRevisionRef.current += 1;

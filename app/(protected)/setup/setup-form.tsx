@@ -4,6 +4,7 @@ import { Save, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { EmojiTextField } from "@/components/emoji-text-field";
+import { readApiJson } from "@/lib/http/read-api-json";
 
 type SetupFormProps = {
   relationship: {
@@ -89,25 +90,18 @@ export function SetupForm({ relationship, profiles, isDemo }: SetupFormProps) {
     setError("");
     const formData = new FormData(event.currentTarget);
     startTransition(async () => {
-      const response = await fetch("/api/settings", {
-        method: "POST",
-        body: formData,
-      });
-      const result = (await response.json().catch(() => ({
-        error:
-          response.redirected || response.status === 0
-            ? "登录状态异常，请刷新页面或重新登录后再保存。"
-            : `保存失败：服务器返回了 ${response.status}。`,
-      }))) as {
-        error?: string;
-      };
-      if (!response.ok) {
-        setError(result.error ?? "保存失败，请稍后重试。");
-        return;
+      try {
+        const response = await fetch("/api/settings", {
+          method: "POST",
+          body: formData,
+        });
+        await readApiJson<{ ok?: boolean }>(response, "保存设置失败。");
+        window.localStorage.removeItem(draftKey);
+        setMessage("设置已保存。");
+        router.refresh();
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "保存失败，请稍后重试。");
       }
-      window.localStorage.removeItem(draftKey);
-      setMessage("设置已保存。");
-      router.refresh();
     });
   }
 
