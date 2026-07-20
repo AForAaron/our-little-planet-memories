@@ -12,6 +12,10 @@ import {
   type MediaType,
 } from "@/lib/database.types";
 import { readApiJson } from "@/lib/http/read-api-json";
+import {
+  appDateTimeInputToIso,
+  toAppDateTimeInput,
+} from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<EntryCategory, string> = {
   moment: "日常回忆",
@@ -73,12 +77,6 @@ type SelectedMediaPreview = {
   kind: MediaType | "file";
   url: string;
 };
-
-function localDateTime(iso?: string) {
-  const date = iso ? new Date(iso) : new Date();
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
 
 function mediaKindForFile(file: File): SelectedMediaPreview["kind"] {
   if (file.type.startsWith("image/")) return "image";
@@ -289,7 +287,7 @@ function initialDraft(entry: Entry | null | undefined, defaultCategory: EntryCat
   return {
     category: entry?.category ?? defaultCategory,
     title: entry?.title ?? "",
-    happened_at: localDateTime(entry?.happened_at),
+    happened_at: toAppDateTimeInput(entry?.happened_at),
     mood: entry?.mood ?? "",
     rating: entry?.rating ? String(entry.rating) : "",
     body: entry?.body ?? "",
@@ -468,6 +466,10 @@ export function EntryForm({
       try {
         const formData = new FormData(event.currentTarget);
         formData.delete("media_files");
+        formData.set(
+          "happened_at",
+          appDateTimeInputToIso(draft.happened_at),
+        );
         const uploaded = await uploadFiles(selectedFiles);
         formData.set("uploaded_media", JSON.stringify(uploaded));
         let response: Response;

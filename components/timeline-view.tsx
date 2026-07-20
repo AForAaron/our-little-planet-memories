@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { Entry, EntryCategory } from "@/lib/database.types";
 import { readApiJson } from "@/lib/http/read-api-json";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatTimelineDateParts } from "@/lib/utils";
 import type { EntrySavedPayload, LazyEntryFormProps } from "./lazy-entry-form";
 
 const PAGE_SIZE = 24;
@@ -38,17 +38,6 @@ function mediaPreviewUrl(media: EntryMedia) {
 
 function preloadEntryForm() {
   void import("./lazy-entry-form");
-}
-
-function dateParts(value: string) {
-  const date = new Date(value);
-  return {
-    monthDay: new Intl.DateTimeFormat("zh-CN", {
-      month: "2-digit",
-      day: "2-digit",
-    }).format(date).replace("/", "."),
-    year: String(date.getFullYear()),
-  };
 }
 
 export function TimelineView({
@@ -186,7 +175,7 @@ export function TimelineView({
         <div className="relative">
           {timelineEntries.map((entry, index) => {
             const canEdit = !isDemo;
-            const date = dateParts(entry.happened_at);
+            const date = formatTimelineDateParts(entry.happened_at);
             const firstMedia = entry.media?.find((media) => mediaPreviewUrl(media));
             const mediaCount = entry.media_count ?? entry.media?.length ?? 0;
             return (
