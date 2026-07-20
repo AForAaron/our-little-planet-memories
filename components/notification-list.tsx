@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import type { ActivityNotification } from "@/lib/database.types";
 import { readApiJson } from "@/lib/http/read-api-json";
+import { normalizeInternalPath } from "@/lib/security/internal-path";
 
 function formatTime(value: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -64,20 +65,23 @@ export function NotificationList({
 
       {items.length ? (
         <div className="notification-list">
-          {items.map((item) => (
-            <article key={item.id} className={item.read_at ? "notification-item" : "notification-item is-unread"}>
-              <span className="notification-avatar" aria-hidden="true">
-                {item.actor?.display_name?.slice(0, 1) ?? "♡"}
-              </span>
-              <div>
-                <Link href={item.href} onClick={() => markRead(item.id)}>
-                  {item.title}
-                </Link>
-                {item.body && <p>{item.body}</p>}
-                <time>{formatTime(item.created_at)}</time>
-              </div>
-            </article>
-          ))}
+          {items.map((item) => {
+            const href = normalizeInternalPath(item.href, "/home");
+            return (
+              <article key={item.id} className={item.read_at ? "notification-item" : "notification-item is-unread"}>
+                <span className="notification-avatar" aria-hidden="true">
+                  {item.actor?.display_name?.slice(0, 1) ?? "♡"}
+                </span>
+                <div>
+                  <Link href={href} onClick={() => markRead(item.id)}>
+                    {item.title}
+                  </Link>
+                  {item.body && <p>{item.body}</p>}
+                  <time>{formatTime(item.created_at)}</time>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="notification-empty">

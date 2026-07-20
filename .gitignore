@@ -9,4 +9,5 @@ node_modules
 # Private source data and generated import artifacts must never be committed.
 /Datas/
 /data-work/
+docs/data/PRIVATE_MIGRATION_REPORT.md
 .pnpm-store/

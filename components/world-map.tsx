@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { ExternalMapGate } from "@/components/external-map-gate";
 
 export type WorldMapPoint = {
   id: string;
@@ -33,5 +34,17 @@ const LeafletWorldMap = dynamic(() => import("./world-map-leaflet"), {
 });
 
 export function WorldMap(props: WorldMapProps) {
-  return <LeafletWorldMap {...props} />;
+  if (props.points.length === 0 && !props.enableViewportLoading) {
+    return <LeafletWorldMap {...props} />;
+  }
+
+  return (
+    <ExternalMapGate
+      className="world-map world-map-loading"
+      description="加载后，浏览器会向 OpenStreetMap 请求地图瓦片，对方会收到你的 IP 地址和正在查看的区域。"
+      style={{ minHeight: props.height ?? "32rem" }}
+    >
+      <LeafletWorldMap {...props} />
+    </ExternalMapGate>
+  );
 }

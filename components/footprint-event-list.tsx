@@ -1,6 +1,7 @@
 import { Bell, Eye, Footprints, Heart, MessageCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { FootprintEvent } from "@/lib/database.types";
+import { normalizeInternalPath } from "@/lib/security/internal-path";
 
 function formatRelative(value: string) {
   const diff = Date.now() - new Date(value).getTime();
@@ -61,6 +62,7 @@ export function FootprintEventList({
     <div className={compact ? "footprint-list is-compact" : "footprint-list"}>
       {events.map((event) => {
         const Icon = iconFor(event);
+        const href = normalizeInternalPath(event.page_path);
         return (
           <article key={event.id} className="footprint-item">
             <span className="footprint-icon" aria-hidden="true">
@@ -70,10 +72,10 @@ export function FootprintEventList({
               <p>{textFor(event)}</p>
               <div className="footprint-meta">
                 <time>{formatRelative(event.created_at)}</time>
-                {event.page_path && (
+                {href && (
                   <>
                     <span>·</span>
-                    <Link href={event.page_path}>{event.page_title || "打开这里"}</Link>
+                    <Link href={href}>{event.page_title || "打开这里"}</Link>
                   </>
                 )}
               </div>

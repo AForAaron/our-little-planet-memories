@@ -8,13 +8,9 @@ export const metadata = { title: "记忆审核入口" };
 export const dynamic = "force-dynamic";
 
 function requestFromHeaders(headerStore: Headers) {
-  const host = headerStore.get("host") ?? "localhost:3000";
-  return new Request(`http://${host}/review`, {
+  return new Request("http://localhost/review", {
     headers: {
-      host,
       cookie: headerStore.get("cookie") ?? "",
-      "x-forwarded-for": headerStore.get("x-forwarded-for") ?? "",
-      "cf-connecting-ip": headerStore.get("cf-connecting-ip") ?? "",
     },
   });
 }

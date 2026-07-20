@@ -19,6 +19,7 @@ import type {
   ActivityStreamItem,
 } from "@/lib/database.types";
 import { readApiJson } from "@/lib/http/read-api-json";
+import { normalizeInternalPath } from "@/lib/security/internal-path";
 
 const FILTERS: { value: ActivityStreamFilter; label: string }[] = [
   { value: "all", label: "全部" },
@@ -43,7 +44,7 @@ function destination(item: ActivityStreamItem) {
       ? `/memories/${item.entry_id}#follow-ups`
       : `/memories/${item.entry_id}`;
   }
-  return item.page_path;
+  return normalizeInternalPath(item.page_path);
 }
 
 function presentation(kind: ActivityEventKind) {

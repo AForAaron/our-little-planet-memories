@@ -15,6 +15,7 @@ import {
   presenceState,
   profiles,
 } from "@/lib/db/schema";
+import { normalizeInternalPath } from "@/lib/security/internal-path";
 import { createActivityEvent } from "./activity-stream";
 import { DEMO_FOOTPRINTS, DEMO_PRESENCE } from "./demo";
 
@@ -51,7 +52,7 @@ function mapProfile(row: typeof profiles.$inferSelect | null) {
 function mapPresence(row: PresenceRow, profile: typeof profiles.$inferSelect | null): PresenceState {
   return {
     user_id: row.userId,
-    current_path: row.currentPath,
+    current_path: normalizeInternalPath(row.currentPath, "/"),
     page_title: row.pageTitle,
     last_seen_at: row.lastSeenAt.toISOString(),
     updated_at: row.updatedAt.toISOString(),
@@ -65,7 +66,7 @@ function mapFootprint(row: FootprintRow, profile: typeof profiles.$inferSelect |
     author_id: row.authorId,
     event_type: row.eventType as FootprintEventType,
     scope: row.scope as FootprintScope,
-    page_path: row.pagePath,
+    page_path: normalizeInternalPath(row.pagePath, "/"),
     page_title: row.pageTitle,
     target_type: row.targetType,
     target_id: row.targetId,
@@ -78,12 +79,6 @@ function mapFootprint(row: FootprintRow, profile: typeof profiles.$inferSelect |
 
 function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
-}
-
-function normalizePath(value: unknown) {
-  const path = cleanText(value, 500) || "/";
-  if (!path.startsWith("/")) return "/";
-  return path.split("#")[0] || "/";
 }
 
 function normalizeScope(value: unknown): FootprintScope {
@@ -152,7 +147,7 @@ export async function updatePresence(input: {
 
   const db = getDatabase();
   const now = new Date();
-  const currentPath = normalizePath(input.currentPath);
+  const currentPath = normalizeInternalPath(input.currentPath, "/");
   const pageTitle = cleanText(input.pageTitle, 140) || null;
 
   await db
@@ -250,7 +245,9 @@ export async function getFootprints({
   if (!user) throw new Error("登录已失效，请重新登录。");
 
   const db = getDatabase();
-  const normalizedPath = pagePath ? normalizePath(pagePath) : undefined;
+  const normalizedPath = pagePath
+    ? normalizeInternalPath(pagePath)
+    : undefined;
   const clauses: SQL[] = [];
   if (normalizedPath) clauses.push(eq(footprintEvents.pagePath, normalizedPath));
   if (targetType) clauses.push(eq(footprintEvents.targetType, targetType));
@@ -301,7 +298,7 @@ export async function createFootprint(input: {
 
   const eventType = normalizeEventType(input.eventType);
   const scope = normalizeScope(input.scope);
-  const pagePath = normalizePath(input.pagePath);
+  const pagePath = normalizeInternalPath(input.pagePath, "/");
   const pageTitle = cleanText(input.pageTitle, 140) || null;
   const targetType = cleanText(input.targetType, 40) || null;
   const targetId = cleanText(input.targetId, 120) || null;
