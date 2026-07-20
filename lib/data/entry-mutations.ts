@@ -15,6 +15,7 @@ import {
 } from "@/lib/database.types";
 import { validateMediaUpload } from "@/lib/media/policy";
 import { deletePrivateObject, inspectPrivateObject } from "@/lib/r2/client";
+import { parseAbsoluteDateTime } from "@/lib/utils";
 
 type UploadedMedia = {
   r2Key: string;
@@ -47,8 +48,10 @@ function readEntryFields(formData: FormData) {
       : null;
 
   if (!title || !happenedAt) throw new Error("标题和发生时间不能为空。");
-  const parsedDate = new Date(happenedAt);
-  if (Number.isNaN(parsedDate.getTime())) throw new Error("发生时间格式不正确。");
+  const parsedDate = parseAbsoluteDateTime(happenedAt);
+  if (!parsedDate) {
+    throw new Error("发生时间必须包含明确时区，请重新选择后保存。");
+  }
 
   return {
     title,

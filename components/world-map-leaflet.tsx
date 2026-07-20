@@ -15,6 +15,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import { readApiJson } from "@/lib/http/read-api-json";
+import { formatDate } from "@/lib/utils";
 import type { WorldMapPoint } from "./world-map";
 
 type LeafletWorldMapProps = {
@@ -35,18 +36,6 @@ function escapeHtml(value: string | null | undefined) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function formatDate(value: string) {
-  try {
-    return new Intl.DateTimeFormat("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date(value));
-  } catch {
-    return value.slice(0, 10);
-  }
 }
 
 function markerIcon(category: string) {
