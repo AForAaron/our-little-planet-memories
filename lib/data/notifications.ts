@@ -12,6 +12,7 @@ import {
   activityNotifications,
   profiles,
 } from "@/lib/db/schema";
+import { normalizeInternalPath } from "@/lib/security/internal-path";
 import { DEMO_NOTIFICATIONS } from "./demo";
 
 type NotificationRow = typeof activityNotifications.$inferSelect;
@@ -39,7 +40,7 @@ function mapNotification(
     follow_up_id: row.followUpId,
     title: row.title,
     body: row.body,
-    href: row.href,
+    href: normalizeInternalPath(row.href, "/home"),
     read_at: row.readAt?.toISOString() ?? null,
     created_at: row.createdAt.toISOString(),
     actor: mapProfile(actor),
@@ -80,7 +81,7 @@ export async function createPartnerNotification(input: {
       followUpId: input.followUpId ?? null,
       title: input.title,
       body: input.body ?? null,
-      href: input.href,
+      href: normalizeInternalPath(input.href, "/home"),
     })
     .returning();
   return created;

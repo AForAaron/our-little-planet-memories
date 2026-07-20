@@ -6,6 +6,7 @@ import { isLiveMode } from "@/lib/config/backend";
 import type { CompanionMessage } from "@/lib/database.types";
 import { getDatabase } from "@/lib/db/client";
 import { companionMessages, profiles } from "@/lib/db/schema";
+import { normalizeInternalPath } from "@/lib/security/internal-path";
 import { createActivityEvent } from "./activity-stream";
 import { DEMO_COMPANION_MESSAGES } from "./demo";
 
@@ -13,12 +14,6 @@ type MessageRow = typeof companionMessages.$inferSelect;
 
 function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
-}
-
-function normalizePath(value: unknown) {
-  const path = cleanText(value, 500);
-  if (!path || !path.startsWith("/")) return null;
-  return path.split("#")[0] || "/";
 }
 
 function mapProfile(row: typeof profiles.$inferSelect | null) {
@@ -39,7 +34,7 @@ function mapMessage(
     id: row.id,
     author_id: row.authorId,
     body: row.body,
-    page_path: row.pagePath,
+    page_path: normalizeInternalPath(row.pagePath),
     page_title: row.pageTitle,
     created_at: row.createdAt.toISOString(),
     profile: mapProfile(profile),
@@ -72,7 +67,7 @@ export async function createCompanionMessage(input: {
 
   const body = cleanText(input.body, 500);
   if (!body) throw new Error("先写一句想发送的话。");
-  const pagePath = normalizePath(input.pagePath);
+  const pagePath = normalizeInternalPath(input.pagePath);
   const pageTitle = cleanText(input.pageTitle, 140) || null;
 
   const [created] = await getDatabase()

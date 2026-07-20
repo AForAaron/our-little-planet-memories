@@ -2,6 +2,7 @@ import "server-only";
 
 import { asc, eq } from "drizzle-orm";
 import { cache } from "react";
+import { requireCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
 import { DEMO_RELATIONSHIP } from "@/lib/data/demo";
 import { getDatabase } from "@/lib/db/client";
@@ -18,6 +19,8 @@ export const getSiteSettings = cache(async function getSiteSettings() {
       isDemo: true,
     };
   }
+
+  await requireCoupleUser();
 
   const db = getDatabase();
   const [relationshipRows, profileRows] = await Promise.all([

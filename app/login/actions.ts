@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { ensureProfile } from "@/lib/auth/profile";
-import { getAuth } from "@/lib/auth/server";
+import { emailIsVerified, getAuth } from "@/lib/auth/server";
 import {
   getAllowlistEmails,
   isLiveMode,
@@ -38,6 +38,9 @@ export async function signIn(formData: FormData) {
   // session again here would still see the incoming request's old cookies,
   // so initialize the one-time profile from the sign-in response directly.
   if (!data?.user) loginError("登录状态未能完成初始化，请重试。");
+  if (!emailIsVerified(data.user)) {
+    loginError("请先完成白名单邮箱验证，再进入小星球");
+  }
   await ensureProfile(data.user);
   redirect("/home");
 }

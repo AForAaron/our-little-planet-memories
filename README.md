@@ -38,16 +38,17 @@ pnpm dev
 2. 从 Connect 页面复制 pooled connection string 到 `DATABASE_URL`。
 3. 从 `Project → Branch → Auth → Configuration` 复制 Auth URL。
 4. 用 `openssl rand -base64 32` 生成 Cookie Secret。
-5. 在 `ALLOWLIST_EMAILS` 中填写且只填写两个邮箱。
-6. 保持 `APP_DATA_MODE=demo`。
-7. 先拉取 Neon 管理的 Auth schema，确认真实用户 ID 类型：
+5. 在 Auth 的邮件配置中启用邮箱验证；应用只允许已验证的白名单邮箱读取私密数据。
+6. 在 `ALLOWLIST_EMAILS` 中填写且只填写两个邮箱。
+7. 保持 `APP_DATA_MODE=demo`。
+8. 先拉取 Neon 管理的 Auth schema，确认真实用户 ID 类型：
 
    ```bash
    pnpm db:auth:pull
    ```
 
-8. 对照 `drizzle-auth-introspection/` 检查 `lib/db/schema.ts` 中的 `profiles.id`。
-9. 生成并检查应用表 migration：
+9. 对照 `drizzle-auth-introspection/` 检查 `lib/db/schema.ts` 中的 `profiles.id`。
+10. 生成并检查应用表 migration：
 
    ```bash
    pnpm db:generate
@@ -91,6 +92,7 @@ APP_DATA_MODE=live
 ```bash
 pnpm data:verify
 pnpm data:compare-zips
+export REVIEW_ACCESS_TOKEN="$(openssl rand -hex 32)"
 pnpm review
 ```
 
@@ -137,7 +139,7 @@ Web-private/
 
 源码、正式 migrations、白名单注册、首次设置、事件详情、时间模块、日记、愿望、观影、探店、多媒体签名上传及审核改造已经就绪。尚需用户创建 Neon/Auth/R2 并填写 `.env.local`，才能执行 introspection、migration 和真实凭据验收。
 
-Leaflet 依赖安装曾被当前执行环境的用量限制拒绝，因此 `/places/map` 目前展示已经脱敏的地图点数据，但交互式世界底图、缩放、聚合与虚线路线仍需在依赖安装恢复后完成。
+地图会在用户明确点击后才向 OpenStreetMap 请求瓦片；坐标选择器在主服务不可用时才会使用 CARTO 作为备用底图。
 
 ## 验证
 

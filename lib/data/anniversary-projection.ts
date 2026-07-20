@@ -2,6 +2,7 @@ import "server-only";
 
 import { asc, eq } from "drizzle-orm";
 import { cache } from "react";
+import { requireCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
 import { DEMO_ENTRIES } from "@/lib/data/demo";
 import { getDatabase } from "@/lib/db/client";
@@ -30,6 +31,8 @@ export const getAnniversaryProjection = cache(
             left.id.localeCompare(right.id),
         );
     }
+
+    await requireCoupleUser();
 
     const rows = await getDatabase()
       .select({

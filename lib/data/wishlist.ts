@@ -1,6 +1,7 @@
 import "server-only";
 
 import { asc } from "drizzle-orm";
+import { requireCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
 import { getDatabase } from "@/lib/db/client";
 import { wishlistItems } from "@/lib/db/schema";
@@ -15,6 +16,7 @@ export async function getWishlist() {
       isDemo: true,
     };
   }
+  await requireCoupleUser();
   const rows = await getDatabase()
     .select()
     .from(wishlistItems)

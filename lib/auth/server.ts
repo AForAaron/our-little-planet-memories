@@ -34,12 +34,28 @@ export function emailIsAllowlisted(email?: string | null) {
   return Boolean(email && getAllowlistEmails().includes(email.toLowerCase()));
 }
 
+export function emailIsVerified(
+  user?: { emailVerified?: boolean | null } | null,
+) {
+  return user?.emailVerified === true;
+}
+
 export const getCoupleUser = cache(async () => {
   if (!isLiveMode()) return null;
   const { data: session } = await getAuth().getSession();
   const user = session?.user;
-  return user && emailIsAllowlisted(user.email) ? user : null;
+  return user && emailIsVerified(user) && emailIsAllowlisted(user.email)
+    ? user
+    : null;
 });
+
+export async function assertCoupleUser() {
+  const user = await getCoupleUser();
+  if (!user) {
+    throw new Error("请使用已验证的白名单邮箱重新登录。");
+  }
+  return user;
+}
 
 export async function requireCoupleUser() {
   const user = await getCoupleUser();

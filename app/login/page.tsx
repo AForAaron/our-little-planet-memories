@@ -62,7 +62,7 @@ export default async function LoginPage({
           )}
           {registered === "1" && (
             <p className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] px-4 py-3 text-sm text-accent">
-              注册完成，请使用新账号登录。
+              注册完成，请先验证邮箱，再使用新账号登录。
             </p>
           )}
 

@@ -14,7 +14,10 @@ import {
 } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { cache } from "react";
-import { getCoupleUser } from "@/lib/auth/server";
+import {
+  assertCoupleUser,
+  requireCoupleUser,
+} from "@/lib/auth/server";
 import { isLiveMode, isR2Configured } from "@/lib/config/backend";
 import { getDatabase } from "@/lib/db/client";
 import {
@@ -437,6 +440,7 @@ export async function getEntriesPage(
   if (!isLiveMode()) {
     return getDemoEntriesPage({ categories, cursor, limit });
   }
+  await assertCoupleUser();
   return getLiveEntriesPage({ categories, cursor, limit });
 }
 
@@ -448,13 +452,14 @@ export async function getEntryListItem(id: string): Promise<Entry | null> {
   if (!isLiveMode()) {
     return DEMO_ENTRIES.find((entry) => entry.id === id) ?? null;
   }
+  await assertCoupleUser();
   return getLiveEntryListItem(id);
 }
 
 export async function getTimelineData(options: EntriesPageOptions = {}) {
   const [page, user] = await Promise.all([
     getEntriesPage(options),
-    isLiveMode() ? getCoupleUser() : Promise.resolve(null),
+    isLiveMode() ? assertCoupleUser() : Promise.resolve(null),
   ]);
   return {
     ...page,
@@ -583,6 +588,7 @@ export const getMemoryDetail = cache(async (id: string) => {
       isDemo: true,
     };
   }
+  await requireCoupleUser();
   return getLiveMemoryDetail(id);
 });
 
@@ -692,6 +698,8 @@ export async function getMapPoints(
     };
   }
 
+  await assertCoupleUser();
+
   const db = getDatabase();
   const filters = [
     isNotNull(places.lat),
@@ -786,6 +794,8 @@ export async function getHomeData() {
       isDemo: true,
     };
   }
+
+  await requireCoupleUser();
 
   const db = getDatabase();
   const authorProfiles = alias(profiles, "home_author_profiles");

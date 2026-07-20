@@ -6,6 +6,7 @@ import type { FormEvent } from "react";
 import { EmojiTextField } from "@/components/emoji-text-field";
 import { EmojiUsageProvider } from "@/components/emoji-usage-provider";
 import type { CompanionMessage, PresenceState } from "@/lib/database.types";
+import { normalizeInternalPath } from "@/lib/security/internal-path";
 
 const REACTIONS = ["想再去", "记得", "抱抱", "笑死"];
 
@@ -50,6 +51,8 @@ export function CompanionPanel({
   pending,
   status,
 }: CompanionPanelProps) {
+  const presenceHref = normalizeInternalPath(other?.current_path);
+
   return (
     <div className="companion-card">
       <div className="companion-head">
@@ -62,8 +65,8 @@ export function CompanionPanel({
         </button>
       </div>
 
-      {other && (
-        <Link href={other.current_path} className="companion-presence">
+      {other && presenceHref && (
+        <Link href={presenceHref} className="companion-presence">
           <Navigation size={15} />
           <span>{other.profile?.display_name ?? "对方"}</span>
           <b>{other.page_title || other.current_path}</b>

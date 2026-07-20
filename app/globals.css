@@ -2511,6 +2511,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
   text-align: center;
   color: var(--color-text-muted);
 }
+.external-map-gate {
+  display: grid;
+  max-width: 30rem;
+  justify-items: center;
+  gap: .9rem;
+  padding: 1.5rem;
+}
+.external-map-gate p {
+  margin: 0;
+  font-size: .8125rem;
+  line-height: 1.6;
+}
 .planet-marker {
   display: block;
   width: 1.65rem;

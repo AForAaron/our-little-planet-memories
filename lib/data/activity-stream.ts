@@ -17,6 +17,7 @@ import {
   entries,
   profiles,
 } from "@/lib/db/schema";
+import { normalizeInternalPath } from "@/lib/security/internal-path";
 import {
   DEMO_ACTIVITY_STREAM,
   DEMO_PENDING_ENTRY_ATTENTION,
@@ -54,7 +55,7 @@ function mapActivityEvent(
     source_id: row.sourceId,
     actor_id: row.actorId,
     entry_id: row.entryId,
-    page_path: row.pagePath,
+    page_path: normalizeInternalPath(row.pagePath),
     page_title: row.pageTitle,
     entry_title: entryTitle,
     body: row.body,
@@ -104,7 +105,7 @@ export async function createActivityEvent(input: {
       sourceType: input.sourceType,
       sourceId: input.sourceId,
       entryId: input.entryId ?? null,
-      pagePath: input.pagePath ?? null,
+      pagePath: normalizeInternalPath(input.pagePath),
       pageTitle: input.pageTitle ?? null,
       body: input.body ?? null,
       reaction: input.reaction ?? null,
@@ -204,7 +205,7 @@ export async function getPendingEntryAttention() {
       actor_id: row.notification.actorId,
       title: row.notification.title,
       body: row.notification.body,
-      href: row.notification.href,
+      href: normalizeInternalPath(row.notification.href, "/home"),
       created_at: row.notification.createdAt.toISOString(),
       actor: mapProfile(row.actor),
     };

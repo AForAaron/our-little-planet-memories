@@ -253,40 +253,8 @@ export function reviewModeEnabled() {
   );
 }
 
-export function requestIsLocal(request: Request) {
-  if (request.headers.get("sec-fetch-site") === "cross-site") return false;
-  const origin = request.headers.get("origin");
-  if (origin) {
-    try {
-      const originHost = new URL(origin).hostname;
-      if (!["127.0.0.1", "::1", "localhost"].includes(originHost)) return false;
-    } catch {
-      return false;
-    }
-  }
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const cfConnectingIp = request.headers.get("cf-connecting-ip");
-  if (cfConnectingIp) return false;
-  if (
-    forwardedFor &&
-    !forwardedFor
-      .split(",")
-      .map((value) => value.trim())
-      .every((value) =>
-        ["127.0.0.1", "::1", "localhost"].includes(value),
-      )
-  ) {
-    return false;
-  }
-  const host = request.headers.get("host")?.split(":")[0] ?? "";
-  return host === "127.0.0.1" || host === "localhost" || host === "[::1]";
-}
-
-export function canUseReview(request?: Request) {
-  return (
-    reviewModeEnabled() &&
-    (!request || requestIsLocal(request) || requestHasValidReviewCookie(request))
-  );
+export function canUseReview(request: Request) {
+  return reviewModeEnabled() && requestHasValidReviewCookie(request);
 }
 
 export function normalizeCandidate(candidate: ReviewCandidate) {
