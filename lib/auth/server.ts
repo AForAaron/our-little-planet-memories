@@ -8,6 +8,7 @@ import {
   isLiveMode,
   isNeonConfigured,
 } from "@/lib/config/backend";
+import { emailIsVerified } from "@/lib/auth/verification";
 
 function createAuth() {
   if (!isNeonConfigured()) {
@@ -32,12 +33,6 @@ export function getAuth() {
 
 export function emailIsAllowlisted(email?: string | null) {
   return Boolean(email && getAllowlistEmails().includes(email.toLowerCase()));
-}
-
-export function emailIsVerified(
-  user?: { emailVerified?: boolean | null } | null,
-) {
-  return user?.emailVerified === true;
 }
 
 export const getCoupleUser = cache(async () => {
