@@ -2,7 +2,7 @@ import { LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { BrandIcon } from "@/components/brand-icon";
 import { PasswordField } from "@/components/password-field";
-import { signIn } from "./actions";
+import { resendVerificationEmail, signIn } from "./actions";
 import { isLiveMode, isNeonConfigured } from "@/lib/config/backend";
 
 export const metadata = { title: "回到小星球" };
@@ -10,9 +10,21 @@ export const metadata = { title: "回到小星球" };
 export default async function LoginPage({
   searchParams,
 }: {
-    searchParams: Promise<{ error?: string; registered?: string }>;
+    searchParams: Promise<{
+      error?: string;
+      registered?: string;
+      verification?: string;
+      verificationSent?: string;
+      verified?: string;
+    }>;
 }) {
-  const { error, registered } = await searchParams;
+  const {
+    error,
+    registered,
+    verification,
+    verificationSent,
+    verified,
+  } = await searchParams;
   const configured = isLiveMode() && isNeonConfigured();
 
   return (
@@ -65,6 +77,33 @@ export default async function LoginPage({
               注册完成，请先验证邮箱，再使用新账号登录。
             </p>
           )}
+          {verificationSent === "1" && (
+            <p className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] px-4 py-3 text-sm leading-6 text-accent" role="status">
+              验证邮件已发送。请打开邮箱完成验证，再使用原密码登录。
+            </p>
+          )}
+          {verified === "1" && (
+            <p className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] px-4 py-3 text-sm leading-6 text-accent" role="status">
+              邮箱验证完成，请使用原密码登录。无需重新注册。
+            </p>
+          )}
+          {verification === "required" && (
+            <section className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] p-4 text-sm leading-6 text-muted" aria-labelledby="verification-title" role="alert">
+              <p id="verification-title" className="font-semibold text-text">
+                账号已经存在，无需重新注册
+              </p>
+              <p className="mt-1">请重新发送验证邮件，完成验证后使用原密码登录。</p>
+              <form action={resendVerificationEmail} className="mt-4 grid gap-3">
+                <label className="label">
+                  已注册的白名单邮箱
+                  <input className="field" name="email" type="email" autoComplete="email" required />
+                </label>
+                <button className="button-secondary h-11 w-full" type="submit">
+                  重新发送验证邮件
+                </button>
+              </form>
+            </section>
+          )}
 
           {!configured && (
             <div className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] p-4 text-sm leading-6 text-muted">
@@ -88,12 +127,17 @@ export default async function LoginPage({
             <button className="button-primary mt-2 h-[54px] w-full text-base" type="submit">进入我们的星球</button>
           </form>
           {configured && (
-            <p className="mt-5 text-center text-sm text-muted">
-              第一次来？
-              <Link href="/register" className="ml-1 font-semibold text-accent">
-                使用白名单邮箱注册
+            <div className="mt-5 grid gap-2 text-center text-sm text-muted">
+              <p>
+                第一次来？
+                <Link href="/register" className="ml-1 font-semibold text-accent">
+                  使用白名单邮箱注册
+                </Link>
+              </p>
+              <Link href="/login?verification=required" className="font-semibold text-accent">
+                已经注册但没有收到验证邮件？
               </Link>
-            </p>
+            </div>
           )}
           <p className="mt-7 text-center text-xs text-muted">登录即表示：今天也要好好记录生活。</p>
         </div>
