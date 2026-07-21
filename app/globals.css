@@ -1567,17 +1567,27 @@ button, a { -webkit-tap-highlight-color: transparent; }
   display: grid;
   gap: .75rem;
 }
-.follow-up-item {
+.follow-up-node {
   display: grid;
   grid-template-columns: 2.35rem minmax(0, 1fr);
   gap: .75rem;
   align-items: start;
+  position: relative;
+}
+.follow-up-node.is-root {
   border: 1px solid var(--color-line);
   border-radius: 1rem;
   background: color-mix(in srgb, var(--color-surface) 72%, var(--color-control));
   padding: .95rem;
 }
-.follow-up-item > span {
+.follow-up-node.is-reply {
+  grid-template-columns: 1.85rem minmax(0, 1fr);
+  border-left: 2px solid var(--color-line);
+  border-radius: .85rem;
+  background: var(--color-control);
+  padding: .7rem;
+}
+.follow-up-avatar {
   display: grid;
   width: 2.35rem;
   height: 2.35rem;
@@ -1587,6 +1597,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
   color: var(--color-on-accent);
   font-size: .8rem;
   font-weight: 800;
+}
+.follow-up-node.is-reply .follow-up-avatar {
+  width: 1.85rem;
+  height: 1.85rem;
+  background: var(--color-pink-soft);
+  color: var(--color-pink);
+  font-size: .72rem;
 }
 .follow-up-meta {
   display: flex;
@@ -1599,7 +1616,11 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .follow-up-meta b {
   color: var(--color-text);
 }
-.follow-up-item p {
+.follow-up-parent {
+  color: var(--color-accent-strong);
+  font-size: .72rem;
+}
+.follow-up-node p {
   margin-top: .35rem;
   white-space: pre-wrap;
   color: var(--color-text);
@@ -1617,35 +1638,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   padding: 0;
   font-size: .76rem;
   font-weight: 750;
-}
-.follow-up-replies {
-  display: grid;
-  gap: .55rem;
-  margin-top: .75rem;
-  border-left: 2px solid var(--color-line);
-  padding-left: .75rem;
-}
-.follow-up-reply {
-  display: grid;
-  grid-template-columns: 1.85rem minmax(0, 1fr);
-  gap: .55rem;
-  border-radius: .85rem;
-  background: var(--color-control);
-  padding: .7rem;
-}
-.follow-up-reply > span {
-  display: grid;
-  width: 1.85rem;
-  height: 1.85rem;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--color-pink-soft);
-  color: var(--color-pink);
-  font-size: .72rem;
-  font-weight: 800;
-}
-.follow-up-reply p {
-  font-size: .86rem;
 }
 .follow-up-reply-form {
   display: grid;

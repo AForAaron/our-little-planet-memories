@@ -260,6 +260,18 @@ export const DEMO_ENTRY_FOLLOW_UPS: EntryFollowUp[] = [
         created_at: new Date(now - 38 * 60 * 1000).toISOString(),
         updated_at: new Date(now - 38 * 60 * 1000).toISOString(),
         profile: { display_name: "张张", avatar_url: null, color: null },
+        replies: [
+          {
+            id: "demo-follow-up-reply-2",
+            entry_id: "demo-1",
+            author_id: "demo-partner",
+            parent_id: "demo-follow-up-reply-1",
+            body: "那就一直慢慢说，想到什么都回来留一句。",
+            created_at: new Date(now - 31 * 60 * 1000).toISOString(),
+            updated_at: new Date(now - 31 * 60 * 1000).toISOString(),
+            profile: { display_name: "沈沈", avatar_url: null, color: null },
+          },
+        ],
       },
     ],
   },

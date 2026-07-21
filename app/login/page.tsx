@@ -113,12 +113,8 @@ export default async function LoginPage({
               <p id="verification-code-title" className="font-semibold text-text">
                 输入邮箱验证码
               </p>
-              <p className="mt-1">无需重新注册。请填写已注册邮箱和邮件中的 6 位数字。</p>
+              <p className="mt-1">无需重新注册。请填写邮件中的 6 位数字。</p>
               <form action={verifyEmailCode} className="mt-4 grid gap-3">
-                <label className="label">
-                  已注册的白名单邮箱
-                  <input className="field" name="email" type="email" autoComplete="email" required />
-                </label>
                 <label className="label">
                   6 位验证码
                   <input
