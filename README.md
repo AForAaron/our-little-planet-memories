@@ -20,6 +20,14 @@
 
 缺少环境变量时不会自动降级为半连接状态；`live` 配置不完整会直接报错。
 
+## 帖子贴画画板
+
+每个回忆详情页都有“装饰这页”入口，支持 24 枚内置贴纸、自由简笔画、整笔橡皮、拖动、缩放、旋转、层级、透明度和撤销/重做。贴画按标题、媒体、正文、追评、聊天及足迹等内容锚点保存，页面换行或宽度变化后会重新定位；双方的正式数据约 15 秒同步一次，同一元素使用 revision 乐观锁防止静默覆盖。
+
+- `demo`：只保留当前页面会话，刷新后重置。
+- `live`：需要先应用包含 `entry_canvas_items` 的 `0007` migration；每帖最多 150 项，每笔最多 2,000 个点且 payload 不超过 64KB。
+- 贴纸只允许仓库内置资源，不接受外部 URL、SVG 或 HTML。
+
 ## 本地启动
 
 要求 Node.js 22 或更新版本。
@@ -114,6 +122,7 @@ components/                  网站共享组件
 features/import-review/      仅本机启用的审核功能
 lib/auth/                    Neon Auth 服务端封装与双邮箱守卫
 lib/config/                  demo/live 与环境变量验证
+lib/canvas/                  画板坐标、校验与 API 错误契约
 lib/data/                    演示数据和 Neon 数据仓库
 lib/db/                      Drizzle client 与 public schema
 lib/r2/                      私有对象上传、读取签名和删除
@@ -121,6 +130,7 @@ scripts/import/              本地清洗、验证和发布脚本
 docs/                        数据审计、计划与旧原型归档
 drizzle/                     正式应用 migration
 drizzle-auth-introspection/  Neon Auth 只读 introspection（生成后）
+public/stickers/             内置透明贴纸资源
 ```
 
 私密目录：
@@ -137,7 +147,7 @@ Web-private/
 
 ## 当前云端检查点
 
-源码、正式 migrations、白名单注册、首次设置、事件详情、时间模块、日记、愿望、观影、探店、多媒体签名上传及审核改造已经就绪。尚需用户创建 Neon/Auth/R2 并填写 `.env.local`，才能执行 introspection、migration 和真实凭据验收。
+源码、正式 migrations、白名单注册、首次设置、事件详情、帖子贴画画板、时间模块、日记、愿望、观影、探店、多媒体签名上传及审核改造已经就绪。尚需用户创建 Neon/Auth/R2 并填写 `.env.local`，才能执行 introspection、migration 和真实凭据验收。
 
 地图会在用户明确点击后才向 OpenStreetMap 请求瓦片；坐标选择器在主服务不可用时才会使用 CARTO 作为备用底图。
 
@@ -146,5 +156,6 @@ Web-private/
 ```bash
 pnpm data:verify
 pnpm typecheck
+pnpm test
 pnpm build
 ```

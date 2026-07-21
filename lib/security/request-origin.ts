@@ -2,6 +2,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 import { isLiveMode } from "@/lib/config/backend";
+import { isTrustedSameOriginRequest } from "@/lib/security/request-origin-policy";
 
 /**
  * Cookie authentication already uses SameSite=Strict. This check is a second
@@ -10,17 +11,11 @@ import { isLiveMode } from "@/lib/config/backend";
 export function rejectCrossOriginRequest(request: Request) {
   if (!isLiveMode()) return null;
 
-  const origin = request.headers.get("origin");
-  const fetchSite = request.headers.get("sec-fetch-site");
-  if (!origin || fetchSite === "cross-site") return forbidden();
-
-  try {
-    if (new URL(origin).origin !== new URL(request.url).origin) {
-      return forbidden();
-    }
-  } catch {
-    return forbidden();
-  }
+  if (!isTrustedSameOriginRequest({
+    requestUrl: request.url,
+    origin: request.headers.get("origin"),
+    fetchSite: request.headers.get("sec-fetch-site"),
+  })) return forbidden();
 
   return null;
 }

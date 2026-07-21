@@ -12,6 +12,45 @@ export const ENTRY_CATEGORIES = [
 export type EntryCategory = (typeof ENTRY_CATEGORIES)[number];
 export type MediaType = "image" | "video" | "audio";
 
+export const CANVAS_ITEM_KINDS = ["sticker", "stroke"] as const;
+export type CanvasItemKind = (typeof CANVAS_ITEM_KINDS)[number];
+
+export type CanvasPoint = {
+  x: number;
+  y: number;
+  pressure?: number;
+};
+
+export type StickerPayload = {
+  assetKey: string;
+};
+
+export type StrokePayload = {
+  colorKey: string;
+  width: number;
+  points: CanvasPoint[];
+};
+
+export type CanvasItemPayload = StickerPayload | StrokePayload;
+
+export type EntryCanvasItem = {
+  id: string;
+  entry_id: string;
+  author_id: string;
+  kind: CanvasItemKind;
+  anchor_key: string;
+  x_ratio: number;
+  y_ratio: number;
+  width_ratio: number;
+  rotation: number;
+  opacity: number;
+  z_index: number;
+  payload: CanvasItemPayload;
+  revision: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Profile = {
   id: string;
   display_name: string;

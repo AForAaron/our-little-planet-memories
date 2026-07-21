@@ -7,6 +7,7 @@ import {
   doublePrecision,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   smallint,
@@ -143,6 +144,75 @@ export const entries = pgTable(
     check(
       "entries_rating_check",
       sql`${table.rating} is null or (${table.rating} between 1 and 5)`,
+    ),
+  ],
+);
+
+export const entryCanvasItems = pgTable(
+  "entry_canvas_items",
+  {
+    id: uuid("id").primaryKey(),
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    anchorKey: text("anchor_key").notNull(),
+    xRatio: doublePrecision("x_ratio").notNull(),
+    yRatio: doublePrecision("y_ratio").notNull(),
+    widthRatio: doublePrecision("width_ratio").notNull(),
+    rotation: doublePrecision("rotation").notNull().default(0),
+    opacity: doublePrecision("opacity").notNull().default(1),
+    zIndex: integer("z_index").notNull().default(0),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    revision: integer("revision").notNull().default(1),
+    createdAt,
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("entry_canvas_items_entry_z_index_idx").on(
+      table.entryId,
+      table.zIndex,
+    ),
+    check(
+      "entry_canvas_items_kind_check",
+      sql`${table.kind} in ('sticker', 'stroke')`,
+    ),
+    check(
+      "entry_canvas_items_anchor_key_check",
+      sql`char_length(${table.anchorKey}) between 1 and 128`,
+    ),
+    check(
+      "entry_canvas_items_x_ratio_check",
+      sql`${table.xRatio} between -0.5 and 1.5`,
+    ),
+    check(
+      "entry_canvas_items_y_ratio_check",
+      sql`${table.yRatio} between -0.5 and 1.5`,
+    ),
+    check(
+      "entry_canvas_items_width_ratio_check",
+      sql`${table.widthRatio} between 0.03 and 1`,
+    ),
+    check(
+      "entry_canvas_items_rotation_check",
+      sql`${table.rotation} between -360 and 360`,
+    ),
+    check(
+      "entry_canvas_items_opacity_check",
+      sql`${table.opacity} between 0.1 and 1`,
+    ),
+    check(
+      "entry_canvas_items_z_index_check",
+      sql`${table.zIndex} between -10000 and 10000`,
+    ),
+    check(
+      "entry_canvas_items_revision_check",
+      sql`${table.revision} > 0`,
     ),
   ],
 );
