@@ -2,7 +2,11 @@ import { LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { BrandIcon } from "@/components/brand-icon";
 import { PasswordField } from "@/components/password-field";
-import { resendVerificationEmail, signIn } from "./actions";
+import {
+  resendVerificationEmail,
+  signIn,
+  verifyEmailCode,
+} from "./actions";
 import { isLiveMode, isNeonConfigured } from "@/lib/config/backend";
 
 export const metadata = { title: "回到小星球" };
@@ -28,7 +32,7 @@ export default async function LoginPage({
   const configured = isLiveMode() && isNeonConfigured();
 
   return (
-    <main className="grid min-h-screen overflow-hidden bg-[var(--color-bg)] md:grid-cols-[1.05fr_1fr]">
+    <main className="grid min-h-screen overflow-x-hidden bg-[var(--color-bg)] md:grid-cols-[1.05fr_1fr]">
       <section className="hero cosmos-panel relative hidden min-h-screen flex-col justify-between overflow-hidden p-16 text-[var(--color-on-accent)] md:flex lg:p-[72px]">
         <BrandIcon className="absolute left-[61%] top-[48%] h-[300px] w-[420px] -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_26px_32px_rgb(110_70_50_/_24%)]" variant="hero" />
         <div className="relative flex items-center gap-3">
@@ -74,12 +78,12 @@ export default async function LoginPage({
           )}
           {registered === "1" && (
             <p className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] px-4 py-3 text-sm text-accent">
-              注册完成，请先验证邮箱，再使用新账号登录。
+              注册完成。请输入邮件中的 6 位验证码，再使用新账号登录。
             </p>
           )}
           {verificationSent === "1" && (
             <p className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] px-4 py-3 text-sm leading-6 text-accent" role="status">
-              验证邮件已发送。请打开邮箱完成验证，再使用原密码登录。
+              验证码已发送，有效期为 10 分钟。请在下方输入邮件中的 6 位数字。
             </p>
           )}
           {verified === "1" && (
@@ -104,6 +108,44 @@ export default async function LoginPage({
               </form>
             </section>
           )}
+          {verification === "code" && (
+            <section className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] p-4 text-sm leading-6 text-muted" aria-labelledby="verification-code-title">
+              <p id="verification-code-title" className="font-semibold text-text">
+                输入邮箱验证码
+              </p>
+              <p className="mt-1">无需重新注册。请填写已注册邮箱和邮件中的 6 位数字。</p>
+              <form action={verifyEmailCode} className="mt-4 grid gap-3">
+                <label className="label">
+                  已注册的白名单邮箱
+                  <input className="field" name="email" type="email" autoComplete="email" required />
+                </label>
+                <label className="label">
+                  6 位验证码
+                  <input
+                    className="field"
+                    name="otp"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    required
+                  />
+                </label>
+                <button className="button-primary h-11 w-full" type="submit">
+                  完成邮箱验证
+                </button>
+              </form>
+              <div className="mt-3 grid gap-2 text-center">
+                <Link href="/login?verification=required" className="font-semibold text-accent">
+                  验证码过期或没有收到？重新发送
+                </Link>
+                <Link href="/login" className="font-semibold text-muted hover:text-text">
+                  返回密码登录
+                </Link>
+              </div>
+            </section>
+          )}
 
           {!configured && (
             <div className="mt-5 rounded-soft border border-line bg-[var(--color-surface-soft)] p-4 text-sm leading-6 text-muted">
@@ -113,31 +155,35 @@ export default async function LoginPage({
             </div>
           )}
 
-          <form action={signIn} className="mt-7 grid gap-5">
-            <label className="label">
-              邮箱
-              <input className="field" name="email" type="email" autoComplete="email" placeholder="you@ours.space" required />
-            </label>
-            <PasswordField
-              name="password"
-              label="密码"
-              autoComplete="current-password"
-              placeholder="只有你们知道的暗号"
-            />
-            <button className="button-primary mt-2 h-[54px] w-full text-base" type="submit">进入我们的星球</button>
-          </form>
-          {configured && (
-            <div className="mt-5 grid gap-2 text-center text-sm text-muted">
-              <p>
-                第一次来？
-                <Link href="/register" className="ml-1 font-semibold text-accent">
-                  使用白名单邮箱注册
-                </Link>
-              </p>
-              <Link href="/login?verification=required" className="font-semibold text-accent">
-                已经注册但没有收到验证邮件？
-              </Link>
-            </div>
+          {verification !== "code" && (
+            <>
+              <form action={signIn} className="mt-7 grid gap-5">
+                <label className="label">
+                  邮箱
+                  <input className="field" name="email" type="email" autoComplete="email" placeholder="you@ours.space" required />
+                </label>
+                <PasswordField
+                  name="password"
+                  label="密码"
+                  autoComplete="current-password"
+                  placeholder="只有你们知道的暗号"
+                />
+                <button className="button-primary mt-2 h-[54px] w-full text-base" type="submit">进入我们的星球</button>
+              </form>
+              {configured && (
+                <div className="mt-5 grid gap-2 text-center text-sm text-muted">
+                  <p>
+                    第一次来？
+                    <Link href="/register" className="ml-1 font-semibold text-accent">
+                      使用白名单邮箱注册
+                    </Link>
+                  </p>
+                  <Link href="/login?verification=required" className="font-semibold text-accent">
+                    已经注册但没有收到验证邮件？
+                  </Link>
+                </div>
+              )}
+            </>
           )}
           <p className="mt-7 text-center text-xs text-muted">登录即表示：今天也要好好记录生活。</p>
         </div>
