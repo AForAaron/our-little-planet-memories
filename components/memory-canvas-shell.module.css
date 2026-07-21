@@ -1,0 +1,551 @@
+.shell {
+  position: relative;
+  min-width: 0;
+}
+
+.surface {
+  position: relative;
+  min-width: 0;
+  isolation: isolate;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.launcher {
+  position: absolute;
+  top: -3.55rem;
+  right: 0;
+  z-index: 42;
+  display: inline-flex;
+  min-height: 2.45rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  color: var(--color-accent-strong);
+  box-shadow: var(--shadow);
+  padding: 0.58rem 0.9rem;
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 750;
+  transition: transform var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.launcher:hover {
+  transform: translateY(-1px);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lift);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.overlayEditing {
+  pointer-events: auto;
+  cursor: default;
+  touch-action: pan-y;
+}
+
+.overlayEditing::before {
+  position: absolute;
+  inset: -0.4rem;
+  z-index: -1;
+  border: 1px dashed color-mix(in srgb, var(--color-accent) 40%, transparent);
+  border-radius: 1.4rem;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-accent) 28%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 18px 18px;
+  content: "";
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.overlayEditing[data-tool="sticker"] {
+  cursor: copy;
+}
+
+.overlayEditing[data-tool="brush"] {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.overlayEditing[data-tool="eraser"] {
+  cursor: cell;
+}
+
+.overlayHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.overlaySyncing {
+  cursor: progress;
+  pointer-events: none;
+}
+
+.stickerItem {
+  position: absolute;
+  display: block;
+  border: 0;
+  border-radius: 0.75rem;
+  transform-origin: center;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+.overlayEditing .stickerItem {
+  pointer-events: none;
+  touch-action: none;
+}
+
+.stickerHitTarget {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  cursor: grab;
+  padding: 0;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.overlayEditing[data-tool="select"] .stickerHitTarget,
+.overlayEditing[data-tool="eraser"] .stickerHitTarget {
+  pointer-events: auto;
+}
+
+.stickerHitTarget:active {
+  cursor: grabbing;
+}
+
+.stickerSprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-image: url("/stickers/planet-sticker-sheet.png");
+  background-repeat: no-repeat;
+  background-position: var(--sticker-x) var(--sticker-y);
+  background-size: 600% 400%;
+  filter: drop-shadow(0 5px 8px rgb(63 80 87 / 12%));
+  pointer-events: none;
+}
+
+.selectedSticker::after {
+  position: absolute;
+  inset: -0.3rem;
+  border: 2px dashed color-mix(in srgb, var(--color-accent-strong) 76%, white);
+  border-radius: 0.85rem;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-surface) 70%, transparent);
+  content: "";
+  pointer-events: none;
+}
+
+.transformHandle {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border: 2px solid var(--color-surface);
+  border-radius: 999px;
+  background: var(--color-accent-strong);
+  color: var(--color-on-accent);
+  box-shadow: 0 3px 9px rgb(63 80 87 / 26%);
+  cursor: grab;
+  padding: 0;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.transformHandle:active {
+  cursor: grabbing;
+}
+
+.rotateHandle {
+  top: -2.15rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.resizeHandle {
+  right: -0.75rem;
+  bottom: -0.75rem;
+  cursor: nwse-resize;
+}
+
+.resizeHandle::after {
+  width: 0.52rem;
+  height: 0.52rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  content: "";
+}
+
+.strokeLayer,
+.draftLayer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.draftLayer {
+  z-index: 2147483000;
+}
+
+.interactiveStroke {
+  pointer-events: none;
+  cursor: pointer;
+}
+
+.overlayEditing[data-tool="select"] .interactiveStroke,
+.overlayEditing[data-tool="eraser"] .interactiveStroke {
+  pointer-events: stroke;
+}
+
+.overlayEditing[data-tool="eraser"] .interactiveStroke {
+  cursor: cell;
+}
+
+.strokeSelection {
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+.toolbar {
+  position: fixed;
+  top: 50%;
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 70;
+  display: grid;
+  width: min(19.5rem, calc(100vw - 2rem));
+  max-height: min(42rem, calc(100vh - 2rem));
+  gap: 0.72rem;
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-line));
+  border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  box-shadow: var(--shadow-lift);
+  padding: 1rem;
+  backdrop-filter: blur(18px);
+  transform: translateY(-50%);
+  overscroll-behavior: contain;
+}
+
+.toolbarSyncing {
+  cursor: progress;
+}
+
+.toolbarSyncing > :not(.notice) {
+  opacity: 0.56;
+  pointer-events: none;
+}
+
+.toolbarHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.toolbarHeader > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.16rem;
+}
+
+.toolbarHeader b {
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+}
+
+.toolbarHeader span {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.toolbarHeader > button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: 0.72rem;
+  background: var(--color-control);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.notice {
+  margin: 0;
+  border-radius: 0.75rem;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.noticeError {
+  color: var(--color-danger);
+}
+
+.toolRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.toolRow > button {
+  display: grid;
+  min-width: 0;
+  min-height: 3.5rem;
+  place-items: center;
+  gap: 0.24rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.85rem;
+  background: var(--color-control);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.45rem 0.25rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  transition: border-color var(--transition), color var(--transition), background var(--transition), transform var(--transition);
+}
+
+.toolRow > button:hover {
+  transform: translateY(-1px);
+  color: var(--color-text);
+}
+
+.toolRow > button.activeTool {
+  border-color: color-mix(in srgb, var(--color-accent) 56%, var(--color-line));
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.historyRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.historyRow button,
+.selectionButtons button,
+.resetDemo {
+  display: inline-flex;
+  min-height: 2.15rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.72rem;
+  background: var(--color-control);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.4rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.historyRow button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.paletteSection,
+.selectionPanel {
+  display: grid;
+  gap: 0.65rem;
+  border-top: 1px solid var(--color-line);
+  padding-top: 0.75rem;
+}
+
+.sectionLabel {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.stickerGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.32rem;
+}
+
+.stickerGrid button {
+  aspect-ratio: 1;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--color-control) 78%, transparent);
+  cursor: pointer;
+  padding: 0.16rem;
+  transition: transform var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.stickerGrid button:hover {
+  transform: scale(1.08);
+}
+
+.stickerGrid button.activeStickerChoice {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.colorRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.52rem;
+}
+
+.colorRow button {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 3px solid var(--color-surface);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--color-line);
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.colorRow button:hover {
+  transform: scale(1.08);
+}
+
+.colorRow button.activeColor {
+  box-shadow: 0 0 0 2px var(--color-text), 0 0 0 4px var(--color-surface);
+  transform: scale(1.08);
+}
+
+.widthControl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.widthControl input {
+  width: 100%;
+  accent-color: var(--color-accent);
+}
+
+.widthControl output {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-align: right;
+}
+
+.helperText {
+  margin: 0;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-text-muted);
+  padding-top: 0.72rem;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.selectionButtons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.selectionButtons button.deleteButton,
+.resetDemo {
+  color: var(--color-danger);
+}
+
+.resetDemo {
+  width: 100%;
+  background: var(--color-accent-soft);
+}
+
+@media (max-width: 760px) {
+  .launcher {
+    top: -3.35rem;
+    min-height: 2.25rem;
+    padding: 0.5rem 0.72rem;
+  }
+
+  .toolbar {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: min(52vh, 31rem);
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 1.35rem 1.35rem 0 0;
+    padding: 0.9rem max(0.9rem, env(safe-area-inset-right)) max(0.9rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
+    transform: none;
+  }
+
+  .toolbar::before {
+    width: 2.4rem;
+    height: 0.25rem;
+    margin: -0.35rem auto 0;
+    border-radius: 999px;
+    background: var(--color-line);
+    content: "";
+  }
+
+  .toolRow > button {
+    min-height: 3.25rem;
+  }
+
+  .stickerGrid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .stickerGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .toolbarHeader b {
+    font-size: 0.95rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launcher,
+  .toolRow > button,
+  .stickerGrid button,
+  .colorRow button {
+    transition: none;
+  }
+}

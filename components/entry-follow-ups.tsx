@@ -163,7 +163,11 @@ export function EntryFollowUps({
   }
 
   return (
-    <section className="follow-up-panel">
+    <section
+      id="follow-ups"
+      className="follow-up-panel"
+      data-canvas-anchor="follow-ups"
+    >
       <div className="follow-up-head">
         <div>
           <h2>追评</h2>
@@ -202,6 +206,7 @@ export function EntryFollowUps({
           visibleEvents.map(({ item, depth, parent }) => (
             <article
               key={item.id}
+              data-canvas-anchor={`follow-up:${item.id}`}
               className={depth ? "follow-up-node is-reply" : "follow-up-node is-root"}
               style={{ marginInlineStart: `${Math.min(depth, 4) * 12}px` }}
             >

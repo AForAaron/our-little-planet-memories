@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-default-type=module --experimental-strip-types --test tests/**/*.test.mts tests/*.test.mts",
     "test:security": "node --experimental-default-type=module --test tests/security/internal-path.test.mts",
     "db:auth:pull": "drizzle-kit pull --config=drizzle.auth.config.ts",
     "db:generate": "drizzle-kit generate",

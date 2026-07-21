@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { ChatBubbleThread } from "@/components/chat-bubble-thread";
 import { EntryAttentionMarker } from "@/components/entry-attention-marker";
 import { EntryFollowUps } from "@/components/entry-follow-ups";
+import { MemoryCanvasShell } from "@/components/memory-canvas-shell";
 import { PageFootprints } from "@/components/page-footprints";
+import { getEntryCanvasItems } from "@/lib/data/entry-canvas";
 import { getEntryFollowUps } from "@/lib/data/entry-follow-ups";
 import { getMemoryDetail } from "@/lib/data/memories";
 import type { Media } from "@/lib/database.types";
@@ -93,11 +95,12 @@ export default async function MemoryDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [detail, followUps] = await Promise.all([
-    getMemoryDetail(id),
-    getEntryFollowUps(id),
-  ]);
+  const detail = await getMemoryDetail(id);
   if (!detail?.entry) notFound();
+  const [followUps, canvasItems] = await Promise.all([
+    getEntryFollowUps(id),
+    getEntryCanvasItems(id),
+  ]);
   const { entry, chapter, place, messages } = detail;
   const backTarget = backTargetForCategory(entry.category);
   const visibleMedia = entry.media?.filter((item) => item.display_url) ?? [];
@@ -109,8 +112,13 @@ export default async function MemoryDetailPage({
       <Link href={backTarget.href} className="mb-6 inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-[var(--color-accent-strong)]">
         <ArrowLeft size={17} /> {backTarget.label}
       </Link>
-      <article>
-        <div className="mb-8">
+      <MemoryCanvasShell
+        entryId={entry.id}
+        initialItems={canvasItems}
+        isDemo={detail.isDemo}
+      >
+        <article>
+          <div className="mb-8" data-canvas-anchor="header">
           <div className="mb-4 flex flex-wrap items-center gap-2.5">
             <span className="rounded-full bg-[var(--color-accent-soft)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-accent-strong)]">{CATEGORY_LABELS[entry.category] ?? entry.category}</span>
             {chapter && <span className="rounded-full bg-[var(--color-control)] px-3.5 py-1.5 text-xs text-muted">{chapter.title}</span>}
@@ -139,6 +147,7 @@ export default async function MemoryDetailPage({
               {visibleMedia.map((item, index) => (
                 <figure
                   key={item.id}
+                  data-canvas-anchor={`media:${item.id}`}
                   className={`surface overflow-hidden rounded-[20px] ${index === 0 ? "sm:col-span-2" : ""}`}
                 >
                   <div className={index === 0 ? "h-[18rem] sm:h-[420px]" : "h-[16rem]"}>
@@ -155,7 +164,10 @@ export default async function MemoryDetailPage({
           </section>
         ) : null}
 
-        <section className="surface rounded-[24px] p-6 sm:p-[34px]">
+        <section
+          className="surface rounded-[24px] p-6 sm:p-[34px]"
+          data-canvas-anchor="body"
+        >
           <p className="whitespace-pre-wrap text-[15.5px] leading-[2.05] text-text">
             {entry.body || "这段回忆还没有写下说明。"}
           </p>
@@ -188,7 +200,7 @@ export default async function MemoryDetailPage({
         </div>
 
         {messages.length ? (
-          <section className="mt-8">
+          <section className="mt-8" data-canvas-anchor="chat">
             <div className="rounded-[24px] bg-[var(--color-surface-soft)] p-5 shadow-[inset_0_2px_6px_rgb(0_0_0_/_6%)] sm:p-7">
               <h2 className="mb-6 flex items-center justify-center gap-2 text-center font-heading text-base font-semibold text-text">
                 <MessageCircle size={18} /> 当天的聊天记录
@@ -202,10 +214,11 @@ export default async function MemoryDetailPage({
           </section>
         ) : null}
 
-        <div className="mt-8">
+        <div className="mt-8" data-canvas-anchor="footprints">
           <PageFootprints pagePath={pagePath} title="这段回忆的足迹" />
         </div>
-      </article>
+        </article>
+      </MemoryCanvasShell>
     </main>
   );
 }
