@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ensureProfile } from "@/lib/auth/profile";
 import { getAuth } from "@/lib/auth/server";
@@ -20,6 +21,32 @@ type EmailOtpVerificationClient = {
     otp: string;
   }): Promise<{ error?: unknown }>;
 };
+
+const EMAIL_VERIFICATION_COOKIE = "planet_email_verification";
+const EMAIL_VERIFICATION_MAX_AGE_SECONDS = 10 * 60;
+
+async function rememberVerificationEmail(email: string) {
+  const cookieStore = await cookies();
+  cookieStore.set(EMAIL_VERIFICATION_COOKIE, email, {
+    httpOnly: true,
+    maxAge: EMAIL_VERIFICATION_MAX_AGE_SECONDS,
+    path: "/",
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+  });
+}
+
+async function getRememberedVerificationEmail() {
+  const cookieStore = await cookies();
+  return normalizeEmailAddress(
+    cookieStore.get(EMAIL_VERIFICATION_COOKIE)?.value,
+  );
+}
+
+async function clearRememberedVerificationEmail() {
+  const cookieStore = await cookies();
+  cookieStore.delete(EMAIL_VERIFICATION_COOKIE);
+}
 
 function loginError(message: string): never {
   redirect(`/login?error=${encodeURIComponent(message)}`);
@@ -63,6 +90,7 @@ export async function signIn(formData: FormData) {
   // so initialize the one-time profile from the sign-in response directly.
   if (!data?.user) loginError("登录状态未能完成初始化，请重试。");
   if (!emailIsVerified(data.user)) {
+    await rememberVerificationEmail(email);
     redirect("/login?verification=required");
   }
   await ensureProfile(data.user);
@@ -73,6 +101,7 @@ export async function signOut() {
   if (isLiveMode() && isNeonConfigured()) {
     await getAuth().signOut();
   }
+  await clearRememberedVerificationEmail();
   redirect("/login");
 }
 
@@ -90,6 +119,7 @@ export async function resendVerificationEmail(formData: FormData) {
     email,
   });
   if (error) verificationError("验证邮件发送失败，请稍后重试");
+  await rememberVerificationEmail(email);
   redirect("/login?verification=code&verificationSent=1");
 }
 
@@ -98,10 +128,10 @@ export async function verifyEmailCode(formData: FormData) {
     verificationCodeError("Neon Auth 尚未完成配置");
   }
 
-  const email = normalizeEmailAddress(formData.get("email"));
+  const email = await getRememberedVerificationEmail();
   const otp = normalizeEmailVerificationCode(formData.get("otp"));
   if (!email || !getAllowlistEmails().includes(email)) {
-    verificationCodeError("请填写已经注册的白名单邮箱");
+    verificationCodeError("验证已过期，请重新发送验证码");
   }
   if (!otp) {
     verificationCodeError("请输入邮件中的 6 位数字验证码");
@@ -119,6 +149,7 @@ export async function verifyEmailCode(formData: FormData) {
   if (error) {
     verificationCodeError("验证码无效或已过期，请重新发送后再试");
   }
+  await clearRememberedVerificationEmail();
   redirect("/login?verified=1");
 }
 
@@ -138,5 +169,6 @@ export async function signUp(formData: FormData) {
   if (error) {
     registerError("注册未完成；如果邮箱已注册，请返回登录并重新发送验证邮件");
   }
+  await rememberVerificationEmail(email);
   redirect("/login?registered=1&verification=code");
 }

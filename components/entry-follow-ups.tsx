@@ -2,7 +2,7 @@
 
 import { MessageSquarePlus } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { EntryFollowUp } from "@/lib/database.types";
 import { readApiJson } from "@/lib/http/read-api-json";
 
@@ -35,6 +35,39 @@ function formatFullTime(value: string) {
   }).format(new Date(value));
 }
 
+type FlattenedFollowUp = {
+  item: EntryFollowUp;
+  depth: number;
+  parent: EntryFollowUp | null;
+};
+
+function flattenFollowUps(
+  items: EntryFollowUp[],
+  depth = 0,
+  parent: EntryFollowUp | null = null,
+  result: FlattenedFollowUp[] = [],
+) {
+  for (const item of items) {
+    result.push({ item, depth, parent });
+    flattenFollowUps(item.replies ?? [], depth + 1, item, result);
+  }
+  return result;
+}
+
+function appendReply(
+  items: EntryFollowUp[],
+  parentId: string,
+  reply: EntryFollowUp,
+): EntryFollowUp[] {
+  return items.map((item) => {
+    if (item.id === parentId) {
+      return { ...item, replies: [...(item.replies ?? []), reply] };
+    }
+    if (!item.replies?.length) return item;
+    return { ...item, replies: appendReply(item.replies, parentId, reply) };
+  });
+}
+
 export function EntryFollowUps({
   entryId,
   isDemo = false,
@@ -55,6 +88,7 @@ export function EntryFollowUps({
   const [replyBody, setReplyBody] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const visibleEvents = useMemo(() => flattenFollowUps(events), [events]);
 
   function preloadComposer() {
     void loadFollowUpComposer();
@@ -87,13 +121,7 @@ export function EntryFollowUps({
 
   function insertCreated(item: EntryFollowUp) {
     if (item.parent_id) {
-      setEvents((current) =>
-        current.map((event) =>
-          event.id === item.parent_id
-            ? { ...event, replies: [...(event.replies ?? []), item] }
-            : event,
-        ),
-      );
+      setEvents((current) => appendReply(current, item.parent_id!, item));
     } else {
       setEvents((current) => [{ ...item, replies: [] }, ...current]);
     }
@@ -141,7 +169,7 @@ export function EntryFollowUps({
           <h2>追评</h2>
           <p>过了一段时间以后，再把新的想法和感受补在这里。</p>
         </div>
-        <span>{events.length} 条</span>
+        <span>{visibleEvents.length} 条</span>
       </div>
 
       {isComposerOpen ? (
@@ -170,15 +198,20 @@ export function EntryFollowUps({
       )}
 
       <div className="follow-up-list">
-        {events.length ? (
-          events.map((item) => (
-            <article key={item.id} className="follow-up-item">
-              <span aria-hidden="true">
+        {visibleEvents.length ? (
+          visibleEvents.map(({ item, depth, parent }) => (
+            <article
+              key={item.id}
+              className={depth ? "follow-up-node is-reply" : "follow-up-node is-root"}
+              style={{ marginInlineStart: `${Math.min(depth, 4) * 12}px` }}
+            >
+              <span className="follow-up-avatar" aria-hidden="true">
                 {item.profile?.display_name?.slice(0, 1) ?? "♡"}
               </span>
               <div>
                 <div className="follow-up-meta">
                   <b>{item.profile?.display_name ?? "我们"}</b>
+                  {parent && <span className="follow-up-parent">回复 {parent.profile?.display_name ?? "这句话"}</span>}
                   <time title={formatFullTime(item.created_at)}>
                     {formatRelative(item.created_at)} · {formatFullTime(item.created_at)}
                   </time>
@@ -191,29 +224,9 @@ export function EntryFollowUps({
                     onPointerEnter={preloadComposer}
                     onFocus={preloadComposer}
                   >
-                    回复这条追评
+                    回复这句话
                   </button>
                 </div>
-                {item.replies?.length ? (
-                  <div className="follow-up-replies">
-                    {item.replies.map((reply) => (
-                      <article key={reply.id} className="follow-up-reply">
-                        <span aria-hidden="true">
-                          {reply.profile?.display_name?.slice(0, 1) ?? "♡"}
-                        </span>
-                        <div>
-                          <div className="follow-up-meta">
-                            <b>{reply.profile?.display_name ?? "我们"}</b>
-                            <time title={formatFullTime(reply.created_at)}>
-                              {formatRelative(reply.created_at)} · {formatFullTime(reply.created_at)}
-                            </time>
-                          </div>
-                          <p>{reply.body}</p>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : null}
                 {replyTargetId === item.id && (
                   <FollowUpComposer
                     mode="reply"
@@ -232,7 +245,7 @@ export function EntryFollowUps({
         ) : (
           <div className="follow-up-empty">
             <MessageSquarePlus size={22} />
-            <span>还没有追评。等某天再想起这里，可以回来补一句。</span>
+            <span>还没有追评。等某天再想起这里，可以回来补一句，再把话慢慢聊下去。</span>
           </div>
         )}
       </div>

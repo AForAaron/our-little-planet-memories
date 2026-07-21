@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { getCoupleUser } from "@/lib/auth/server";
 import { isLiveMode } from "@/lib/config/backend";
 import type { EntryFollowUp } from "@/lib/database.types";
@@ -56,15 +56,32 @@ function buildTree(items: EntryFollowUp[]) {
   for (const item of items) {
     if (item.parent_id) {
       const parent = byId.get(item.parent_id);
-      if (parent && !parent.parent_id) {
+      if (parent && !wouldCreateCycle(item.id, parent.id, byId)) {
         parent.replies ??= [];
         parent.replies.push(item);
+      } else {
+        roots.push(item);
       }
     } else {
       roots.push(item);
     }
   }
   return roots;
+}
+
+function wouldCreateCycle(
+  itemId: string,
+  parentId: string,
+  byId: Map<string, EntryFollowUp>,
+) {
+  const visited = new Set<string>([itemId]);
+  let currentId: string | null = parentId;
+  while (currentId) {
+    if (visited.has(currentId)) return true;
+    visited.add(currentId);
+    currentId = byId.get(currentId)?.parent_id ?? null;
+  }
+  return false;
 }
 
 export async function getEntryFollowUps(entryId: string) {
@@ -119,9 +136,6 @@ export async function createEntryFollowUp(input: {
     if (!parentRow || parentRow.entryId !== input.entryId) {
       throw new Error("没有找到要回复的追评。");
     }
-    if (parentRow.parentId) {
-      throw new Error("第一版只支持回复主追评。");
-    }
     parent = parentRow;
   }
 
@@ -155,10 +169,13 @@ export async function createEntryFollowUp(input: {
     createdAt: created.createdAt,
   }).catch(() => undefined);
   await completeEntryAttention(input.entryId).catch(() => undefined);
+  const repliesToPartner = Boolean(parent && parent.authorId !== user.id);
   const notificationTitle = parent
-    ? `${profile?.displayName ?? "对方"} 回复了你的追评`
+    ? repliesToPartner
+      ? `${profile?.displayName ?? "对方"} 回复了你的追评`
+      : `${profile?.displayName ?? "对方"} 在《${title}》里继续说了下去`
     : `${profile?.displayName ?? "对方"} 追评了《${title}》`;
-  const recipientId = parent?.authorId !== user.id ? parent?.authorId : null;
+  const recipientId = repliesToPartner ? parent!.authorId : null;
 
   await createPartnerNotification({
     actorId: user.id,
