@@ -69,6 +69,7 @@ export function TimelineView({
   const [entryTotal, setEntryTotal] = useState(total ?? sourceEntries.length);
   const [loadingMore, setLoadingMore] = useState(false);
   const loadMoreInFlight = useRef(false);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
@@ -78,9 +79,19 @@ export function TimelineView({
     setEntryTotal(total ?? sourceEntries.length);
   }, [nextCursor, sourceEntries, total]);
 
-  function openEditor(entry: Entry | "new") {
+  function openEditor(entry: Entry | "new", origin?: HTMLElement) {
     preloadEntryForm();
+    returnFocusRef.current = origin ?? null;
     setEditing(entry);
+  }
+
+  function closeEditor() {
+    setEditing(null);
+    const origin = returnFocusRef.current;
+    returnFocusRef.current = null;
+    requestAnimationFrame(() => {
+      if (origin?.isConnected) origin.focus();
+    });
   }
 
   function mergeSavedEntry(saved: EntrySavedPayload) {
@@ -163,7 +174,7 @@ export function TimelineView({
           className="button-primary h-[46px] px-5"
           onMouseEnter={preloadEntryForm}
           onFocus={preloadEntryForm}
-          onClick={() => openEditor("new")}
+          onClick={(event) => openEditor("new", event.currentTarget)}
         >
           <Plus size={16} /> 写一段回忆
         </button>
@@ -246,7 +257,7 @@ export function TimelineView({
                               className="button-secondary size-8 !rounded-[10px] !p-0"
                               onMouseEnter={preloadEntryForm}
                               onFocus={preloadEntryForm}
-                              onClick={() => openEditor(entry)}
+                              onClick={(event) => openEditor(entry, event.currentTarget)}
                               aria-label="编辑"
                             ><Pencil size={15} /></button>
                             <button className="button-danger size-8 !rounded-[10px] !p-0" onClick={() => remove(entry)} disabled={pending} aria-label="删除"><Trash2 size={15} /></button>
@@ -287,7 +298,7 @@ export function TimelineView({
               className="button-primary mt-6"
               onMouseEnter={preloadEntryForm}
               onFocus={preloadEntryForm}
-              onClick={() => openEditor("new")}
+              onClick={(event) => openEditor("new", event.currentTarget)}
             ><Plus size={18} /> 写下第一条</button>
           </div>
         </div>
@@ -315,7 +326,7 @@ export function TimelineView({
           defaultCategory={defaultCategory}
           isDemo={isDemo}
           onSaved={mergeSavedEntry}
-          onClose={() => setEditing(null)}
+          onClose={closeEditor}
         />
       )}
     </>

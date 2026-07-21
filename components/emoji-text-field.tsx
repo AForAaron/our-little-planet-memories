@@ -2,6 +2,7 @@
 
 import { Smile, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { EMOJI_GROUPS } from "@/lib/emoji/catalog";
 import { useEmojiUsage } from "@/components/emoji-usage-provider";
 
@@ -18,6 +19,10 @@ type EmojiTextFieldProps = {
   className?: string;
   rows?: number;
   autoComplete?: string;
+  autoFocus?: boolean;
+  focusRequest?: number;
+  scrollIntoViewOnFocus?: boolean;
+  onKeyDown?: (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   "aria-describedby"?: string;
 };
 
@@ -36,11 +41,17 @@ export function EmojiTextField({
   className = "",
   rows,
   autoComplete,
+  autoFocus = false,
+  focusRequest,
+  scrollIntoViewOnFocus = false,
+  onKeyDown,
   "aria-describedby": ariaDescribedBy,
 }: EmojiTextFieldProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const selectionRef = useRef<Selection | null>(null);
+  const hasFocused = useRef(false);
+  const lastFocusRequest = useRef<number | undefined>(undefined);
   const [open, setOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState("常用");
   const pickerId = useId();
@@ -106,6 +117,27 @@ export function EmojiTextField({
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!autoFocus || disabled) return;
+    if (focusRequest === undefined && hasFocused.current) return;
+    if (focusRequest !== undefined && focusRequest === lastFocusRequest.current) return;
+
+    hasFocused.current = true;
+    lastFocusRequest.current = focusRequest;
+    const frame = requestAnimationFrame(() => {
+      const field = fieldRef.current;
+      if (!field) return;
+      if (scrollIntoViewOnFocus) {
+        field.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      }
+      field.focus({ preventScroll: true });
+      const cursor = field.value.length;
+      field.setSelectionRange(cursor, cursor);
+      selectionRef.current = { start: cursor, end: cursor };
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [autoFocus, disabled, focusRequest, scrollIntoViewOnFocus]);
+
   const emojis = activeGroup === "常用"
     ? commonEmojis
     : EMOJI_GROUPS.find((group) => group.label === activeGroup)?.emojis ?? [];
@@ -132,6 +164,7 @@ export function EmojiTextField({
           disabled={disabled}
           rows={rows}
           autoComplete={autoComplete}
+          onKeyDown={onKeyDown}
           aria-describedby={ariaDescribedBy}
         />
       ) : (
@@ -152,6 +185,7 @@ export function EmojiTextField({
           required={required}
           disabled={disabled}
           autoComplete={autoComplete}
+          onKeyDown={onKeyDown}
           aria-describedby={ariaDescribedBy}
         />
       )}

@@ -53,7 +53,7 @@ export function PendingEntryInbox({
                 {entry.items.map((item) => {
                   const { Icon, label } = itemPresentation(item.type);
                   return (
-                    <Link key={item.id} href={entry.href} className="attention-event">
+                    <Link key={item.id} href={item.href} className="attention-event">
                       <span aria-hidden="true"><Icon size={14} /></span>
                       <div>
                         <small>{label} · {item.actor?.display_name ?? "对方"} · {formatTime(item.created_at)}</small>

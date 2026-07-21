@@ -85,7 +85,8 @@ export function EntryFollowUps({
   const [body, setBody] = useState("");
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [replyTargetId, setReplyTargetId] = useState<string | null>(null);
-  const [replyBody, setReplyBody] = useState("");
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [focusRequest, setFocusRequest] = useState(0);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const visibleEvents = useMemo(() => flattenFollowUps(events), [events]);
@@ -98,6 +99,7 @@ export function EntryFollowUps({
     preloadComposer();
     setError("");
     setIsComposerOpen(true);
+    setFocusRequest((current) => current + 1);
   }
 
   function closeComposer() {
@@ -109,14 +111,21 @@ export function EntryFollowUps({
   function openReplyComposer(id: string) {
     preloadComposer();
     setError("");
-    setReplyBody("");
-    setReplyTargetId((current) => current === id ? null : id);
+    setReplyTargetId(id);
+    setFocusRequest((current) => current + 1);
   }
 
-  function closeReplyComposer() {
-    setReplyBody("");
+  function closeReplyComposer(id: string) {
+    setReplyDrafts((current) => {
+      const { [id]: _discarded, ...remaining } = current;
+      return remaining;
+    });
     setError("");
-    setReplyTargetId(null);
+    setReplyTargetId((current) => current === id ? null : current);
+  }
+
+  function updateReplyDraft(id: string, value: string) {
+    setReplyDrafts((current) => ({ ...current, [id]: value }));
   }
 
   function insertCreated(item: EntryFollowUp) {
@@ -129,7 +138,7 @@ export function EntryFollowUps({
 
   function submit(event: React.FormEvent<HTMLFormElement>, parentId?: string) {
     event.preventDefault();
-    const content = (parentId ? replyBody : body).trim();
+    const content = (parentId ? replyDrafts[parentId] ?? "" : body).trim();
     if (!content) {
       setError("先写一点想追加的感受。");
       return;
@@ -152,7 +161,12 @@ export function EntryFollowUps({
         if (!result.item) throw new Error("追评保存失败：服务器没有返回新追评。");
         insertCreated(result.item);
         if (parentId) {
-          closeReplyComposer();
+          setReplyDrafts((current) => {
+            const { [parentId]: _sent, ...remaining } = current;
+            return remaining;
+          });
+          setReplyTargetId(result.item.id);
+          setFocusRequest((current) => current + 1);
         } else {
           setBody("");
         }
@@ -184,6 +198,7 @@ export function EntryFollowUps({
           pending={pending}
           value={body}
           error={error}
+          focusRequest={focusRequest}
           onChange={setBody}
           onCancel={closeComposer}
           onSubmit={(event) => submit(event)}
@@ -206,6 +221,7 @@ export function EntryFollowUps({
           visibleEvents.map(({ item, depth, parent }) => (
             <article
               key={item.id}
+              id={`follow-up-${item.id}`}
               data-canvas-anchor={`follow-up:${item.id}`}
               className={depth ? "follow-up-node is-reply" : "follow-up-node is-root"}
               style={{ marginInlineStart: `${Math.min(depth, 4) * 12}px` }}
@@ -234,13 +250,15 @@ export function EntryFollowUps({
                 </div>
                 {replyTargetId === item.id && (
                   <FollowUpComposer
+                    id={`follow-up-reply-${item.id}`}
                     mode="reply"
                     isDemo={isDemo}
                     pending={pending}
-                    value={replyBody}
+                    value={replyDrafts[item.id] ?? ""}
                     error={error}
-                    onChange={setReplyBody}
-                    onCancel={closeReplyComposer}
+                    focusRequest={focusRequest}
+                    onChange={(value) => updateReplyDraft(item.id, value)}
+                    onCancel={() => closeReplyComposer(item.id)}
                     onSubmit={(event) => submit(event, item.id)}
                   />
                 )}

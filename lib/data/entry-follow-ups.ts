@@ -185,7 +185,7 @@ export async function createEntryFollowUp(input: {
     followUpId: created.id,
     title: notificationTitle,
     body,
-    href: `/memories/${input.entryId}#follow-ups`,
+    href: `/memories/${input.entryId}#follow-up-${created.id}`,
   }).catch(() => undefined);
 
   return {

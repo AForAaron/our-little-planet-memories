@@ -2,6 +2,7 @@
 
 import { Crosshair, FileAudio, Film, ImagePlus, LoaderCircle, MapPinned, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { EmojiTextField } from "@/components/emoji-text-field";
 import { LocationPicker } from "@/components/location-picker";
@@ -323,6 +324,7 @@ export function EntryForm({
   const [geocodePending, setGeocodePending] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedMedia, setSelectedMedia] = useState<SelectedMediaPreview[]>([]);
   const draftKey = useMemo(
@@ -370,6 +372,47 @@ export function EntryForm({
       previews.forEach((preview) => URL.revokeObjectURL(preview.url));
     };
   }, [selectedFiles]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.defaultPrevented) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute("hidden"));
+      if (!focusable.length) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const current = document.activeElement as HTMLElement | null;
+      if (event.shiftKey && current === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && current === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (!dialog.contains(current)) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   function updateDraft<K extends keyof EntryDraft>(key: K, value: EntryDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -443,6 +486,12 @@ export function EntryForm({
     } finally {
       setGeocodePending(false);
     }
+  }
+
+  function searchPlaceOnEnter(event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing || geocodePending) return;
+    event.preventDefault();
+    void searchPlaceByName();
   }
 
   function chooseGeocodeResult(result: GeocodeResult) {
@@ -521,10 +570,8 @@ export function EntryForm({
   ];
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="entry-form-title" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose();
-    }}>
-      <section className="entry-modal-card">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="entry-form-title">
+      <section ref={dialogRef} className="entry-modal-card">
         <div className="entry-modal-header">
           <div>
             <h2 id="entry-form-title">
@@ -539,7 +586,20 @@ export function EntryForm({
           <button className="entry-close-button" type="button" onClick={onClose} aria-label="关闭"><X size={18} /></button>
         </div>
 
-        <form onSubmit={submit} className="entry-form">
+        <form
+          onSubmit={submit}
+          onKeyDown={(event) => {
+            if (
+              event.key === "Enter"
+              && (event.metaKey || event.ctrlKey)
+              && !event.nativeEvent.isComposing
+            ) {
+              event.preventDefault();
+              event.currentTarget.requestSubmit();
+            }
+          }}
+          className="entry-form"
+        >
           <div className="entry-form-body">
             <input type="hidden" name="category" value={draft.category} />
             <div className="entry-form-section">
@@ -567,6 +627,7 @@ export function EntryForm({
                 placeholder="给这段回忆起个名字"
                 maxLength={100}
                 required
+                autoFocus
               />
             </label>
 
@@ -645,6 +706,7 @@ export function EntryForm({
                 value={draft.place_name}
                 onChange={(value) => updateDraft("place_name", value)}
                 maxLength={120}
+                onKeyDown={searchPlaceOnEnter}
               />
               </label>
               <div className="entry-location-actions">

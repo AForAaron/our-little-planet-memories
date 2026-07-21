@@ -826,6 +826,23 @@ button, a { -webkit-tap-highlight-color: transparent; }
   overflow-y: auto;
   padding: 1rem;
 }
+.companion-messages-wrap {
+  position: relative;
+}
+.companion-new-message {
+  position: absolute;
+  right: 1.25rem;
+  bottom: .45rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-line));
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lift);
+  color: var(--color-accent-strong);
+  cursor: pointer;
+  padding: .35rem .65rem;
+  font-size: .7rem;
+  font-weight: 750;
+}
 .companion-message {
   display: grid;
   grid-template-columns: 1.7rem minmax(0, 1fr);
@@ -896,6 +913,17 @@ button, a { -webkit-tap-highlight-color: transparent; }
   gap: .65rem;
   padding: .85rem 1rem 1rem;
 }
+.companion-notice,
+.companion-error {
+  font-size: .76rem;
+  line-height: 1.5;
+}
+.companion-notice {
+  color: var(--color-accent-strong);
+}
+.companion-error {
+  color: var(--color-danger);
+}
 .companion-toggle {
   display: inline-flex;
   width: fit-content;
@@ -944,11 +972,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .companion-reactions button:disabled {
   cursor: wait;
   opacity: .55;
-}
-.companion-error {
-  color: var(--color-danger);
-  font-size: .76rem;
-  line-height: 1.5;
 }
 .footprints-hero {
   border: 1px solid var(--color-line);
@@ -1242,6 +1265,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
   display: grid;
   gap: .7rem;
   margin-top: 1rem;
+}
+.activity-load-more-wrap {
+  display: grid;
+  justify-items: center;
+  gap: .5rem;
+}
+.activity-load-error {
+  color: var(--color-danger);
+  font-size: .8rem;
 }
 .activity-item {
   display: grid;
@@ -1573,6 +1605,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
   gap: .75rem;
   align-items: start;
   position: relative;
+}
+.follow-up-node {
+  scroll-margin-top: 1rem;
+}
+.follow-up-node:target {
+  border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-line));
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
 .follow-up-node.is-root {
   border: 1px solid var(--color-line);

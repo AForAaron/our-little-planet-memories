@@ -40,7 +40,9 @@ function mapNotification(
     follow_up_id: row.followUpId,
     title: row.title,
     body: row.body,
-    href: normalizeInternalPath(row.href, "/home"),
+    href: row.entryId && row.followUpId
+      ? `/memories/${row.entryId}#follow-up-${row.followUpId}`
+      : normalizeInternalPath(row.href, "/home"),
     read_at: row.readAt?.toISOString() ?? null,
     created_at: row.createdAt.toISOString(),
     actor: mapProfile(actor),

@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   ActivityEventKind,
   ActivityStreamFilter,
@@ -41,7 +41,7 @@ function formatTime(value: string) {
 function destination(item: ActivityStreamItem) {
   if (item.entry_id) {
     return item.kind === "follow_up_created" || item.kind === "follow_up_replied"
-      ? `/memories/${item.entry_id}#follow-ups`
+      ? `/memories/${item.entry_id}#follow-up-${item.source_id}`
       : `/memories/${item.entry_id}`;
   }
   return normalizeInternalPath(item.page_path);
@@ -89,10 +89,18 @@ export function ActivityStreamList({
   const [items, setItems] = useState(initialItems);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setItems(initialItems);
+    setNextCursor(initialNextCursor);
+    setError("");
+  }, [initialItems, initialNextCursor]);
 
   async function loadMore() {
     if (!nextCursor || loading) return;
     setLoading(true);
+    setError("");
     try {
       const params = new URLSearchParams({ filter, before: nextCursor, limit: "24" });
       const response = await fetch(`/api/footprints?${params.toString()}`);
@@ -105,8 +113,8 @@ export function ActivityStreamList({
         return [...current, ...result.items.filter((item) => !known.has(item.id))];
       });
       setNextCursor(result.nextCursor);
-    } catch {
-      // Keep the current list; a later user retry can load the same cursor.
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "加载足迹失败，请稍后重试。");
     } finally {
       setLoading(false);
     }
@@ -171,9 +179,12 @@ export function ActivityStreamList({
       </div>
 
       {nextCursor && (
-        <button type="button" className="activity-load-more" onClick={loadMore} disabled={loading}>
-          {loading ? "正在加载" : "加载更早的足迹"}
-        </button>
+        <div className="activity-load-more-wrap">
+          <button type="button" className="activity-load-more" onClick={loadMore} disabled={loading}>
+            {loading ? "正在加载" : "加载更早的足迹"}
+          </button>
+          {error && <p className="activity-load-error" aria-live="polite">{error}</p>}
+        </div>
       )}
     </div>
   );
