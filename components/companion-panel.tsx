@@ -2,6 +2,7 @@
 
 import { Bell, Heart, Navigation, Send, X } from "lucide-react";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { EmojiTextField } from "@/components/emoji-text-field";
 import { EmojiUsageProvider } from "@/components/emoji-usage-provider";
@@ -14,7 +15,9 @@ type CompanionPanelProps = {
   error: string;
   isDemo: boolean;
   message: string;
+  messageScrollRequest: number;
   messages: CompanionMessage[];
+  notice: string;
   onClose: () => void;
   onMessageChange: (value: string) => void;
   onReaction: (reaction: string) => void;
@@ -40,7 +43,9 @@ export function CompanionPanel({
   error,
   isDemo,
   message,
+  messageScrollRequest,
   messages,
+  notice,
   onClose,
   onMessageChange,
   onReaction,
@@ -52,6 +57,45 @@ export function CompanionPanel({
   status,
 }: CompanionPanelProps) {
   const presenceHref = normalizeInternalPath(other?.current_path);
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const hasInitialScroll = useRef(false);
+  const [showNewMessageJump, setShowNewMessageJump] = useState(false);
+  const chronologicalMessages = useMemo(() => [...messages].reverse(), [messages]);
+  const newestMessageId = messages[0]?.id;
+
+  const isNearBottom = useCallback((container: HTMLDivElement) => (
+    container.scrollHeight - container.scrollTop - container.clientHeight < 28
+  ), []);
+
+  const scrollToLatest = useCallback((behavior: ScrollBehavior = "smooth") => {
+    const container = messagesRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior });
+    setShowNewMessageJump(false);
+  }, []);
+
+  useEffect(() => {
+    if (!newestMessageId) return;
+    const frame = requestAnimationFrame(() => {
+      const container = messagesRef.current;
+      if (!container) return;
+      if (!hasInitialScroll.current) {
+        hasInitialScroll.current = true;
+        scrollToLatest("auto");
+      } else if (isNearBottom(container)) {
+        scrollToLatest();
+      } else {
+        setShowNewMessageJump(true);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isNearBottom, newestMessageId, scrollToLatest]);
+
+  useEffect(() => {
+    if (!messageScrollRequest) return;
+    const frame = requestAnimationFrame(() => scrollToLatest());
+    return () => cancelAnimationFrame(frame);
+  }, [messageScrollRequest, scrollToLatest]);
 
   return (
     <div className="companion-card">
@@ -73,9 +117,17 @@ export function CompanionPanel({
         </Link>
       )}
 
-      <div className="companion-messages">
-        {messages.length ? (
-          messages.map((item) => (
+      <div className="companion-messages-wrap">
+        <div
+          ref={messagesRef}
+          className="companion-messages"
+          onScroll={() => {
+            const container = messagesRef.current;
+            if (container && isNearBottom(container)) setShowNewMessageJump(false);
+          }}
+        >
+        {chronologicalMessages.length ? (
+          chronologicalMessages.map((item) => (
             <div key={item.id} className="companion-message">
               <span>{item.profile?.display_name?.slice(0, 1) ?? "我"}</span>
               <div>
@@ -89,6 +141,12 @@ export function CompanionPanel({
           ))
         ) : (
           <p className="companion-empty">发一句话，对方打开网页时就能看见。</p>
+        )}
+        </div>
+        {showNewMessageJump && (
+          <button type="button" className="companion-new-message" onClick={() => scrollToLatest()}>
+            有新悄悄话
+          </button>
         )}
       </div>
 
@@ -117,13 +175,15 @@ export function CompanionPanel({
               placeholder="写一句只属于小窗的悄悄话"
               maxLength={500}
               className="companion-message-input"
+              autoFocus
             />
           </EmojiUsageProvider>
           <button type="submit" disabled={pending || !message.trim()} aria-label="发送">
             <Send size={16} />
           </button>
         </div>
-        {error && <p className="companion-error">{error}</p>}
+        {notice && <p className="companion-notice" aria-live="polite">{notice}</p>}
+        {error && <p className="companion-error" aria-live="polite">{error}</p>}
       </form>
     </div>
   );

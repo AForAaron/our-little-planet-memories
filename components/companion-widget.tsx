@@ -108,6 +108,8 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [messageScrollRequest, setMessageScrollRequest] = useState(0);
   const pathnameRef = useRef(pathname);
   const openRef = useRef(open);
   const messageRevisionRef = useRef(0);
@@ -187,8 +189,10 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
     eventType: "reaction" | "summon";
     body?: string;
     reaction?: string;
+    successMessage: string;
   }) {
     setError("");
+    setNotice("");
     setPending(true);
     try {
       const response = await fetch("/api/footprints", {
@@ -204,6 +208,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
         }),
       });
       await readApiJson<{ ok?: boolean }>(response, "发送失败。");
+      setNotice(input.successMessage);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "发送失败。");
     } finally {
@@ -217,6 +222,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
     if (!text || submittingMessageRef.current) return;
     submittingMessageRef.current = true;
     setError("");
+    setNotice("");
     setPending(true);
     try {
       const response = await fetch("/api/companion/messages", {
@@ -240,6 +246,7 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
       confirmedMessagesRef.current.set(createdMessage.id, createdMessage);
       setMessages((current) => mergeMessages(current, confirmedMessagesRef.current.values()));
       setMessage("");
+      setMessageScrollRequest((current) => current + 1);
       refreshMessagesNow();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "发送失败。");
@@ -260,12 +267,25 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
           error={error}
           isDemo={isDemo}
           message={message}
+          messageScrollRequest={messageScrollRequest}
           messages={messages}
+          notice={notice}
           onClose={() => setOpen(false)}
-          onMessageChange={setMessage}
-          onReaction={(reaction) => createFootprintAction({ eventType: "reaction", reaction })}
+          onMessageChange={(value) => {
+            setMessage(value);
+            setNotice("");
+          }}
+          onReaction={(reaction) => createFootprintAction({
+            eventType: "reaction",
+            reaction,
+            successMessage: `已留下「${reaction}」。`,
+          })}
           onSubmit={submit}
-          onSummon={() => createFootprintAction({ eventType: "summon", body: "来看看这里" })}
+          onSummon={() => createFootprintAction({
+            eventType: "summon",
+            body: "来看看这里",
+            successMessage: "已经叫她来看看这里了。",
+          })}
           other={other}
           pathname={pathname}
           pending={pending}

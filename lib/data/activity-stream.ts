@@ -205,7 +205,9 @@ export async function getPendingEntryAttention() {
       actor_id: row.notification.actorId,
       title: row.notification.title,
       body: row.notification.body,
-      href: normalizeInternalPath(row.notification.href, "/home"),
+      href: row.notification.entryId && row.notification.followUpId
+        ? `/memories/${row.notification.entryId}#follow-up-${row.notification.followUpId}`
+        : normalizeInternalPath(row.notification.href, "/home"),
       created_at: row.notification.createdAt.toISOString(),
       actor: mapProfile(row.actor),
     };

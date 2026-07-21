@@ -2,6 +2,7 @@
 
 import { Check, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
+import type { KeyboardEvent } from "react";
 import { EmojiTextField } from "@/components/emoji-text-field";
 import { readApiJson } from "@/lib/http/read-api-json";
 
@@ -17,6 +18,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
   const [pending, startTransition] = useTransition();
   const [visibleItems, setVisibleItems] = useState(items);
   const [draft, setDraft] = useState({ title: "", description: "" });
+  const [titleFocusRequest, setTitleFocusRequest] = useState(0);
   const draftKey = "little-planet-wishlist-draft";
 
   useEffect(() => {
@@ -61,6 +63,19 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
     window.localStorage.removeItem(draftKey);
     setDraft({ title: "", description: "" });
     setVisibleItems((current) => [...current, result.item!]);
+    setTitleFocusRequest((current) => current + 1);
+  }
+
+  function submitWithShortcut(event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    if (
+      event.key !== "Enter"
+      || (!event.metaKey && !event.ctrlKey)
+      || event.nativeEvent.isComposing
+      || pending
+      || !draft.title.trim()
+    ) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
   }
 
   async function toggleWish(id: string, done: boolean) {
@@ -98,6 +113,8 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
             }
             maxLength={120}
             required
+            autoFocus={titleFocusRequest > 0}
+            focusRequest={titleFocusRequest || undefined}
           />
         </label>
         <label className="label mt-4">
@@ -114,6 +131,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
               }))
             }
             maxLength={500}
+            onKeyDown={submitWithShortcut}
           />
         </label>
         <p className="mt-3 text-xs leading-5 text-muted">愿望草稿会自动保存到这台电脑。</p>
@@ -124,7 +142,7 @@ export function WishlistBoard({ items, isDemo }: { items: Wish[]; isDemo: boolea
       </form>
 
       <section className="grid gap-3">
-        {error && <p className="rounded-soft bg-[var(--color-accent-soft)] p-4 text-sm text-[var(--color-danger)]">{error}</p>}
+        {error && <p className="rounded-soft bg-[var(--color-accent-soft)] p-4 text-sm text-[var(--color-danger)]" aria-live="polite">{error}</p>}
         {visibleItems.map((item) => (
           <article key={item.id} className={`surface flex items-start gap-4 rounded-[20px] p-5 transition hover:-translate-y-0.5 ${item.isDone ? "opacity-65" : ""}`}>
             <button

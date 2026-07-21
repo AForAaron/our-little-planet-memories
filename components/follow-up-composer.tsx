@@ -2,6 +2,7 @@
 
 import { MessageSquarePlus, Send } from "lucide-react";
 import { useMemo } from "react";
+import type { KeyboardEvent } from "react";
 import { EmojiTextField } from "@/components/emoji-text-field";
 import { EmojiUsageProvider } from "@/components/emoji-usage-provider";
 
@@ -12,6 +13,7 @@ type FollowUpComposerProps = {
   pending: boolean;
   value: string;
   error: string;
+  focusRequest?: number;
   onCancel: () => void;
   onChange: (value: string) => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
@@ -24,6 +26,7 @@ export default function FollowUpComposer({
   pending,
   value,
   error,
+  focusRequest,
   onCancel,
   onChange,
   onSubmit,
@@ -31,6 +34,18 @@ export default function FollowUpComposer({
   const remaining = useMemo(() => 500 - value.length, [value]);
   const trimmedValue = value.trim();
   const isReply = mode === "reply";
+
+  function submitWithShortcut(event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    if (
+      event.key !== "Enter"
+      || (!event.metaKey && !event.ctrlKey)
+      || event.nativeEvent.isComposing
+      || pending
+      || !trimmedValue
+    ) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
 
   return (
     <EmojiUsageProvider isDemo={isDemo}>
@@ -49,6 +64,10 @@ export default function FollowUpComposer({
           onChange={(next) => onChange(next.slice(0, 500))}
           placeholder={isReply ? "回复这条追评..." : "比如：现在回头看，那天最想记住的是..."}
           maxLength={500}
+          autoFocus
+          focusRequest={focusRequest}
+          scrollIntoViewOnFocus={isReply}
+          onKeyDown={submitWithShortcut}
         />
         <div className="follow-up-actions">
           {!isReply && <span className={remaining < 40 ? "is-low" : ""}>{remaining}</span>}
@@ -62,7 +81,7 @@ export default function FollowUpComposer({
             </button>
           </div>
         </div>
-        {error && <p className="follow-up-error">{error}</p>}
+        {error && <p className="follow-up-error" aria-live="polite">{error}</p>}
       </form>
     </EmojiUsageProvider>
   );
