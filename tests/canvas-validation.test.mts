@@ -44,6 +44,13 @@ test("accepts a client UUID and sanitizes an internal sticker", () => {
   });
 });
 
+test("accepts the new dog sticker from the shared internal catalog", () => {
+  const result = validateCanvasItemCreate(
+    stickerInput({ payload: { assetKey: "dog" } }),
+  );
+  assert.deepEqual(result.payload, { assetKey: "dog" });
+});
+
 test("accepts bounded vector strokes with optional pressure", () => {
   const result = validateCanvasItemCreate(
     stickerInput({

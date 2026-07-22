@@ -285,6 +285,7 @@ export const DEMO_NOTIFICATIONS: ActivityNotification[] = [
     type: "follow_up_created",
     entry_id: "demo-1",
     follow_up_id: "demo-follow-up-1",
+    canvas_item_id: null,
     title: "沈沈追评了《周末的海边日落》",
     body: "现在再看，最记得的是那天风很大，但心里很安静。",
     href: "/memories/demo-1#follow-up-demo-follow-up-1",

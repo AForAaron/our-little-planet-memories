@@ -38,6 +38,7 @@ function mapNotification(
     type: row.type as ActivityNotificationType,
     entry_id: row.entryId,
     follow_up_id: row.followUpId,
+    canvas_item_id: row.canvasItemId,
     title: row.title,
     body: row.body,
     href: row.entryId && row.followUpId
@@ -61,7 +62,7 @@ async function getPartnerProfileId(actorId: string) {
 
 export async function createPartnerNotification(input: {
   actorId: string;
-  type: ActivityNotificationType;
+  type: Exclude<ActivityNotificationType, "sticker_added">;
   entryId?: string | null;
   followUpId?: string | null;
   title: string;

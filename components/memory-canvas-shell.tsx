@@ -39,6 +39,12 @@ import {
   simplifyCanvasPoints,
   type CanvasAnchorMetric,
 } from "@/lib/canvas/geometry";
+import {
+  CANVAS_STICKERS,
+  CANVAS_STICKER_SHEETS,
+  getCanvasStickerDefinition,
+  type CanvasStickerDefinition,
+} from "@/lib/canvas/stickers";
 import type {
   EntryCanvasItem,
   StickerPayload,
@@ -56,13 +62,6 @@ type Tool = "select" | "sticker" | "brush" | "eraser";
 type SaveState = "idle" | "saving" | "saved" | "conflict" | "error";
 
 type Point = StrokePayload["points"][number];
-
-type StickerDefinition = {
-  assetKey: string;
-  label: string;
-  column: number;
-  row: number;
-};
 
 type StrokeColor = {
   key: string;
@@ -103,35 +102,6 @@ type DraftStroke = {
 
 type CanvasResponse = { items?: EntryCanvasItem[] };
 type CanvasItemResponse = { item?: EntryCanvasItem };
-
-const STICKERS: StickerDefinition[] = [
-  { assetKey: "donut-planet", label: "甜甜圈星球", column: 0, row: 0 },
-  { assetKey: "sparkle", label: "闪闪星光", column: 1, row: 0 },
-  { assetKey: "heart", label: "爱心", column: 2, row: 0 },
-  { assetKey: "moon", label: "月亮", column: 3, row: 0 },
-  { assetKey: "cloud", label: "云朵", column: 4, row: 0 },
-  { assetKey: "strawberry", label: "草莓", column: 5, row: 0 },
-  { assetKey: "cat", label: "小猫", column: 0, row: 1 },
-  { assetKey: "bunny", label: "小兔", column: 1, row: 1 },
-  { assetKey: "bear", label: "小熊", column: 2, row: 1 },
-  { assetKey: "cherries", label: "樱桃", column: 3, row: 1 },
-  { assetKey: "flower", label: "小花", column: 4, row: 1 },
-  { assetKey: "rainbow", label: "彩虹", column: 5, row: 1 },
-  { assetKey: "tape-coral", label: "珊瑚胶带", column: 0, row: 2 },
-  { assetKey: "tape-amber", label: "琥珀胶带", column: 1, row: 2 },
-  { assetKey: "tape-cyan", label: "蓝色胶带", column: 2, row: 2 },
-  { assetKey: "arrow-curved", label: "弯箭头", column: 3, row: 2 },
-  { assetKey: "arrow-straight", label: "直箭头", column: 4, row: 2 },
-  { assetKey: "scribble", label: "手绘线圈", column: 5, row: 2 },
-  { assetKey: "love-letter", label: "情书", column: 0, row: 3 },
-  { assetKey: "camera", label: "相机", column: 1, row: 3 },
-  { assetKey: "cup", label: "小杯子", column: 2, row: 3 },
-  { assetKey: "house", label: "小屋", column: 3, row: 3 },
-  { assetKey: "footprints", label: "脚印", column: 4, row: 3 },
-  { assetKey: "shooting-star", label: "流星", column: 5, row: 3 },
-];
-
-const STICKER_BY_KEY = new Map(STICKERS.map((item) => [item.assetKey, item]));
 
 const STROKE_COLORS: StrokeColor[] = [
   { key: "coral", label: "珊瑚橙", value: "#fa855a" },
@@ -247,10 +217,20 @@ function anchorsEqual(
   });
 }
 
-function stickerStyle(definition: StickerDefinition): CSSProperties {
+function stickerStyle(definition: CanvasStickerDefinition): CSSProperties {
+  const sheet = CANVAS_STICKER_SHEETS[definition.sheetKey];
+  const x = sheet.columns > 1
+    ? definition.column * (100 / (sheet.columns - 1))
+    : 0;
+  const y = sheet.rows > 1
+    ? definition.row * (100 / (sheet.rows - 1))
+    : 0;
   return {
-    "--sticker-x": `${definition.column * 20}%`,
-    "--sticker-y": `${definition.row * (100 / 3)}%`,
+    "--sticker-image": `url("${sheet.src}")`,
+    "--sticker-size-x": `${sheet.columns * 100}%`,
+    "--sticker-size-y": `${sheet.rows * 100}%`,
+    "--sticker-x": `${x}%`,
+    "--sticker-y": `${y}%`,
   } as CSSProperties;
 }
 
@@ -422,7 +402,9 @@ export function MemoryCanvasShell({
   const [decorationsVisible, setDecorationsVisible] = useState(true);
   const [tool, setTool] = useState<Tool>("select");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedAssetKey, setSelectedAssetKey] = useState(STICKERS[0].assetKey);
+  const [selectedAssetKey, setSelectedAssetKey] = useState<string>(
+    CANVAS_STICKERS[0].assetKey,
+  );
   const [colorKey, setColorKey] = useState(STROKE_COLORS[0].key);
   const [brushWidth, setBrushWidth] = useState(6);
   const [draftStroke, setDraftStroke] = useState<DraftStroke | null>(null);
@@ -1405,7 +1387,7 @@ export function MemoryCanvasShell({
               );
             }
 
-            const definition = STICKER_BY_KEY.get(stickerPayload(item).assetKey);
+            const definition = getCanvasStickerDefinition(stickerPayload(item).assetKey);
             if (!definition) return null;
             const width = Math.max(24, item.width_ratio * anchor.width);
             const left = anchor.left + item.x_ratio * anchor.width;
@@ -1595,7 +1577,7 @@ export function MemoryCanvasShell({
             <section className={styles.paletteSection} aria-label="贴纸选择">
               <div className={styles.sectionLabel}>点一个图案，再点到页面上</div>
               <div className={styles.stickerGrid}>
-                {STICKERS.map((sticker) => (
+                {CANVAS_STICKERS.map((sticker) => (
                   <button
                     key={sticker.assetKey}
                     type="button"

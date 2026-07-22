@@ -2,38 +2,12 @@ import type {
   CanvasItemKind,
   CanvasItemPayload,
 } from "../database.types";
+import { CANVAS_STICKER_ASSET_KEYS } from "./stickers.ts";
 
 export const CANVAS_MAX_ITEMS = 150;
 export const CANVAS_MAX_STROKE_POINTS = 2_000;
 export const CANVAS_MAX_PAYLOAD_BYTES = 64 * 1024;
 const CANVAS_STROKE_POINT_RATIO_LIMIT = 16;
-
-export const CANVAS_STICKER_ASSET_KEYS = [
-  "donut-planet",
-  "sparkle",
-  "heart",
-  "moon",
-  "cloud",
-  "strawberry",
-  "cat",
-  "bunny",
-  "bear",
-  "cherries",
-  "flower",
-  "rainbow",
-  "tape-coral",
-  "tape-amber",
-  "tape-cyan",
-  "arrow-curved",
-  "arrow-straight",
-  "scribble",
-  "love-letter",
-  "camera",
-  "cup",
-  "house",
-  "footprints",
-  "shooting-star",
-] as const;
 
 export const CANVAS_STROKE_COLOR_KEYS = [
   "coral",
@@ -185,9 +159,7 @@ function validateStickerPayload(value: unknown): CanvasItemPayload {
   assertOnlyKeys(payload, new Set(["assetKey"]), "贴纸 payload");
   if (
     typeof payload.assetKey !== "string" ||
-    !CANVAS_STICKER_ASSET_KEYS.includes(
-      payload.assetKey as (typeof CANVAS_STICKER_ASSET_KEYS)[number],
-    )
+    !CANVAS_STICKER_ASSET_KEYS.some((assetKey) => assetKey === payload.assetKey)
   ) {
     throw new CanvasValidationError("请选择内置贴纸，不能使用外部图片地址。");
   }

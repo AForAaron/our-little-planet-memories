@@ -140,10 +140,10 @@
   display: block;
   width: 100%;
   height: 100%;
-  background-image: url("/stickers/planet-sticker-sheet.png");
+  background-image: var(--sticker-image);
   background-repeat: no-repeat;
   background-position: var(--sticker-x) var(--sticker-y);
-  background-size: 600% 400%;
+  background-size: var(--sticker-size-x) var(--sticker-size-y);
   filter: drop-shadow(0 5px 8px rgb(63 80 87 / 12%));
   pointer-events: none;
 }

@@ -1,4 +1,4 @@
-import { BellRing, BookOpen, MessageCircle, MessageSquareReply, PencilLine, Plus } from "lucide-react";
+import { BellRing, BookOpen, MessageCircle, MessageSquareReply, PencilLine, Plus, Sticker } from "lucide-react";
 import Link from "next/link";
 import type {
   ActivityNotificationType,
@@ -19,6 +19,7 @@ function itemPresentation(type: ActivityNotificationType) {
   if (type === "entry_created") return { label: "发布回忆", Icon: Plus };
   if (type === "entry_updated") return { label: "修改回忆", Icon: PencilLine };
   if (type === "follow_up_replied") return { label: "回复追评", Icon: MessageSquareReply };
+  if (type === "sticker_added") return { label: "添加贴纸", Icon: Sticker };
   return { label: "追评", Icon: MessageCircle };
 }
 

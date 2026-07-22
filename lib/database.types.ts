@@ -177,7 +177,8 @@ export type ActivityNotificationType =
   | "entry_created"
   | "entry_updated"
   | "follow_up_created"
-  | "follow_up_replied";
+  | "follow_up_replied"
+  | "sticker_added";
 
 export type ActivityNotification = {
   id: string;
@@ -186,6 +187,7 @@ export type ActivityNotification = {
   type: ActivityNotificationType;
   entry_id: string | null;
   follow_up_id: string | null;
+  canvas_item_id: string | null;
   title: string;
   body: string | null;
   href: string;
