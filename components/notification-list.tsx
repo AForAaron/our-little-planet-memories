@@ -85,7 +85,7 @@ export function NotificationList({
         </div>
       ) : (
         <div className="notification-empty">
-          现在没有通知。等对方发新回忆、修改或追评时，这里会亮起来。
+          现在没有通知。等对方发新回忆、修改、追评或添加贴纸时，这里会亮起来。
         </div>
       )}
     </section>

@@ -409,6 +409,9 @@ export const activityNotifications = pgTable(
     followUpId: uuid("follow_up_id").references(() => entryFollowUps.id, {
       onDelete: "cascade",
     }),
+    canvasItemId: uuid("canvas_item_id").references(() => entryCanvasItems.id, {
+      onDelete: "cascade",
+    }),
     title: text("title").notNull(),
     body: text("body"),
     href: text("href").notNull(),
@@ -424,9 +427,25 @@ export const activityNotifications = pgTable(
       table.recipientId,
       table.readAt,
     ),
+    uniqueIndex("activity_notifications_canvas_item_recipient_unique").on(
+      table.canvasItemId,
+      table.recipientId,
+    ),
     check(
       "activity_notifications_type_check",
-      sql`${table.type} in ('entry_created', 'entry_updated', 'follow_up_created', 'follow_up_replied')`,
+      sql`${table.type} in ('entry_created', 'entry_updated', 'follow_up_created', 'follow_up_replied', 'sticker_added')`,
+    ),
+    check(
+      "activity_notifications_canvas_item_check",
+      sql`(
+        ${table.type} = 'sticker_added'
+        and ${table.canvasItemId} is not null
+        and ${table.entryId} is not null
+        and ${table.followUpId} is null
+      ) or (
+        ${table.type} <> 'sticker_added'
+        and ${table.canvasItemId} is null
+      )`,
     ),
   ],
 );
