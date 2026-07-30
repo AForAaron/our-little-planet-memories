@@ -7,6 +7,10 @@ import {
   signIn,
   verifyEmailCode,
 } from "./actions";
+import {
+  getAuthProvider,
+  isCloudBaseAuthConfigured,
+} from "@/lib/auth/cloudbase-shared";
 import { isLiveMode, isNeonConfigured } from "@/lib/config/backend";
 
 export const metadata = { title: "回到小星球" };
@@ -29,7 +33,11 @@ export default async function LoginPage({
     verificationSent,
     verified,
   } = await searchParams;
-  const configured = isLiveMode() && isNeonConfigured();
+  const configured =
+    isLiveMode() &&
+    (getAuthProvider() === "cloudbase"
+      ? isCloudBaseAuthConfigured()
+      : isNeonConfigured());
 
   return (
     <main className="grid min-h-screen overflow-x-hidden bg-[var(--color-bg)] md:grid-cols-[1.05fr_1fr]">

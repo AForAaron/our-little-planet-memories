@@ -2,6 +2,13 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  getAuthProvider,
+  isCloudBaseAuthConfigured,
+  signInWithCloudBaseEmail,
+  signOutCloudBase,
+} from "@/lib/auth/cloudbase";
+import { findProfileIdByAuthIdentity } from "@/lib/auth/identity-map";
 import { ensureProfile } from "@/lib/auth/profile";
 import { getAuth } from "@/lib/auth/server";
 import {
@@ -68,6 +75,13 @@ function verificationCodeError(message: string): never {
   );
 }
 
+function authReadyForLogin() {
+  if (getAuthProvider() === "cloudbase") {
+    return isCloudBaseAuthConfigured();
+  }
+  return isNeonConfigured();
+}
+
 export async function signIn(formData: FormData) {
   if (!isLiveMode()) redirect("/home");
 
@@ -79,8 +93,31 @@ export async function signIn(formData: FormData) {
   if (!allowed.includes(email)) {
     loginError("这个邮箱不在小星球的访客名单里");
   }
-  if (!isNeonConfigured()) {
-    loginError("Neon Auth 尚未完成配置");
+  if (!authReadyForLogin()) {
+    loginError(
+      getAuthProvider() === "cloudbase"
+        ? "CloudBase Auth 尚未完成配置"
+        : "Neon Auth 尚未完成配置",
+    );
+  }
+
+  if (getAuthProvider() === "cloudbase") {
+    const result = await signInWithCloudBaseEmail({ email, password });
+    if (!result.ok || !result.user) {
+      loginError("登录失败，请检查邮箱或密码");
+    }
+    if (!emailIsVerified(result.user)) {
+      await rememberVerificationEmail(email);
+      redirect("/login?verification=required");
+    }
+    const profileId = await findProfileIdByAuthIdentity(
+      "cloudbase",
+      result.user.id,
+    );
+    if (!profileId) {
+      loginError("账号映射尚未开通，请联系维护者完成 auth_identity_map");
+    }
+    redirect("/home");
   }
 
   const { data, error } = await getAuth().signIn.email({ email, password });
@@ -98,16 +135,24 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signOut() {
-  if (isLiveMode() && isNeonConfigured()) {
-    await getAuth().signOut();
+  if (isLiveMode()) {
+    if (getAuthProvider() === "cloudbase" && isCloudBaseAuthConfigured()) {
+      await signOutCloudBase();
+    } else if (isNeonConfigured()) {
+      await getAuth().signOut();
+    }
   }
   await clearRememberedVerificationEmail();
   redirect("/login");
 }
 
 export async function resendVerificationEmail(formData: FormData) {
-  if (!isLiveMode() || !isNeonConfigured()) {
-    verificationError("Neon Auth 尚未完成配置");
+  if (!isLiveMode() || getAuthProvider() === "cloudbase" || !isNeonConfigured()) {
+    verificationError(
+      getAuthProvider() === "cloudbase"
+        ? "CloudBase 路径请使用已开通映射的账号；不支持此验证流程"
+        : "Neon Auth 尚未完成配置",
+    );
   }
 
   const email = normalizeEmailAddress(formData.get("email"));
@@ -124,8 +169,12 @@ export async function resendVerificationEmail(formData: FormData) {
 }
 
 export async function verifyEmailCode(formData: FormData) {
-  if (!isLiveMode() || !isNeonConfigured()) {
-    verificationCodeError("Neon Auth 尚未完成配置");
+  if (!isLiveMode() || getAuthProvider() === "cloudbase" || !isNeonConfigured()) {
+    verificationCodeError(
+      getAuthProvider() === "cloudbase"
+        ? "CloudBase 路径请使用已开通映射的账号；不支持此验证流程"
+        : "Neon Auth 尚未完成配置",
+    );
   }
 
   const email = await getRememberedVerificationEmail();
@@ -154,8 +203,12 @@ export async function verifyEmailCode(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
-  if (!isLiveMode() || !isNeonConfigured()) {
-    registerError("请先完成 Neon Auth 配置并切换到 live 模式");
+  if (!isLiveMode() || getAuthProvider() === "cloudbase" || !isNeonConfigured()) {
+    registerError(
+      getAuthProvider() === "cloudbase"
+        ? "CloudBase 路径仅开放白名单登录，不开放自助注册"
+        : "请先完成 Neon Auth 配置并切换到 live 模式",
+    );
   }
 
   const email = normalizeEmailAddress(formData.get("email"));

@@ -1,5 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import {
+  CLOUDBASE_SESSION_COOKIE,
+  getAuthProvider,
+  isCloudBaseAuthConfigured,
+} from "@/lib/auth/cloudbase-shared";
 import { getAuth } from "@/lib/auth/server";
 import { isLiveMode, isNeonConfigured } from "@/lib/config/backend";
 
@@ -18,7 +23,14 @@ export default function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!isLiveMode() || !isNeonConfigured()) {
+  if (!isLiveMode()) {
+    return NextResponse.next();
+  }
+
+  const usingCloudBase =
+    getAuthProvider() === "cloudbase" && isCloudBaseAuthConfigured();
+  const usingNeon = getAuthProvider() !== "cloudbase" && isNeonConfigured();
+  if (!usingCloudBase && !usingNeon) {
     return NextResponse.next();
   }
 
@@ -41,8 +53,18 @@ export default function proxy(request: NextRequest) {
   const isPublicRoute =
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/api/health" ||
     pathname.startsWith("/api/auth/");
   if (isPublicRoute) return NextResponse.next();
+
+  if (usingCloudBase) {
+    const session = request.cookies.get(CLOUDBASE_SESSION_COOKIE)?.value;
+    if (!session) {
+      const loginUrl = new URL("/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
 
   return getAuth().middleware({ loginUrl: "/login" })(request);
 }
