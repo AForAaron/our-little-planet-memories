@@ -10,8 +10,8 @@ CloudBase 环境：`our-little-planet-d1dcw25f2b06ae`（上海 PostgreSQL）
 |--------|------|------|
 | M0 | 代码/核验完成 | PG17 已确认；本机 `tcb` 仍登录瑞记，部署前必须换第二账号 |
 | M1 | 完成 | `standalone` 构建通过；`/api/health` 与 `?sharp=1` 探活通过；Docker 守护进程未就绪，镜像待本机构建 |
-| M2 | 代码完成，CloudBase 空库待连接串 | `DATABASE_DRIVER` + `pg` 已接入；`0009_auth_identity_map` 已在 Neon 验证可迁移；**尚未**对 CloudBase 空库执行 |
-| M3 | 阻塞 | 需第二账号 `tcb login` + Docker/镜像推送 + 控制台创建 Run |
+| M2 | **CloudBase 空库已完成** | 外网探测 OK；0000–0009 migration 已落库；探测表保留；`profiles` 等业务表已创建 |
+| M3 | 本地容器完成 / 云端部署待控台 | `our-little-planet:local` 镜像已构建；`/api/health` 与 `sharp` 通过；`tcb cloudrun deploy` 长时间卡住无服务创建，需控制台创建云托管 |
 | M4 | 脚手架完成 | `auth_identity_map` + `AUTH_PROVIDER`；CloudBase 会话解析待控制台开通后接线 |
 | M5 | 导出完成 / 导入阻塞 | Neon 只读计数已导出至 `Web-private/backups/neon-snapshots/`；导入需 CloudBase `DATABASE_URL` |
 | M6 | 适配器完成 / 复制阻塞 | `STORAGE_PROVIDER=r2\|s3`；对象复制脚本已就绪，需 S3_* 目标桶 |

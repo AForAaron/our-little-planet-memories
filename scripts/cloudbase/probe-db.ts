@@ -15,8 +15,8 @@ const pool = new pg.Pool({
   connectionString: url,
   max: 1,
   ssl:
-    process.env.PGSSL === "disable"
-      ? undefined
+    process.env.PGSSL === "disable" || /sslmode=disable/i.test(url)
+      ? false
       : { rejectUnauthorized: process.env.PGSSL_REJECT_UNAUTHORIZED === "true" },
 });
 

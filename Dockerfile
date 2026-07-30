@@ -1,12 +1,15 @@
 # CloudBase Run / local container image for Our Little Planet.
 # Build context must never include Web-private or .env* secrets.
-FROM node:22-bookworm-slim AS deps
+# Default base image uses Tencent mirror for mainland builds.
+ARG NODE_IMAGE=docker.m.daocloud.io/library/node:22-bookworm-slim
+FROM ${NODE_IMAGE} AS deps
 WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set dangerouslyAllowAllBuilds true \
+  && pnpm install --frozen-lockfile
 
-FROM node:22-bookworm-slim AS builder
+FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
@@ -15,7 +18,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV APP_DATA_MODE=demo
 RUN pnpm build
 
-FROM node:22-bookworm-slim AS runner
+FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
