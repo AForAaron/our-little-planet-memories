@@ -1,4 +1,20 @@
 /** Prefer gateway-facing host when behind CloudBase Run / reverse proxies. */
+export function resolvePublicRequestHost({
+  requestUrl,
+  host,
+  forwardedHost,
+}: {
+  requestUrl: string;
+  host: string | null;
+  forwardedHost: string | null;
+}) {
+  const url = new URL(requestUrl);
+  return (
+    firstHeaderValue(forwardedHost) || firstHeaderValue(host) || url.host
+  );
+}
+
+/** @deprecated Prefer resolvePublicRequestHost; kept for call-site clarity in tests. */
 export function resolvePublicRequestOrigin({
   requestUrl,
   host,
@@ -10,12 +26,16 @@ export function resolvePublicRequestOrigin({
   forwardedHost: string | null;
   forwardedProto: string | null;
 }) {
+  const publicHost = resolvePublicRequestHost({
+    requestUrl,
+    host,
+    forwardedHost,
+  });
   const url = new URL(requestUrl);
-  const publicHost =
-    firstHeaderValue(forwardedHost) || firstHeaderValue(host) || url.host;
   const proto =
     firstHeaderValue(forwardedProto) ||
-    (url.protocol === "https:" ? "https" : "http");
+    (url.protocol === "https:" ? "https" : null) ||
+    (isLoopbackHost(publicHost) ? "http" : "https");
   return `${proto}://${publicHost}`;
 }
 
@@ -36,13 +56,15 @@ export function isTrustedSameOriginRequest({
 }) {
   if (!origin || fetchSite === "cross-site") return false;
   try {
-    const expected = resolvePublicRequestOrigin({
+    // Compare host only: CloudBase often presents http request.url while the
+    // browser Origin is https, and X-Forwarded-Proto may be absent.
+    const publicHost = resolvePublicRequestHost({
       requestUrl,
       host,
       forwardedHost,
-      forwardedProto,
     });
-    return new URL(origin).origin === new URL(expected).origin;
+    void forwardedProto;
+    return new URL(origin).host === publicHost;
   } catch {
     return false;
   }
@@ -52,4 +74,9 @@ function firstHeaderValue(value: string | null) {
   if (!value) return null;
   const first = value.split(",")[0]?.trim();
   return first || null;
+}
+
+function isLoopbackHost(host: string) {
+  const name = host.split(":")[0]?.toLowerCase() ?? "";
+  return name === "localhost" || name === "127.0.0.1" || name === "::1";
 }
