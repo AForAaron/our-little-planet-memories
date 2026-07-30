@@ -15,6 +15,12 @@ type HealthBody = {
     profilesCount?: number;
     error?: string;
   };
+  auth?: {
+    ok: boolean;
+    hasUser?: boolean;
+    emailDomain?: string | null;
+    error?: string;
+  };
 };
 
 /**
@@ -22,6 +28,7 @@ type HealthBody = {
  * - default: no secrets, no DB
  * - ?sharp=1: native sharp encode
  * - ?db=1: optional Postgres probe when DATABASE_URL is configured (no secret echo)
+ * - ?auth=1: optional CloudBase session probe (no tokens / full emails)
  */
 export async function GET(request: NextRequest) {
   const wantSharp = request.nextUrl.searchParams.get("sharp") === "1";
@@ -78,6 +85,33 @@ export async function GET(request: NextRequest) {
           error: error instanceof Error ? error.message : "db probe failed",
         };
       }
+    }
+  }
+
+  if (request.nextUrl.searchParams.get("auth") === "1") {
+    try {
+      const { getAuthProvider, getCloudBaseSessionUser } = await import(
+        "@/lib/auth/cloudbase"
+      );
+      if (getAuthProvider() !== "cloudbase") {
+        body.auth = { ok: false, error: "AUTH_PROVIDER is not cloudbase" };
+      } else {
+        const user = await getCloudBaseSessionUser();
+        body.auth = {
+          ok: Boolean(user),
+          hasUser: Boolean(user),
+          emailDomain: user?.email?.includes("@")
+            ? user.email.split("@")[1]
+            : null,
+        };
+        if (!user) body.ok = false;
+      }
+    } catch (error) {
+      body.ok = false;
+      body.auth = {
+        ok: false,
+        error: error instanceof Error ? error.message : "auth probe failed",
+      };
     }
   }
 
