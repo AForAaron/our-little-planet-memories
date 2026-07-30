@@ -46,14 +46,22 @@ function getS3Client() {
   }
 
   if (getStorageProvider() === "s3") {
+    const credentials: {
+      accessKeyId: string;
+      secretAccessKey: string;
+      sessionToken?: string;
+    } = {
+      accessKeyId: requireEnv("S3_ACCESS_KEY_ID"),
+      secretAccessKey: requireEnv("S3_SECRET_ACCESS_KEY"),
+    };
+    if (process.env.S3_SESSION_TOKEN) {
+      credentials.sessionToken = process.env.S3_SESSION_TOKEN;
+    }
     client = new S3Client({
       region: process.env.S3_REGION || "ap-shanghai",
       endpoint: requireEnv("S3_ENDPOINT"),
       forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== "0",
-      credentials: {
-        accessKeyId: requireEnv("S3_ACCESS_KEY_ID"),
-        secretAccessKey: requireEnv("S3_SECRET_ACCESS_KEY"),
-      },
+      credentials,
     });
     return client;
   }

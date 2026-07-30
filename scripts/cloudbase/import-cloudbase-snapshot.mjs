@@ -47,9 +47,10 @@ const IMPORT_ORDER = [
   "profile_emoji_usage",
   "companion_messages",
   "entry_follow_ups",
+  // canvas items before notifications that may reference canvas_item_id
+  "entry_canvas_items",
   "activity_notifications",
   "activity_events",
-  "entry_canvas_items",
   "auth_identity_map",
 ];
 

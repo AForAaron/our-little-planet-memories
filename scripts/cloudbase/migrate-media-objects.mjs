@@ -41,18 +41,30 @@ const source = new S3Client({
 });
 const sourceBucket = requireEnv("R2_BUCKET");
 
+const targetCredentials = {
+  accessKeyId: requireEnv("S3_ACCESS_KEY_ID"),
+  secretAccessKey: requireEnv("S3_SECRET_ACCESS_KEY"),
+};
+if (process.env.S3_SESSION_TOKEN) {
+  targetCredentials.sessionToken = process.env.S3_SESSION_TOKEN;
+}
+
 const target = new S3Client({
   region: process.env.S3_REGION || "ap-shanghai",
   endpoint: requireEnv("S3_ENDPOINT"),
   forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== "0",
-  credentials: {
-    accessKeyId: requireEnv("S3_ACCESS_KEY_ID"),
-    secretAccessKey: requireEnv("S3_SECRET_ACCESS_KEY"),
-  },
+  credentials: targetCredentials,
 });
 const targetBucket = requireEnv("S3_BUCKET");
 
-const pool = new pg.Pool({ connectionString: dbUrl, max: 1, ssl: { rejectUnauthorized: false } });
+const pool = new pg.Pool({
+  connectionString: dbUrl,
+  max: 1,
+  ssl:
+    process.env.PGSSL === "disable"
+      ? undefined
+      : { rejectUnauthorized: process.env.PGSSL_REJECT_UNAUTHORIZED === "true" },
+});
 const { rows } = await pool.query(`
   select distinct key from (
     select r2_key as key from media where r2_key is not null and r2_key <> ''
