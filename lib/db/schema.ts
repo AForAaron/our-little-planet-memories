@@ -30,6 +30,41 @@ export const profiles = pgTable("profiles", {
   createdAt,
 });
 
+/**
+ * Maps external auth provider subject IDs (e.g. CloudBase Auth UID)
+ * onto stable application profile UUIDs. Never overwrite profiles.id.
+ */
+export const authIdentityMap = pgTable(
+  "auth_identity_map",
+  {
+    provider: text("provider").notNull(),
+    providerUserId: text("provider_user_id").notNull(),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    email: text("email"),
+    createdAt,
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.provider, table.providerUserId],
+      name: "auth_identity_map_provider_user_pk",
+    }),
+    uniqueIndex("auth_identity_map_provider_profile_unique").on(
+      table.provider,
+      table.profileId,
+    ),
+    index("auth_identity_map_profile_id_idx").on(table.profileId),
+    check(
+      "auth_identity_map_provider_check",
+      sql`${table.provider} in ('neon', 'cloudbase')`,
+    ),
+  ],
+);
+
 export const profileEmojiUsage = pgTable(
   "profile_emoji_usage",
   {

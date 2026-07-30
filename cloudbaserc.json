@@ -1,0 +1,10 @@
+{
+  "envId": "our-little-planet-d1dcw25f2b06ae",
+  "version": "2.0",
+  "$schema": "https://framework-1253421192.file.myqcloud.com/schema/latest.json",
+  "framework": {
+    "name": "our-little-planet",
+    "plugins": {}
+  },
+  "note": "Do not deploy while tcb is logged into rui-ledger. Use CloudBase Run container from Dockerfile; never static hosting."
+}

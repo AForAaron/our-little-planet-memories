@@ -41,7 +41,7 @@ export function WorldMap(props: WorldMapProps) {
   return (
     <ExternalMapGate
       className="world-map world-map-loading"
-      description="加载后，浏览器会向 OpenStreetMap 请求地图瓦片，对方会收到你的 IP 地址和正在查看的区域。"
+      description="加载后，浏览器会向高德地图请求地图瓦片，对方会收到你的 IP 地址和正在查看的区域。"
       style={{ minHeight: props.height ?? "32rem" }}
     >
       <LeafletWorldMap {...props} />
