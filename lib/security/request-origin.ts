@@ -15,6 +15,9 @@ export function rejectCrossOriginRequest(request: Request) {
     requestUrl: request.url,
     origin: request.headers.get("origin"),
     fetchSite: request.headers.get("sec-fetch-site"),
+    host: request.headers.get("host"),
+    forwardedHost: request.headers.get("x-forwarded-host"),
+    forwardedProto: request.headers.get("x-forwarded-proto"),
   })) return forbidden();
 
   return null;
