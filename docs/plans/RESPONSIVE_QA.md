@@ -37,9 +37,10 @@ Cross-device UI + canvas coord v2. Gold screenshots: companion overflow, decorat
 - [x] `npm run build` passed
 - [x] `node --test tests/canvas-geometry.test.mts` passed (incl. v2)
 - [x] `node --test tests/canvas-validation.test.mts` passed (incl. v2 widthRatio)
-- [x] Diff excludes `request-origin*`, Auth, `.env*`; `next-env.d.ts` restored/not committed
-- [ ] Deploy via `tcbr UpdateCloudRunServer` + single-line remark; verify new ImageUrl
-- [ ] Post-deploy: phone companion emoji + write-path smoke on CloudBase URL
+- [x] Diff excludes `request-origin*`, Auth, `.env*`; `next-env.d.ts` not committed
+- [x] Commit `8ddd1ab` pushed to `codex/cloudbase-migration`
+- [ ] CloudBase Run cutover: `UpdateCloudRunServer` Task `1821903`→`025` and `1821948`→`026` both failed at CreateVersion (`PipelineTaskId=0`, FailReason「创建版本失败：任务失败」). **live remains prior version (020)**. Retry via console: 更新服务 → 代码库重建（勿选已有镜像）→ branch `codex/cloudbase-migration` → one-line remark `responsive-canvas-v2`.
+- [ ] After successful version: verify ImageUrl is not `*-007-*`; phone companion emoji + write-path smoke on CloudBase URL
 
 ## Cloud guardrails
 
