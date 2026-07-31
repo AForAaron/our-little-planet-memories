@@ -50,6 +50,31 @@ export function anchorStrokePointToRoot(
   };
 }
 
+/** coordVersion 2: point offsets use width for x and height for y. */
+export function anchorStrokePointToLocalV2(
+  point: CanvasPoint,
+  originXRatio: number,
+  originYRatio: number,
+) {
+  return {
+    x: originXRatio + point.x,
+    y: originYRatio + point.y,
+  };
+}
+
+export function anchorStrokePointToRootV2(
+  point: CanvasPoint,
+  anchor: CanvasAnchorMetric,
+  originXRatio: number,
+  originYRatio: number,
+) {
+  const local = anchorStrokePointToLocalV2(point, originXRatio, originYRatio);
+  return {
+    x: anchor.left + local.x * anchor.width,
+    y: anchor.top + local.y * anchor.height,
+  };
+}
+
 function round(value: number, digits: number) {
   const factor = 10 ** digits;
   return Math.round(value * factor) / factor;

@@ -171,7 +171,7 @@ function validateStrokePayload(value: unknown): CanvasItemPayload {
   const payload = readRecord(value, "笔迹 payload");
   assertOnlyKeys(
     payload,
-    new Set(["colorKey", "width", "points"]),
+    new Set(["colorKey", "width", "widthRatio", "coordVersion", "points"]),
     "笔迹 payload",
   );
   if (
@@ -183,6 +183,20 @@ function validateStrokePayload(value: unknown): CanvasItemPayload {
     throw new CanvasValidationError("画笔颜色不在允许范围内。");
   }
   const width = readNumber(payload.width, "画笔宽度", 1, 24);
+  let coordVersion: 1 | 2 = 1;
+  if (payload.coordVersion !== undefined) {
+    if (payload.coordVersion !== 1 && payload.coordVersion !== 2) {
+      throw new CanvasValidationError("coordVersion 必须是 1 或 2。");
+    }
+    coordVersion = payload.coordVersion;
+  }
+  let widthRatio: number | undefined;
+  if (payload.widthRatio !== undefined) {
+    widthRatio = readNumber(payload.widthRatio, "画笔宽度比例", 0.001, 0.2);
+  }
+  if (coordVersion === 2 && widthRatio === undefined) {
+    throw new CanvasValidationError("coordVersion 2 必须提供 widthRatio。");
+  }
   if (
     !Array.isArray(payload.points) ||
     payload.points.length < 1 ||
@@ -216,7 +230,14 @@ function validateStrokePayload(value: unknown): CanvasItemPayload {
     }
     return parsed;
   });
-  return { colorKey: payload.colorKey, width, points };
+  const next: CanvasItemPayload = { colorKey: payload.colorKey, width, points };
+  if (coordVersion === 2) {
+    return { ...next, coordVersion: 2, widthRatio };
+  }
+  if (widthRatio !== undefined) {
+    return { ...next, widthRatio };
+  }
+  return next;
 }
 
 export function validateCanvasPayload(

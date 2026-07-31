@@ -226,7 +226,7 @@ async function uploadObject(
     body: file,
   });
   if (!result.ok) {
-    throw new Error(`上传 ${file.name} 失败（${result.status}）。请检查 R2 CORS 和 bucket 权限。`);
+    throw new Error(`上传 ${file.name} 失败（${result.status}）。请检查存储 CORS 与 bucket 权限。`);
   }
   return {
     r2Key: signed.r2Key,

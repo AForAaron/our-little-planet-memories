@@ -3,10 +3,15 @@
 @tailwind utilities;
 
 * { box-sizing: border-box; }
-html { min-height: 100%; }
+html {
+  min-height: 100%;
+  overflow-x: clip;
+}
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
+  overflow-x: clip;
   background:
     radial-gradient(circle at 14% 10%, color-mix(in srgb, var(--color-accent-soft) 78%, transparent) 0 9rem, transparent 16rem),
     radial-gradient(circle at 86% 4%, color-mix(in srgb, var(--color-pink-soft) 64%, transparent) 0 8rem, transparent 15rem),
@@ -52,7 +57,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .button-primary, .button-secondary, .button-danger {
   display: inline-flex;
-  min-height: 2.5rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   align-items: center;
   justify-content: center;
   gap: .5rem;
@@ -98,8 +104,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   top: 50%;
   right: .65rem;
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   place-items: center;
   transform: translateY(-50%);
   border: 1px solid var(--color-line);
@@ -132,7 +138,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   right: 0;
   top: calc(100% + .5rem);
   z-index: 80;
-  width: min(31rem, calc(100vw - 2rem));
+  width: min(31rem, 100%);
+  max-width: 100%;
   border: 1px solid var(--color-line);
   border-radius: 1rem;
   background: var(--color-surface);
@@ -662,6 +669,68 @@ button, a { -webkit-tap-highlight-color: transparent; }
   background: color-mix(in srgb, var(--color-bg) 82%, transparent);
   backdrop-filter: blur(14px);
 }
+.site-header-desktop-actions {
+  display: none;
+  align-items: center;
+  gap: .5rem;
+}
+.site-header-phone-actions {
+  display: flex;
+  align-items: center;
+}
+.site-header-more {
+  position: relative;
+  z-index: 40;
+}
+.site-header-more-menu {
+  position: absolute;
+  top: calc(100% + .45rem);
+  right: 0;
+  z-index: 40;
+  display: grid;
+  width: min(16.5rem, calc(100vw - 2rem));
+  gap: .35rem;
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+  box-shadow: var(--shadow-lift);
+  padding: .55rem;
+  backdrop-filter: blur(16px);
+}
+.site-header-more-row,
+.site-header-more-link {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .7rem;
+  border-radius: .85rem;
+  color: var(--color-text);
+  padding: .2rem .35rem .2rem .2rem;
+  font-size: .88rem;
+  font-weight: 650;
+}
+.site-header-more-link {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.site-header-more-row:hover,
+.site-header-more-link:hover {
+  background: var(--color-control);
+}
+.site-header-more-form {
+  margin: 0;
+}
+@media (min-width: 640px) {
+  .site-header-desktop-actions {
+    display: flex;
+  }
+  .site-header-phone-actions {
+    display: none;
+  }
+}
 .brand-mark {
   position: relative;
   display: grid;
@@ -725,7 +794,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .companion-bubble {
   display: inline-flex;
-  max-width: min(22rem, calc(100vw - 2rem));
+  max-width: min(22rem, calc(100% - 2rem));
   min-height: 3rem;
   align-items: center;
   gap: .55rem;
@@ -755,9 +824,11 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .companion-card {
   display: grid;
-  width: min(24rem, calc(100vw - 2rem));
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  width: min(24rem, calc(100% - 2rem));
   max-height: min(42rem, calc(100vh - 2rem));
-  overflow: hidden;
+  max-height: min(42rem, calc(100dvh - 2rem));
+  overflow: visible;
   border: 1px solid var(--color-line);
   border-radius: 1.35rem;
   background: color-mix(in srgb, var(--color-surface) 94%, transparent);
@@ -769,7 +840,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   align-items: start;
   justify-content: space-between;
   gap: 1rem;
+  overflow: hidden;
   border-bottom: 1px solid var(--color-line);
+  border-radius: 1.35rem 1.35rem 0 0;
   padding: 1rem 1rem .9rem;
 }
 .companion-head h2 {
@@ -828,6 +901,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .companion-messages-wrap {
   position: relative;
+  min-height: 0;
+  overflow: hidden;
 }
 .companion-new-message {
   position: absolute;
@@ -886,13 +961,17 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .companion-reactions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: .45rem;
+  overflow-x: auto;
   border-top: 1px solid var(--color-line);
   padding: .85rem 1rem 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 .companion-reactions button {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: .3rem;
   border: 1px solid var(--color-line);
@@ -903,6 +982,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   padding: .35rem .6rem;
   font-size: .72rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 .companion-reactions button:hover {
   border-color: color-mix(in srgb, var(--color-accent) 32%, var(--color-line));
@@ -936,20 +1016,30 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .companion-input-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 2.55rem;
+  grid-template-columns: minmax(0, 1fr) 2.75rem;
   gap: .5rem;
 }
 .companion-input-row .emoji-field {
+  position: relative;
   min-width: 0;
+}
+.companion-input-row .emoji-picker {
+  top: auto;
+  bottom: calc(100% + .5rem);
+  left: auto;
+  right: 0;
+  width: min(100%, 22rem);
+  max-width: 100%;
+  z-index: 90;
 }
 .companion-input-row .companion-message-input {
   min-width: 0;
-  min-height: 2.55rem;
+  min-height: 2.75rem;
   border: 1px solid var(--color-line);
   border-radius: .85rem;
   background: var(--color-field);
   color: var(--color-text);
-  padding: .72rem 3rem .72rem .85rem;
+  padding: .72rem 3.2rem .72rem .85rem;
   outline: 0;
   font-size: .86rem;
 }
@@ -959,8 +1049,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .companion-input-row > button {
   display: grid;
-  width: 2.55rem;
-  height: 2.55rem;
+  width: 2.75rem;
+  height: 2.75rem;
   place-items: center;
   border: 0;
   border-radius: .8rem;
@@ -1711,6 +1801,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
     width: 100%;
     max-width: 100%;
     max-height: calc(100vh - 1rem);
+    max-height: calc(100dvh - 1rem);
     border-radius: 1.25rem;
   }
   .entry-modal-header,
@@ -1726,18 +1817,47 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .emoji-picker {
     right: auto;
     left: 0;
-    width: min(29rem, calc(100vw - 3rem));
+    width: min(29rem, 100%);
+    max-width: 100%;
   }
   .entry-modal-footer {
     align-items: stretch;
     flex-direction: column;
   }
   .companion {
-    right: 1rem;
-    bottom: 1rem;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding:
+      0
+      max(0rem, env(safe-area-inset-right))
+      max(0rem, env(safe-area-inset-bottom))
+      max(0rem, env(safe-area-inset-left));
+  }
+  .companion:not(.is-open) {
+    left: auto;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    padding: 0;
+  }
+  .companion-bubble {
+    max-width: min(18rem, calc(100% - 1rem));
   }
   .companion-card {
-    width: calc(100vw - 2rem);
+    width: 100%;
+    max-width: none;
+    max-height: min(85dvh, 42rem);
+    border-radius: 1.35rem 1.35rem 0 0;
+    padding-bottom: max(0.25rem, env(safe-area-inset-bottom));
+  }
+  .companion-head {
+    border-radius: 1.35rem 1.35rem 0 0;
+  }
+  .companion-input-row .emoji-picker {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
   }
   .entry-footer-actions {
     width: 100%;
@@ -2527,11 +2647,21 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .world-map {
   width: 100%;
-  min-height: 28rem;
+  min-height: min(52dvh, 22rem);
   overflow: hidden;
   border-radius: 1rem;
   background: var(--color-surface-soft);
   border: 1px solid var(--color-line);
+}
+@media (min-width: 640px) {
+  .world-map {
+    min-height: 26rem;
+  }
+}
+@media (min-width: 1024px) {
+  .world-map {
+    min-height: 28rem;
+  }
 }
 .world-map-loading,
 .world-map-empty {

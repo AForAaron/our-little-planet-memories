@@ -22,8 +22,8 @@ export default async function HomePage() {
       <section className="hero cosmos-panel relative mb-14 overflow-hidden rounded-theme">
         <span className="tiny-star left-[30%] top-[22%]" />
         <span className="tiny-star left-[44%] top-[60%] [animation-delay:1s]" />
-        <div className="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-[1.25fr_.9fr] lg:p-12">
-          <div className="flex min-h-[20rem] flex-col justify-center text-[var(--color-on-accent)]">
+        <div className="relative grid gap-10 p-6 sm:p-10 md:grid-cols-[1.25fr_.9fr] md:p-12">
+          <div className="flex min-h-[14rem] flex-col justify-center text-[var(--color-on-accent)] sm:min-h-[20rem]">
             <span className="mb-6 flex w-fit items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-on-accent)_38%,transparent)] bg-[color-mix(in_srgb,var(--color-on-accent)_18%,transparent)] px-3.5 py-2 text-xs tracking-[.16em]">
               <span className="size-1.5 rounded-full bg-[var(--color-on-accent)]" /> 从 {since} 一起看星星
             </span>
@@ -34,7 +34,7 @@ export default async function HomePage() {
             </h1>
             <div className="mt-8 flex flex-wrap items-end gap-8">
               <div>
-                <div className="font-heading text-[62px] font-bold leading-none">{days || "—"}</div>
+                <div className="font-heading text-[clamp(2.5rem,12vw,3.875rem)] font-bold leading-none">{days || "—"}</div>
                 <div className="mt-2 text-[13.5px] tracking-[.04em] opacity-90">在一起的第 {days || "—"} 天</div>
               </div>
               <div className="hidden h-14 w-px bg-[color-mix(in_srgb,var(--color-on-accent)_38%,transparent)] sm:block" />

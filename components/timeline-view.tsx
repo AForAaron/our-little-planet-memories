@@ -192,7 +192,7 @@ export function TimelineView({
             return (
               <article
                 key={entry.id}
-                className="grid grid-cols-[4.8rem_2rem_minmax(0,1fr)] gap-0 sm:grid-cols-[7.25rem_2.75rem_minmax(0,1fr)]"
+                className="grid grid-cols-[3.5rem_1.5rem_minmax(0,1fr)] gap-0 sm:grid-cols-[7.25rem_2.75rem_minmax(0,1fr)]"
                 style={index > 2 ? { contentVisibility: "auto", containIntrinsicSize: "320px" } : undefined}
               >
                 <time className="pt-5 text-right">

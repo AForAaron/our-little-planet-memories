@@ -177,6 +177,52 @@ test("requires a positive revision and at least one patch field", () => {
   );
 });
 
+test("accepts coordVersion 2 strokes with widthRatio", () => {
+  const result = validateCanvasItemCreate(
+    stickerInput({
+      kind: "stroke",
+      anchor_key: "body",
+      payload: {
+        colorKey: "coral",
+        width: 8,
+        widthRatio: 0.02,
+        coordVersion: 2,
+        points: [
+          { x: 0, y: 0 },
+          { x: 0.2, y: 0.1 },
+        ],
+      },
+    }),
+  );
+  assert.deepEqual(result.payload, {
+    colorKey: "coral",
+    width: 8,
+    widthRatio: 0.02,
+    coordVersion: 2,
+    points: [
+      { x: 0, y: 0 },
+      { x: 0.2, y: 0.1 },
+    ],
+  });
+});
+
+test("rejects coordVersion 2 strokes without widthRatio", () => {
+  assert.throws(
+    () => validateCanvasItemCreate(
+      stickerInput({
+        kind: "stroke",
+        payload: {
+          colorKey: "coral",
+          width: 8,
+          coordVersion: 2,
+          points: [{ x: 0, y: 0 }],
+        },
+      }),
+    ),
+    /widthRatio/,
+  );
+});
+
 test("detects optimistic revision conflicts before a write", () => {
   assert.equal(isCanvasRevisionConflict(4, 4), false);
   assert.equal(isCanvasRevisionConflict(5, 4), true);
