@@ -25,7 +25,8 @@
     "cloudbase:export-neon": "node --env-file-if-exists=.env.local scripts/cloudbase/export-neon-snapshot.mjs",
     "cloudbase:export-neon-data": "node --env-file-if-exists=.env.local scripts/cloudbase/export-neon-snapshot.mjs --with-data",
     "cloudbase:import-snapshot": "node --env-file-if-exists=.env.cloudbase.local scripts/cloudbase/import-cloudbase-snapshot.mjs",
-    "cloudbase:migrate-media": "node --env-file-if-exists=.env.media-migration.local scripts/cloudbase/migrate-media-objects.mjs"
+    "cloudbase:migrate-media": "node --env-file-if-exists=.env.media-migration.local scripts/cloudbase/migrate-media-objects.mjs",
+    "cloudbase:observation-qa": "node --env-file=.env.cloudbase.auth.local scripts/cloudbase/observation-qa.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1079.0",

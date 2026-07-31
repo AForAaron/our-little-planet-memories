@@ -1,0 +1,390 @@
+{
+  "ok": true,
+  "base": "https://little-planet-web-289461-10-1349689007.sh.run.tcloudbase.com",
+  "mark": "obs-qa-2026-07-31",
+  "at": "2026-07-31T01:51:50.693Z",
+  "total": 45,
+  "passed": 45,
+  "failed": [],
+  "created": {
+    "entryA": "5241e016-c5f3-44bf-af1e-e1f58117f731",
+    "entryB": "6e97d23f-404c-4c0e-9b76-bbf2f1992e03",
+    "followUpId": "9e6bdb9d-de6f-4a81-9775-58d292dad6f1",
+    "wishId": "9feb9110-57e0-4c3d-89a4-7f38ecbe64c1",
+    "stickerId": "4429fdb8-da07-4f8e-aeb6-68fad7c80c17"
+  },
+  "results": [
+    {
+      "id": "0.health.db_sharp",
+      "pass": true,
+      "detail": {
+        "http": 503,
+        "mode": "live",
+        "db": {
+          "ok": true,
+          "driver": "node-postgres",
+          "profilesCount": 2
+        },
+        "sharp": {
+          "ok": true,
+          "version": "0.34.5"
+        },
+        "auth": {
+          "ok": false,
+          "hasUser": false,
+          "emailDomain": null
+        }
+      }
+    },
+    {
+      "id": "A.signin",
+      "pass": true,
+      "detail": {
+        "email": "a***@gmail.com",
+        "sub": "2082806080024387585"
+      }
+    },
+    {
+      "id": "A.home",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "A.entries.get",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 5
+      }
+    },
+    {
+      "id": "B.signin",
+      "pass": true,
+      "detail": {
+        "email": "s***@163.com",
+        "sub": "2082806087917805570"
+      }
+    },
+    {
+      "id": "B.home",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "B.entries.get",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 5
+      }
+    },
+    {
+      "id": "W1.A.entries.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "5241e016-c5f3-44bf-af1e-e1f58117f731",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W2.A.follow-ups.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "9e6bdb9d-de6f-4a81-9775-58d292dad6f1",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W3.A.follow-ups.reply",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "a35184ab-ad9f-4fb5-9b7f-d2c5f44c12f6",
+        "parent_id": "9e6bdb9d-de6f-4a81-9775-58d292dad6f1",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W4.B.entries.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "6e97d23f-404c-4c0e-9b76-bbf2f1992e03",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W4.B.follow-ups.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "e647cf71-50e8-432a-b00d-1b7b4b36062e",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W5.A.entries.patch",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "title": "obs-qa-2026-07-31 A entry edited",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W6.A.wishlist.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "9feb9110-57e0-4c3d-89a4-7f38ecbe64c1",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W7.A.canvas.post",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "id": "4429fdb8-da07-4f8e-aeb6-68fad7c80c17",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W8.A.companion.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "e83768f6-b634-4fb3-86af-36d6a398acb7",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.presence.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.emoji-usage.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.cross-origin.rejected",
+      "pass": true,
+      "detail": {
+        "status": 403,
+        "error": "请求必须从本站页面发起。"
+      }
+    },
+    {
+      "id": "X.missing-origin.rejected",
+      "pass": true,
+      "detail": {
+        "status": 403,
+        "error": "请求必须从本站页面发起。"
+      }
+    },
+    {
+      "id": "M1.presign",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasUrl": true,
+        "r2Key": true,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "M2.cos.put",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "M3.entries.post.withMedia",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "bdf9899b-8661-4f75-8e87-22b175c25e19",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "M4.memory.page",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "M5.signed.media.get",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "M6.unsigned.media.denied",
+      "pass": true,
+      "detail": {
+        "status": 403
+      }
+    },
+    {
+      "id": "P.page/home",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "P.page/time/timeline",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "P.page/footprints",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "P.page/places/map",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "P.page/daily/wishlist",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "P.page/notifications",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "P.page/memories/5241e016-c5f3-44bf-af1e-e1f58117f731",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/notifications",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/presence",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/footprints",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/companion/messages",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/map-points",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/geocode/search",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "S.unauth.entries",
+      "pass": true,
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "id": "C1.B.sees.A.follow-ups",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 1
+      }
+    },
+    {
+      "id": "C2.B.follow-up.on.A",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "C3.B.sees.canvas",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 1
+      }
+    },
+    {
+      "id": "C4.presence.summary",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "keys": [
+          "currentUserId",
+          "onlineAfter",
+          "recentAfter",
+          "others"
+        ]
+      }
+    },
+    {
+      "id": "C5.B.sees.companion",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasObs": true
+      }
+    }
+  ]
+}
