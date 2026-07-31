@@ -786,6 +786,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
   0%, 100% { opacity: .25; transform: scale(.8); }
   50% { opacity: 1; transform: scale(1.15); }
 }
+/* Leave room so the fixed companion bubble does not cover page content. */
+.protected-content {
+  padding-bottom: 1.5rem;
+}
+@media (max-width: 640px) {
+  .protected-content {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .companion {
   position: fixed;
   right: max(1rem, env(safe-area-inset-right));
