@@ -295,6 +295,8 @@ export function CompanionWidget({ isDemo = false }: { isDemo?: boolean }) {
         <button
           className="companion-bubble"
           type="button"
+          aria-label={`悄悄话，${status}`}
+          title={status}
           onPointerEnter={preloadPanel}
           onFocus={preloadPanel}
           onClick={() => {
