@@ -40,6 +40,10 @@
   --space-page: clamp(1rem, 4vw, 2.25rem);
   --content-width: 80rem;
   --transition: 180ms ease;
+  /* Breakpoint contract (Tailwind defaults): phone <640, tablet 640–1023, desktop ≥1024 */
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
 }
 
 [data-theme="dark"] {

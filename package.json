@@ -20,7 +20,13 @@
     "data:dry-run": "node --env-file-if-exists=.env.local scripts/import/publish.mjs --dry-run",
     "data:publish": "node --env-file-if-exists=.env.local scripts/import/publish.mjs --apply",
     "data:thumbnails:dry-run": "node --env-file-if-exists=.env.local scripts/media/backfill-thumbnails.mjs",
-    "data:thumbnails:backfill": "node --env-file-if-exists=.env.local scripts/media/backfill-thumbnails.mjs --apply"
+    "data:thumbnails:backfill": "node --env-file-if-exists=.env.local scripts/media/backfill-thumbnails.mjs --apply",
+    "cloudbase:probe-db": "node --env-file-if-exists=.env.cloudbase.local --experimental-strip-types scripts/cloudbase/probe-db.ts",
+    "cloudbase:export-neon": "node --env-file-if-exists=.env.local scripts/cloudbase/export-neon-snapshot.mjs",
+    "cloudbase:export-neon-data": "node --env-file-if-exists=.env.local scripts/cloudbase/export-neon-snapshot.mjs --with-data",
+    "cloudbase:import-snapshot": "node --env-file-if-exists=.env.cloudbase.local scripts/cloudbase/import-cloudbase-snapshot.mjs",
+    "cloudbase:migrate-media": "node --env-file-if-exists=.env.media-migration.local scripts/cloudbase/migrate-media-objects.mjs",
+    "cloudbase:observation-qa": "node --env-file=.env.cloudbase.auth.local scripts/cloudbase/observation-qa.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1079.0",
@@ -33,6 +39,7 @@
     "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.468.0",
     "next": "^16.2.10",
+    "pg": "^8.22.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-leaflet": "^5.0.0",
@@ -42,6 +49,7 @@
     "@types/leaflet": "^1.9.21",
     "@types/leaflet.markercluster": "^1.5.6",
     "@types/node": "^22.10.0",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
@@ -49,5 +57,12 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "@esbuild-kit/core-utils"
+    ]
   }
 }

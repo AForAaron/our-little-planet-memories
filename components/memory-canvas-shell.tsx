@@ -33,6 +33,7 @@ import { useVisibilityAwarePolling } from "@/components/use-visibility-aware-pol
 import {
   CANVAS_STROKE_POINT_RATIO_LIMIT,
   ROOT_CANVAS_ANCHOR,
+  anchorStrokePointToLocalV2,
   anchorStrokePointToRoot,
   resolveCanvasAnchor,
   rootPointToAnchorRatio,
@@ -234,19 +235,8 @@ function stickerStyle(definition: CanvasStickerDefinition): CSSProperties {
   } as CSSProperties;
 }
 
-function pathForPoints(
-  points: Point[],
-  anchor: CanvasAnchorMetric,
-  originXRatio: number,
-  originYRatio: number,
-) {
-  if (!points.length) return "";
-  const resolved = points.map((point) => anchorStrokePointToRoot(
-    point,
-    anchor,
-    originXRatio,
-    originYRatio,
-  ));
+function pathFromResolvedPoints(resolved: Array<{ x: number; y: number }>) {
+  if (!resolved.length) return "";
   if (resolved.length === 1) {
     const point = resolved[0];
     return `M ${point.x} ${point.y} l 0.01 0.01`;
@@ -265,6 +255,34 @@ function pathForPoints(
   const last = resolved[resolved.length - 1];
   path += ` L ${last.x} ${last.y}`;
   return path;
+}
+
+function pathForPoints(
+  points: Point[],
+  anchor: CanvasAnchorMetric,
+  originXRatio: number,
+  originYRatio: number,
+) {
+  if (!points.length) return "";
+  return pathFromResolvedPoints(points.map((point) => anchorStrokePointToRoot(
+    point,
+    anchor,
+    originXRatio,
+    originYRatio,
+  )));
+}
+
+function pathForPointsV2(
+  points: Point[],
+  originXRatio: number,
+  originYRatio: number,
+) {
+  if (!points.length) return "";
+  return pathFromResolvedPoints(points.map((point) => anchorStrokePointToLocalV2(
+    point,
+    originXRatio,
+    originYRatio,
+  )));
 }
 
 const CanvasStrokeItem = memo(function CanvasStrokeItem({
@@ -292,13 +310,79 @@ const CanvasStrokeItem = memo(function CanvasStrokeItem({
   onSelect: (id: string) => void;
 }) {
   const payload = strokePayload(item);
-  const path = useMemo(() => pathForPoints(
-    payload.points,
-    anchor,
-    item.x_ratio,
-    item.y_ratio,
-  ), [anchor, item.x_ratio, item.y_ratio, payload.points]);
+  const isV2 = payload.coordVersion === 2;
+  const path = useMemo(() => (
+    isV2
+      ? pathForPointsV2(payload.points, item.x_ratio, item.y_ratio)
+      : pathForPoints(payload.points, anchor, item.x_ratio, item.y_ratio)
+  ), [anchor, isV2, item.x_ratio, item.y_ratio, payload.points]);
   const strokeColor = COLOR_BY_KEY.get(payload.colorKey) ?? COLOR_BY_KEY.get("coral")!;
+  const strokeWidth = isV2
+    ? Math.max(0.001, payload.widthRatio ?? (payload.width / Math.max(1, anchor.width)))
+    : payload.width;
+  const hitWidth = isV2
+    ? Math.max(strokeWidth, 28 / Math.max(1, anchor.width))
+    : Math.max(payload.width, 28);
+  const selectionWidth = isV2
+    ? strokeWidth + (6 / Math.max(1, anchor.width))
+    : payload.width + 6;
+
+  if (isV2) {
+    return (
+      <svg
+        className={styles.strokeLayerLocal}
+        viewBox="0 0 1 1"
+        preserveAspectRatio="none"
+        style={{
+          left: anchor.left,
+          top: anchor.top,
+          width: Math.max(1, anchor.width),
+          height: Math.max(1, anchor.height),
+          zIndex: item.z_index,
+          opacity: item.opacity,
+        }}
+        aria-hidden={editing && decorationsVisible && tool === "select"
+          ? undefined
+          : true}
+      >
+        {editing && selected && (
+          <path
+            d={path}
+            fill="none"
+            stroke="var(--color-on-accent)"
+            strokeWidth={selectionWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={styles.strokeSelection}
+          />
+        )}
+        {editing && decorationsVisible && (
+          <path
+            d={path}
+            fill="none"
+            stroke="transparent"
+            strokeWidth={hitWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={styles.interactiveStroke}
+            onPointerDown={(event) => onPointerDown(event, item)}
+            onFocus={() => onSelect(item.id)}
+            role={tool === "select" ? "button" : undefined}
+            aria-label={tool === "select" ? "一笔画" : undefined}
+            tabIndex={tool === "select" ? 0 : -1}
+          />
+        )}
+        <path
+          d={path}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
 
   return (
     <svg
@@ -315,7 +399,7 @@ const CanvasStrokeItem = memo(function CanvasStrokeItem({
           d={path}
           fill="none"
           stroke="var(--color-on-accent)"
-          strokeWidth={payload.width + 6}
+          strokeWidth={selectionWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
           className={styles.strokeSelection}
@@ -326,7 +410,7 @@ const CanvasStrokeItem = memo(function CanvasStrokeItem({
           d={path}
           fill="none"
           stroke="transparent"
-          strokeWidth={Math.max(payload.width, 28)}
+          strokeWidth={hitWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
           className={styles.interactiveStroke}
@@ -341,7 +425,7 @@ const CanvasStrokeItem = memo(function CanvasStrokeItem({
         d={path}
         fill="none"
         stroke={strokeColor}
-        strokeWidth={payload.width}
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -990,12 +1074,12 @@ export function MemoryCanvasShell({
     const originY = anchor.top + draft.originYRatio * anchor.height;
     const nextPoint: Point = {
       x: clamp(
-        (localX - originX) / anchor.width,
+        (localX - originX) / Math.max(1, anchor.width),
         -CANVAS_STROKE_POINT_RATIO_LIMIT,
         CANVAS_STROKE_POINT_RATIO_LIMIT,
       ),
       y: clamp(
-        (localY - originY) / anchor.width,
+        (localY - originY) / Math.max(1, anchor.height),
         -CANVAS_STROKE_POINT_RATIO_LIMIT,
         CANVAS_STROKE_POINT_RATIO_LIMIT,
       ),
@@ -1005,7 +1089,7 @@ export function MemoryCanvasShell({
     if (previous) {
       const distance = Math.hypot(
         (nextPoint.x - previous.x) * anchor.width,
-        (nextPoint.y - previous.y) * anchor.width,
+        (nextPoint.y - previous.y) * anchor.height,
       );
       if (distance < 2) return;
     }
@@ -1031,10 +1115,11 @@ export function MemoryCanvasShell({
     const anchor = anchorForKey(completed.anchorKey);
     const points = simplifyCanvasPoints(completed.points, {
       anchorWidth: anchor.width,
-      anchorHeight: anchor.width,
+      anchorHeight: anchor.height,
     });
     const range = itemZRange(itemsRef.current);
     const timestamp = nowIso();
+    const widthRatio = clamp(brushWidth / Math.max(1, anchor.width), 0.001, 0.2);
     const item: EntryCanvasItem = {
       id: createId(),
       entry_id: entryId,
@@ -1050,6 +1135,8 @@ export function MemoryCanvasShell({
       payload: {
         colorKey,
         width: brushWidth,
+        widthRatio,
+        coordVersion: 2,
         points,
       },
       revision: 0,
@@ -1451,23 +1538,29 @@ export function MemoryCanvasShell({
           {draftStroke && (() => {
             const anchor = anchorForKey(draftStroke.anchorKey);
             const color = COLOR_BY_KEY.get(colorKey) ?? COLOR_BY_KEY.get("coral")!;
+            const widthRatio = clamp(brushWidth / Math.max(1, anchor.width), 0.001, 0.2);
             return (
               <svg
-                className={styles.draftLayer}
-                viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
+                className={styles.draftLayerLocal}
+                viewBox="0 0 1 1"
                 preserveAspectRatio="none"
+                style={{
+                  left: anchor.left,
+                  top: anchor.top,
+                  width: Math.max(1, anchor.width),
+                  height: Math.max(1, anchor.height),
+                }}
                 aria-hidden="true"
               >
                 <path
-                  d={pathForPoints(
+                  d={pathForPointsV2(
                     draftStroke.points,
-                    anchor,
                     draftStroke.originXRatio,
                     draftStroke.originYRatio,
                   )}
                   fill="none"
                   stroke={color}
-                  strokeWidth={brushWidth}
+                  strokeWidth={widthRatio}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -1499,6 +1592,7 @@ export function MemoryCanvasShell({
                           ? "已保存"
                           : `${items.length} 个装饰`}
               </span>
+              <span className={styles.toolbarHint}>装饰会跟着正文卡片缩放；请在卡片内涂鸦</span>
             </div>
             <button type="button" onClick={leaveEditing} aria-label="完成装饰">
               <X size={17} />

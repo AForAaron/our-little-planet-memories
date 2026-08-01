@@ -67,3 +67,31 @@ test("accepts same-origin writes and rejects missing or cross-site origins", () 
     fetchSite: null,
   }), false);
 });
+
+test("accepts browser origin when request.url is an internal proxy URL", () => {
+  assert.equal(isTrustedSameOriginRequest({
+    requestUrl: "http://127.0.0.1:80/api/entries/abc/follow-ups",
+    origin: "https://little-planet.example",
+    fetchSite: "same-origin",
+    host: "little-planet.example",
+    forwardedHost: "little-planet.example",
+    forwardedProto: "https",
+  }), true);
+  assert.equal(isTrustedSameOriginRequest({
+    requestUrl: "http://127.0.0.1:80/api/entries/abc/follow-ups",
+    origin: "https://evil.example",
+    fetchSite: "same-origin",
+    host: "little-planet.example",
+    forwardedHost: "little-planet.example",
+    forwardedProto: "https",
+  }), false);
+  // CloudBase often omits X-Forwarded-Proto; request.url stays http.
+  assert.equal(isTrustedSameOriginRequest({
+    requestUrl: "http://127.0.0.1:80/api/entries/abc/follow-ups",
+    origin: "https://little-planet.example",
+    fetchSite: "same-origin",
+    host: "little-planet.example",
+    forwardedHost: null,
+    forwardedProto: null,
+  }), true);
+});

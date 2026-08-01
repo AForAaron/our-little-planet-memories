@@ -1,97 +1,22 @@
 import "server-only";
 
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  HeadObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { isR2Configured } from "@/lib/config/backend";
+/**
+ * Backward-compatible R2 helpers. Prefer `@/lib/storage/client` for new code.
+ * STORAGE_PROVIDER=r2|s3 switches the underlying S3-compatible backend.
+ */
 
-function getR2Config() {
-  if (!isR2Configured()) {
-    throw new Error("Cloudflare R2 尚未配置。");
-  }
+export {
+  createPrivateReadUrl,
+  createPrivateUploadUrl,
+  deletePrivateObject,
+  inspectPrivateObject,
+  uploadPrivateObject,
+} from "@/lib/storage/client";
 
-  return {
-    accountId: process.env.R2_ACCOUNT_ID!,
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-    bucket: process.env.R2_BUCKET!,
-  };
-}
+export { isObjectStorageConfigured as isR2Configured } from "@/lib/config/backend";
 
-let client: S3Client | undefined;
-
-export function getR2Client() {
-  const config = getR2Config();
-  client ??= new S3Client({
-    region: "auto",
-    endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
-    forcePathStyle: true,
-    credentials: {
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-    },
-  });
-  return client;
-}
-
-export async function createPrivateReadUrl(key: string, expiresIn = 3600) {
-  return getSignedUrl(
-    getR2Client(),
-    new GetObjectCommand({ Bucket: getR2Config().bucket, Key: key }),
-    { expiresIn },
-  );
-}
-
-export async function createPrivateUploadUrl(
-  key: string,
-  contentType: string,
-  contentLength: number,
-  expiresIn = 600,
-) {
-  return getSignedUrl(
-    getR2Client(),
-    new PutObjectCommand({
-      Bucket: getR2Config().bucket,
-      Key: key,
-      ContentType: contentType,
-      ContentLength: contentLength,
-    }),
-    { expiresIn },
-  );
-}
-
-export async function uploadPrivateObject(
-  key: string,
-  body: Uint8Array,
-  contentType: string,
-) {
-  await getR2Client().send(
-    new PutObjectCommand({
-      Bucket: getR2Config().bucket,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-    }),
-  );
-}
-
-export async function inspectPrivateObject(key: string) {
-  const result = await getR2Client().send(
-    new HeadObjectCommand({ Bucket: getR2Config().bucket, Key: key }),
-  );
-  return {
-    contentLength: result.ContentLength,
-    contentType: result.ContentType,
-  };
-}
-
-export async function deletePrivateObject(key: string) {
-  await getR2Client().send(
-    new DeleteObjectCommand({ Bucket: getR2Config().bucket, Key: key }),
+export function getR2Client(): never {
+  throw new Error(
+    "getR2Client() 已废弃：请改用 @/lib/storage/client 中的签名/上传辅助函数。",
   );
 }

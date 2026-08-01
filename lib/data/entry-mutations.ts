@@ -211,7 +211,7 @@ export async function createEntryFromForm(formData: FormData) {
       .returning({ id: entries.id });
     entryId = entry.id;
     await attachMedia(entry.id, uploaded);
-    const actorName = user.name?.trim() || user.email.split("@")[0];
+    const actorName = user.name?.trim() || user.email?.split("@")[0] || "伴侣";
     await createActivityEvent({
       actorId: user.id,
       kind: "entry_created",
@@ -277,7 +277,7 @@ export async function updateEntryFromForm(formData: FormData) {
       .where(eq(entries.id, id))
       .returning({ id: entries.id });
     if (!updated) throw new Error("没有找到这条回忆。");
-    const actorName = user.name?.trim() || user.email.split("@")[0];
+    const actorName = user.name?.trim() || user.email?.split("@")[0] || "伴侣";
     await createActivityEvent({
       actorId: user.id,
       kind: "entry_updated",

@@ -8,6 +8,12 @@ import {
   isLiveMode,
   isNeonConfigured,
 } from "@/lib/config/backend";
+import {
+  getAuthProvider,
+  getCloudBaseSessionUser,
+  isCloudBaseAuthConfigured,
+} from "@/lib/auth/cloudbase";
+import { findProfileIdByAuthIdentity } from "@/lib/auth/identity-map";
 import { emailIsVerified } from "@/lib/auth/verification";
 
 function createAuth() {
@@ -27,6 +33,11 @@ function createAuth() {
 let authInstance: ReturnType<typeof createAuth> | undefined;
 
 export function getAuth() {
+  if (getAuthProvider() === "cloudbase") {
+    throw new Error(
+      "当前 AUTH_PROVIDER=cloudbase，请勿调用 Neon getAuth()。会话请走 CloudBase Auth 适配层。",
+    );
+  }
   authInstance ??= createAuth();
   return authInstance;
 }
@@ -35,13 +46,48 @@ export function emailIsAllowlisted(email?: string | null) {
   return Boolean(email && getAllowlistEmails().includes(email.toLowerCase()));
 }
 
-export const getCoupleUser = cache(async () => {
+export type CoupleUser = {
+  id: string;
+  email?: string | null;
+  emailVerified?: boolean | null;
+  name?: string | null;
+  profileId?: string;
+};
+
+export const getCoupleUser = cache(async (): Promise<CoupleUser | null> => {
   if (!isLiveMode()) return null;
+
+  if (getAuthProvider() === "cloudbase") {
+    if (!isCloudBaseAuthConfigured()) return null;
+    const user = await getCloudBaseSessionUser();
+    if (!user || !emailIsVerified(user) || !emailIsAllowlisted(user.email)) {
+      return null;
+    }
+    const profileId = await findProfileIdByAuthIdentity("cloudbase", user.id);
+    if (!profileId) {
+      // Mapping missing: reject rather than invent or overwrite profiles.id.
+      return null;
+    }
+    // Call sites treat user.id as profiles.id (Neon Auth historically used the same UUID).
+    return {
+      id: profileId,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      profileId,
+    };
+  }
+
   const { data: session } = await getAuth().getSession();
   const user = session?.user;
-  return user && emailIsVerified(user) && emailIsAllowlisted(user.email)
-    ? user
-    : null;
+  if (!user || !emailIsVerified(user) || !emailIsAllowlisted(user.email)) {
+    return null;
+  }
+  return {
+    id: user.id,
+    email: user.email,
+    emailVerified: user.emailVerified,
+    name: "name" in user ? (user as { name?: string | null }).name : null,
+  };
 });
 
 export async function assertCoupleUser() {

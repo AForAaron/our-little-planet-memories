@@ -34,7 +34,7 @@ export function NotificationBell() {
   });
 
   return (
-    <Link href="/footprints#inbox" className="notification-bell button-secondary size-10 !p-0" aria-label="待你看看" title="待你看看">
+    <Link href="/footprints#inbox" className="notification-bell button-secondary size-11 !p-0" aria-label="待你看看" title="待你看看">
       <Bell size={18} />
       {unreadCount > 0 && (
         <span>{unreadCount > 9 ? "9+" : unreadCount}</span>

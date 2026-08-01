@@ -1,0 +1,773 @@
+{
+  "ok": true,
+  "base": "https://little-planet-web-289461-10-1349689007.sh.run.tcloudbase.com",
+  "mark": "obs-qa-2026-07-31",
+  "at": "2026-07-31T02:02:31.902Z",
+  "total": 70,
+  "passed": 70,
+  "failed": [],
+  "skipped": [
+    {
+      "id": "P.poll.visibility.code",
+      "reason": "useVisibilityAwarePolling gates on document.visibilityState===visible; no browser MCP this run"
+    },
+    {
+      "id": "P.bookmarks.device",
+      "reason": "agent cannot read phone bookmarks"
+    },
+    {
+      "id": "P.coldstart.scaleToZero",
+      "reason": "not observed scale-to-zero; no fabricated seconds"
+    }
+  ],
+  "created": {
+    "entryA": "f72c2a4c-5c71-4c90-8f47-28602e85e22f",
+    "entryB": "0173f85b-2ab7-48e5-9ede-a5cfd1ae042d",
+    "followUpId": "9045d7e5-766c-4e13-a43e-44c4ae7e16e6",
+    "wishId": "ab174c54-3e10-4165-8b2b-40dd8ce527c0",
+    "stickerId": "21c4d7e4-ac07-4187-a4c7-a3c0936a9b89",
+    "stickerRevision": 3,
+    "mediaEntryId": "0139906b-cd54-423f-a57a-8616304a1c9a"
+  },
+  "perf": {
+    "/api/health": [
+      {
+        "status": 200,
+        "ms": 182
+      },
+      {
+        "status": 200,
+        "ms": 61
+      },
+      {
+        "status": 200,
+        "ms": 57
+      }
+    ],
+    "/home": [
+      {
+        "status": 200,
+        "ms": 142
+      },
+      {
+        "status": 200,
+        "ms": 118
+      },
+      {
+        "status": 200,
+        "ms": 114
+      }
+    ],
+    "/time/timeline": [
+      {
+        "status": 200,
+        "ms": 176
+      },
+      {
+        "status": 200,
+        "ms": 128
+      },
+      {
+        "status": 200,
+        "ms": 139
+      }
+    ],
+    "/api/entries?limit=12": [
+      {
+        "status": 200,
+        "ms": 144
+      },
+      {
+        "status": 200,
+        "ms": 162
+      },
+      {
+        "status": 200,
+        "ms": 136
+      }
+    ],
+    "/places/map": [
+      {
+        "status": 200,
+        "ms": 116
+      },
+      {
+        "status": 200,
+        "ms": 107
+      },
+      {
+        "status": 200,
+        "ms": 117
+      }
+    ]
+  },
+  "results": [
+    {
+      "id": "A.signin",
+      "pass": true,
+      "detail": {
+        "email": "a***@gmail.com",
+        "sub": "2082806080024387585"
+      }
+    },
+    {
+      "id": "A.home",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "A.entries.get",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 5
+      }
+    },
+    {
+      "id": "B.signin",
+      "pass": true,
+      "detail": {
+        "email": "s***@163.com",
+        "sub": "2082806087917805570"
+      }
+    },
+    {
+      "id": "B.home",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "B.entries.get",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 5
+      }
+    },
+    {
+      "id": "0.health.db_sharp",
+      "pass": true,
+      "detail": {
+        "http": 503,
+        "mode": "live",
+        "db": {
+          "ok": true,
+          "driver": "node-postgres",
+          "profilesCount": 2
+        },
+        "sharp": {
+          "ok": true,
+          "version": "0.34.5"
+        },
+        "auth": {
+          "ok": false,
+          "hasUser": false,
+          "emailDomain": null
+        }
+      }
+    },
+    {
+      "id": "W1.A.entries.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "f72c2a4c-5c71-4c90-8f47-28602e85e22f",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W2.A.follow-ups.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "9045d7e5-766c-4e13-a43e-44c4ae7e16e6",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W3.A.follow-ups.reply",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "40558f0f-56ac-4f51-9c3f-81c602e6d8d7",
+        "parent_id": "9045d7e5-766c-4e13-a43e-44c4ae7e16e6",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W4.B.entries.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "0173f85b-2ab7-48e5-9ede-a5cfd1ae042d",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W4.B.follow-ups.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "fd489daf-328e-4c43-9a21-a1cd32e40225",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W5.A.entries.patch",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "title": "obs-qa-2026-07-31 A entry edited",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W6.A.wishlist.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "ab174c54-3e10-4165-8b2b-40dd8ce527c0",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W6b.A.wishlist.patch",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W7.A.canvas.post",
+      "pass": true,
+      "detail": {
+        "status": 201,
+        "id": "21c4d7e4-ac07-4187-a4c7-a3c0936a9b89",
+        "revision": 1,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W7b.A.canvas.patch",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "revision": 2,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W7c.B.canvas.stale409",
+      "pass": true,
+      "detail": {
+        "status": 409,
+        "error": "这个画板元素已被对方更新，请刷新后再试。",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W7d.A.canvas.patch.after409",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "revision": 3
+      }
+    },
+    {
+      "id": "W8.A.companion.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "92a6d181-1f67-4019-898b-c687e4cb790e",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.presence.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.emoji-usage.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.footprints.post",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.notifications.patch",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.inbox.patch",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.uploads.presign.delete",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "X.settings.emptyTitle",
+      "pass": true,
+      "detail": {
+        "status": 400,
+        "originBlock": false,
+        "error": "网站标题不能为空。"
+      }
+    },
+    {
+      "id": "X.cross-origin.rejected",
+      "pass": true,
+      "detail": {
+        "status": 403,
+        "error": "请求必须从本站页面发起。"
+      }
+    },
+    {
+      "id": "X.missing-origin.rejected",
+      "pass": true,
+      "detail": {
+        "status": 403,
+        "error": "请求必须从本站页面发起。"
+      }
+    },
+    {
+      "id": "X.invalidSession.write",
+      "pass": true,
+      "detail": {
+        "status": 401,
+        "error": "登录已失效，请重新登录。"
+      }
+    },
+    {
+      "id": "M1.presign",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasUrl": true,
+        "r2Key": true,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "M2.cos.put",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "M3.entries.post.withMedia",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "id": "0139906b-cd54-423f-a57a-8616304a1c9a",
+        "originBlock": false
+      }
+    },
+    {
+      "id": "M4.memory.page",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "M5.signed.media.get",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "M6.unsigned.media.denied",
+      "pass": true,
+      "detail": {
+        "status": 403
+      }
+    },
+    {
+      "id": "M7.signed.ttl",
+      "pass": true,
+      "detail": {
+        "expires": "3600"
+      }
+    },
+    {
+      "id": "M8.tampered.signature.denied",
+      "pass": true,
+      "detail": {
+        "status": 403
+      }
+    },
+    {
+      "id": "D.html/home",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasNeedle": true,
+        "hasMojibake": false,
+        "needles": [
+          "在一起",
+          "回忆"
+        ]
+      }
+    },
+    {
+      "id": "D.html/time/timeline",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasNeedle": true,
+        "hasMojibake": false,
+        "needles": [
+          "回忆"
+        ]
+      }
+    },
+    {
+      "id": "D.html/daily/wishlist",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasNeedle": true,
+        "hasMojibake": false,
+        "needles": [
+          "愿望"
+        ]
+      }
+    },
+    {
+      "id": "D.html/footprints",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasNeedle": true,
+        "hasMojibake": false,
+        "needles": [
+          "足迹"
+        ]
+      }
+    },
+    {
+      "id": "D.html/places/map",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasNeedle": true,
+        "hasMojibake": false,
+        "needles": [
+          "地图",
+          "地点",
+          "足迹"
+        ]
+      }
+    },
+    {
+      "id": "D.html/notifications",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasNeedle": true,
+        "hasMojibake": false,
+        "needles": [
+          "通知"
+        ]
+      }
+    },
+    {
+      "id": "D.html.memory",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/notifications",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/presence",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/footprints",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/companion/messages",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/map-points",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "R/api/geocode/search",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "D.amap.tile",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "contentType": "image/png"
+      }
+    },
+    {
+      "id": "S.unauth.entries",
+      "pass": true,
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "id": "C1.B.sees.A.follow-ups",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 1
+      }
+    },
+    {
+      "id": "C2.B.follow-up.on.A",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "C3.B.sees.canvas",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "count": 1
+      }
+    },
+    {
+      "id": "C4.presence.summary",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "keys": [
+          "currentUserId",
+          "onlineAfter",
+          "recentAfter",
+          "others"
+        ]
+      }
+    },
+    {
+      "id": "C5.B.sees.companion",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "hasObs": true
+      }
+    },
+    {
+      "id": "W7e.A.canvas.delete",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "W6c.A.wishlist.delete",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "originBlock": false
+      }
+    },
+    {
+      "id": "PERF/api/health",
+      "pass": true,
+      "detail": {
+        "times": [
+          {
+            "status": 200,
+            "ms": 182
+          },
+          {
+            "status": 200,
+            "ms": 61
+          },
+          {
+            "status": 200,
+            "ms": 57
+          }
+        ]
+      }
+    },
+    {
+      "id": "PERF/home",
+      "pass": true,
+      "detail": {
+        "times": [
+          {
+            "status": 200,
+            "ms": 142
+          },
+          {
+            "status": 200,
+            "ms": 118
+          },
+          {
+            "status": 200,
+            "ms": 114
+          }
+        ]
+      }
+    },
+    {
+      "id": "PERF/time/timeline",
+      "pass": true,
+      "detail": {
+        "times": [
+          {
+            "status": 200,
+            "ms": 176
+          },
+          {
+            "status": 200,
+            "ms": 128
+          },
+          {
+            "status": 200,
+            "ms": 139
+          }
+        ]
+      }
+    },
+    {
+      "id": "PERF/api/entries?limit=12",
+      "pass": true,
+      "detail": {
+        "times": [
+          {
+            "status": 200,
+            "ms": 144
+          },
+          {
+            "status": 200,
+            "ms": 162
+          },
+          {
+            "status": 200,
+            "ms": 136
+          }
+        ]
+      }
+    },
+    {
+      "id": "PERF/places/map",
+      "pass": true,
+      "detail": {
+        "times": [
+          {
+            "status": 200,
+            "ms": 116
+          },
+          {
+            "status": 200,
+            "ms": 107
+          },
+          {
+            "status": 200,
+            "ms": 117
+          }
+        ]
+      }
+    },
+    {
+      "id": "P.poll.visibility.code",
+      "pass": true,
+      "detail": {
+        "skipped": true,
+        "reason": "useVisibilityAwarePolling gates on document.visibilityState===visible; no browser MCP this run"
+      }
+    },
+    {
+      "id": "P.bookmarks.device",
+      "pass": true,
+      "detail": {
+        "skipped": true,
+        "reason": "agent cannot read phone bookmarks"
+      }
+    },
+    {
+      "id": "P.coldstart.scaleToZero",
+      "pass": true,
+      "detail": {
+        "skipped": true,
+        "reason": "not observed scale-to-zero; no fabricated seconds"
+      }
+    },
+    {
+      "id": "Z.cleanup.obsEntries",
+      "pass": true,
+      "detail": {
+        "deleted": 3,
+        "scanned": 3
+      }
+    },
+    {
+      "id": "Z.home.noObsQaTitle",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "polluted": false
+      }
+    }
+  ]
+}

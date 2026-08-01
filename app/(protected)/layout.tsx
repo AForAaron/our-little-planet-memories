@@ -20,7 +20,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <>
       <SiteHeader isDemo={!live} title={settings.relationship.title} />
-      {children}
+      <div className="protected-content">{children}</div>
       <CompanionWidget isDemo={!live} />
       <SiteFooter />
     </>

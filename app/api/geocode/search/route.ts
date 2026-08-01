@@ -278,7 +278,13 @@ export async function GET(request: Request) {
   if (!query) return jsonError("请输入地点名称。");
 
   const preferredProvider = process.env.GEOCODING_PROVIDER?.trim().toLowerCase();
-  const shouldPreferAmap = preferredProvider === "amap" || (!preferredProvider && amapConfigured());
+  // Mainland default: Amap only. OSM is opt-in via GEOCODING_PROVIDER=osm.
+  const shouldPreferAmap =
+    preferredProvider !== "osm" &&
+    (preferredProvider === "amap" || !preferredProvider || amapConfigured());
+  const allowOsmFallback =
+    preferredProvider === "osm" ||
+    process.env.GEOCODING_ALLOW_OSM_FALLBACK === "1";
   const cacheKey = `${shouldPreferAmap ? "amap" : "osm"}:${query.toLowerCase()}`;
   const cached = cache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
@@ -292,20 +298,22 @@ export async function GET(request: Request) {
   lastUncachedRequestAt = now;
 
   let results: GeocodeResult[] = [];
-  let provider = "osm";
+  let provider = shouldPreferAmap ? "amap" : "osm";
   let providerError = "";
   try {
     if (shouldPreferAmap) {
+      if (!amapConfigured()) {
+        throw new Error("未配置 AMAP_WEB_SERVICE_KEY，无法使用高德地点搜索。");
+      }
       provider = "amap";
       results = await searchAmap(query);
-    }
-    if (!results.length && preferredProvider !== "amap") {
+    } else if (allowOsmFallback) {
       provider = "osm";
       results = await searchNominatim(query);
     }
   } catch (error) {
     providerError = error instanceof Error ? error.message : "地点搜索失败。";
-    if (provider !== "osm" && preferredProvider !== "amap") {
+    if (allowOsmFallback && provider !== "osm") {
       try {
         provider = "osm";
         results = await searchNominatim(query);

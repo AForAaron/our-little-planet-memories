@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  anchorStrokePointToLocalV2,
   anchorStrokePointToRoot,
+  anchorStrokePointToRootV2,
   resolveCanvasAnchor,
   rootPointToAnchorRatio,
   simplifyCanvasPoints,
@@ -59,6 +61,33 @@ test("keeps stroke geometry proportional when an anchor changes aspect ratio", (
 
   assert.equal(desktop.x - 90, desktop.y - 105);
   assert.equal(mobile.x - 32, mobile.y - 72);
+});
+
+test("v2 local points stay within 1% across desktop and mobile anchors", () => {
+  const point = { x: 0.2, y: 0.15 };
+  const originX = 0.1;
+  const originY = 0.25;
+  const desktopAnchor = { key: "body", left: 40, top: 80, width: 900, height: 600 };
+  const mobileAnchor = { key: "body", left: 16, top: 64, width: 375, height: 800 };
+
+  const desktop = anchorStrokePointToRootV2(point, desktopAnchor, originX, originY);
+  const mobile = anchorStrokePointToRootV2(point, mobileAnchor, originX, originY);
+  const desktopLocal = {
+    x: (desktop.x - desktopAnchor.left) / desktopAnchor.width,
+    y: (desktop.y - desktopAnchor.top) / desktopAnchor.height,
+  };
+  const mobileLocal = {
+    x: (mobile.x - mobileAnchor.left) / mobileAnchor.width,
+    y: (mobile.y - mobileAnchor.top) / mobileAnchor.height,
+  };
+  const expected = anchorStrokePointToLocalV2(point, originX, originY);
+
+  assert.ok(Math.abs(desktopLocal.x - expected.x) < 0.01);
+  assert.ok(Math.abs(desktopLocal.y - expected.y) < 0.01);
+  assert.ok(Math.abs(mobileLocal.x - expected.x) < 0.01);
+  assert.ok(Math.abs(mobileLocal.y - expected.y) < 0.01);
+  assert.ok(Math.abs(desktopLocal.x - mobileLocal.x) < 0.01);
+  assert.ok(Math.abs(desktopLocal.y - mobileLocal.y) < 0.01);
 });
 
 test("thins dense strokes, rounds payload values, and preserves endpoints", () => {

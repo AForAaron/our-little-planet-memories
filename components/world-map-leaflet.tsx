@@ -15,6 +15,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import { readApiJson } from "@/lib/http/read-api-json";
+import { amapTileSources } from "@/lib/maps/amap-tiles";
 import { formatDate } from "@/lib/utils";
 import type { WorldMapPoint } from "./world-map";
 
@@ -325,8 +326,9 @@ export default function LeafletWorldMap({
         style={{ height }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={amapTileSources[0].attribution}
+          subdomains={amapTileSources[0].subdomains}
+          url={amapTileSources[0].url}
         />
         <FitInitialBounds points={initialPoints} />
         <ViewportPointLoader

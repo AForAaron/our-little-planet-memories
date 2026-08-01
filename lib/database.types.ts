@@ -28,6 +28,10 @@ export type StickerPayload = {
 export type StrokePayload = {
   colorKey: string;
   width: number;
+  /** Brush width as a fraction of the anchor width (coordVersion 2). */
+  widthRatio?: number;
+  /** 2 = x/width + y/height local space; omit or 1 = legacy width-normalized points. */
+  coordVersion?: 1 | 2;
   points: CanvasPoint[];
 };
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./theme.css";
 import "./globals.css";
 
@@ -13,6 +13,12 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-icon.png?v=donut-planet-1", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.webmanifest?v=donut-planet-1",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

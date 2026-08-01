@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { amapTileSources } from "@/lib/maps/amap-tiles";
 import type { LocationValue } from "./location-picker";
 
 type LocationPickerLeafletProps = {
@@ -64,16 +65,7 @@ export default function LocationPickerLeaflet({
   }, [value.latitude, value.longitude]);
 
   const fallbackCenter: L.LatLngTuple = [31.2304, 121.4737];
-  const tileSources = [
-    {
-      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    },
-    {
-      url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    },
-  ];
+  const tileSources = amapTileSources;
   const tileSource = tileSources[tileSourceIndex] ?? tileSources[0];
 
   return (
@@ -88,10 +80,15 @@ export default function LocationPickerLeaflet({
           attribution={tileSource.attribution}
           eventHandlers={{
             tileerror: () => {
-              setTileWarning("底图加载不稳定，已尝试切换备用底图；如果仍是蓝底，通常是当前网络阻止了地图瓦片请求。");
-              setTileSourceIndex((current) => Math.min(current + 1, tileSources.length - 1));
+              setTileWarning(
+                "高德底图加载不稳定，已尝试切换备用高德样式；如果仍是蓝底，请检查网络或稍后重试。",
+              );
+              setTileSourceIndex((current) =>
+                Math.min(current + 1, tileSources.length - 1),
+              );
             },
           }}
+          subdomains={tileSource.subdomains}
           url={tileSource.url}
         />
         <MapClickHandler onChange={onChange} />

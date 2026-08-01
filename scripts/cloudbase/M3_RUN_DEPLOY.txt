@@ -1,0 +1,31 @@
+# CloudBase Run 部署说明（M3）
+#
+# 安全红线：本机 tcb 若显示 rui-ledger-*，禁止对本项目执行 deploy。
+# 必须先：
+#   tcb logout
+#   tcb login   # 使用小星球第二腾讯云账号
+#   tcb env list  # 应看到 our-little-planet-d1dcw25f2b06ae
+#
+# 推荐参数：
+#   最小实例 0 / 最大实例 1
+#   端口 3000
+#   健康检查 GET /api/health
+#   初始环境变量 APP_DATA_MODE=demo
+#
+# 本地先构建镜像：
+#   docker build -t our-little-planet:local .
+#
+# 控制台创建「云托管 / CloudBase Run」服务后上传镜像，或使用：
+#   tcb cloudrun deploy -e our-little-planet-d1dcw25f2b06ae
+#
+# 冒烟记录（填写）：
+#   默认域名：
+#   冷启动秒数：
+#   热启动秒数：
+#   资源点消耗基线：
+#   Run 内 select 1：通过 / 失败
+#
+# 失败则停服缩 0，继续使用 Vercel。
+
+ENV_ID=our-little-planet-d1dcw25f2b06ae
+FORBIDDEN_ENV_PREFIX=rui-ledger
